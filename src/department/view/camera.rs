@@ -1,8 +1,8 @@
-use super::position::Pos3;
-use super::matrix::Matrix;
-use super::object_buffer::{ObjectBuffer, Triangle};
+use crate::department::preview::position::Pos3;
+use crate::department::preview::matrix::Matrix;
+use crate::department::preview::object_buffer::{ObjectBuffer, Triangle};
 use image::{Rgba, ImageBuffer};
-use super::output_buffer::{OutputBuffer};
+use crate::department::preview::output_buffer::{OutputBuffer};
 
 pub struct Camera {
     fov_y: f32,

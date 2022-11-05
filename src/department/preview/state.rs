@@ -1,6 +1,6 @@
 use std::iter;
 use super::texture;
-use super::camera;
+use crate::department::view::camera;
 use super::position::Pos3;
 use super::object_buffer::{ObjectBuffer, Triangle};
 

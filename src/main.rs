@@ -1,14 +1,12 @@
-mod user_type;
-use user_type::matrix;
-use user_type::position;
-use user_type::vector::Vector3;
-use user_type::state;
+mod department;
+use department::preview::*;
 
 use winit::{
     event::*,
     event_loop::{ControlFlow, EventLoop},
     window::WindowBuilder,
 };
+use crate::department::preview::vector::Vector3;
 
 fn main_not_use() {
 
