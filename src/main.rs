@@ -1,7 +1,8 @@
-use dognut::user_type::matrix;
-use dognut::user_type::position;
-use dognut::user_type::vector::Vector3;
-use dognut::user_type::state;
+mod user_type;
+use user_type::matrix;
+use user_type::position;
+use user_type::vector::Vector3;
+use user_type::state;
 
 use winit::{
     event::*,
