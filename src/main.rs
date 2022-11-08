@@ -1,4 +1,7 @@
 mod department;
+
+use tui::backend::CrosstermBackend;
+use tui::Terminal;
 use department::preview::*;
 
 use winit::{
@@ -38,5 +41,9 @@ fn main_not_use() {
 }
 
 fn main() {
+    let stdout = std::io::stdout();
+    let backend=  CrosstermBackend::new(stdout);
+    let tem = Terminal::new(backend).unwrap();
+
     pollster::block_on(state::run());
 }
