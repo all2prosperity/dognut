@@ -5,22 +5,32 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies]
-tui = "0.19.0"
-crossterm = "0.25"
+[[bin]]
+name = "test"
 
+[[bin]]
+name = "main"
+
+[[bin]]
+name = "test_pixels"
+
+[dependencies]
+tui = "0.*"
+crossterm = "0.*"
+tobj = "3.*"
 cfg-if = "1"
 anyhow = "1.0"
 bytemuck = { version = "1.4", features = [ "derive" ] }
 pollster = "0.2"
-
 env_logger = "0.9"
 log = "0.4"
-winit = "0.27"
 pixels = "*"
 winit_input_helper = "0.13"
-tobj = "3.2.3"
 profiling = "1.0.7"
+wgpu = "0.*"
+winit = "0.*"
+
+tokio = {version="1", features=["full"]}
 
 [dependencies.image]
 version = "0.24"
