@@ -1,19 +1,16 @@
-mod department;
+use dognut;
 
-use std::io::Stdout;
 use tui::backend::CrosstermBackend;
-use tui::{Frame, Terminal};
+use tui::Terminal;
 use department::preview::*;
-
-use std::sync::mpsc;
-use wgpu::Backend;
 
 use winit::{
     event::*,
     event_loop::{ControlFlow, EventLoop},
     window::WindowBuilder,
 };
-use crate::department::preview::vector::Vector3;
+use dognut::department::preview::matrix;
+use dognut::department::preview::vector::Vector3;
 
 fn main_not_use() {
 
@@ -49,12 +46,5 @@ fn main() {
     let backend=  CrosstermBackend::new(stdout);
     let tem = Terminal::new(backend).unwrap();
 
-    let (tx, rx) = mpsc::channel::<Frame<CrosstermBackend<Stdout>>>();
-
-    let handle = std::thread::spawn(||pollster::block_on(state::run()));
-    handle.join().unwrap();
-
-    // create rasterization thread
-
-
+    pollster::block_on(state::run());
 }

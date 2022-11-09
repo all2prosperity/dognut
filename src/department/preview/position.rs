@@ -2,7 +2,7 @@ use super::matrix::Matrix;
 use super::vector::Vector3;
 use std::ops::{Sub};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Pos3 {
     pub x: f32,
     pub y: f32,
@@ -34,8 +34,7 @@ impl Pos3 {
         Self {x, y, z}
     }
 
-    pub fn from_matrix(matrix: Matrix) -> Self {
-        matrix.debug();
+    pub fn from_matrix(matrix: &Matrix) -> Self {
         let (x, y, z, c) = (
             matrix.index(0, 0),
             matrix.index(1, 0),
