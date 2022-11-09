@@ -1,6 +1,6 @@
 use std::ops::{Add, Mul, Sub};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Matrix {
 // 0 1 2  m = 2, n = 3
 // 0 1 2
@@ -20,7 +20,7 @@ pub struct MatrixIter<'a> {
 
 impl<'a> MatrixIter<'a> {
     fn new(iter: &'a Matrix, x: usize, y: usize) -> Self{
-        MatrixIter {
+        Self {
             iter, x, y
         }
     }
@@ -82,6 +82,34 @@ impl Mul for &Matrix {
         }
     }
 }
+
+impl Add for &Matrix {
+    type Output = Option<Matrix>;
+
+    fn add(self, other: Self) -> Option<Matrix> {
+        if self.m() != other.m() {
+            None
+        }
+        else if self.n() != other.n() {
+            None
+        }
+        else {
+            let mut _s_iter = self.iter();
+            let mut _o_iter = other.iter();
+            let mut _elements = Vec::new();
+            loop {
+                if let Some(_item) = _s_iter.next() {
+                    _elements.push(_item + _o_iter.next().unwrap())
+                }
+                else {
+                    break;
+                }
+            }
+            Matrix::from_vec(self.m(), self.n(), false, _elements)
+        }
+    }
+}
+
 
 impl Add for Matrix {
     type Output = Option<Self>;
@@ -229,6 +257,48 @@ impl Matrix {
         }
 
         self.elements[_idx as usize]
+    }
+
+    pub fn result(&self) -> f32 {
+        self.elements[0]
+    }
+
+    pub fn to_identity_matrix(num: usize) ->Self {
+        let mut ret = Self::new(num, num, false);
+        
+        for i in 0..num {
+            ret.set(i, i, 1.)
+        }
+        ret
+    }
+
+    pub fn mul_num(&mut self, num: f32) -> &Self {
+        for i in self.elements.iter_mut() {
+            *i *= num;
+        }
+        self
+    }
+
+    pub fn add_linear(&self) -> Self {
+        let mut ret = Matrix::new(self.m() + 1, self.n() + 1, false);
+
+        for i in 0..self.m() {
+            for j in 0..self.n() {
+                ret.set(i, j, self.index(i, j));
+            }
+        }
+
+        ret.set(ret.m() - 1, ret.n() - 1, 1.);
+        ret
+    }
+
+    pub fn move_matrix(x: f32, y: f32, z: f32) -> Self {
+        Self::from_vec(4, 4, false, vec![
+            1., 0., 0., x,
+            0., 1., 0., y,
+            0., 0., 1., z,
+            0., 0., 0., 1.,
+        ]).unwrap()
     }
 }
 
