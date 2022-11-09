@@ -1,8 +1,12 @@
 mod department;
 
+use std::io::Stdout;
 use tui::backend::CrosstermBackend;
-use tui::Terminal;
+use tui::{Frame, Terminal};
 use department::preview::*;
+
+use std::sync::mpsc;
+use wgpu::Backend;
 
 use winit::{
     event::*,
@@ -45,5 +49,12 @@ fn main() {
     let backend=  CrosstermBackend::new(stdout);
     let tem = Terminal::new(backend).unwrap();
 
-    pollster::block_on(state::run());
+    let (tx, rx) = mpsc::channel::<Frame<CrosstermBackend<Stdout>>>();
+
+    let handle = std::thread::spawn(||pollster::block_on(state::run()));
+    handle.join().unwrap();
+
+    // create rasterization thread
+
+
 }
