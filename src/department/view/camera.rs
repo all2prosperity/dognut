@@ -59,7 +59,7 @@ impl Camera {
         let mvp = (&projection * view).unwrap();
 
         for _tri in object_buffer.iter() {
-            let trans_poses = _tri.poses.iter().map(|x| (&mvp * &(x.to_matrix())).unwrap());
+            let trans_poses = _tri.v.iter().map(|x| (&mvp * &(x.to_matrix())).unwrap());
             let trans_poses = trans_poses.map(|x| Pos3::from_matrix(&x));
             for pos in trans_poses.clone() {
                 if pos.x < -1. || pos.x > 1. || pos.y > 1. || pos.y < -1.{

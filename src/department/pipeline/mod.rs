@@ -1,3 +1,5 @@
+mod shader;
+
 use std::sync::mpsc::Sender;
 use crate::department::preview::matrix::Matrix;
 

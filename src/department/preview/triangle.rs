@@ -5,7 +5,9 @@ use super::render_object::RenderObject;
 
 #[derive(Debug)]
 pub struct Triangle {
-    pub poses: Vec<Pos3>,
+    pub v: Vec<Pos3>,
+    pub color: Vec<Pos3>,
+    pub normal: Vec<Pos3>,
 }
 
 pub fn max(l: f32, r: f32) -> f32{
@@ -29,13 +31,17 @@ pub fn min(l: f32, r: f32) -> f32 {
 impl Triangle {
     pub fn new(pos1: Pos3, pos2: Pos3, pos3: Pos3) -> Self {
         Self {
-            poses: vec![pos1, pos2, pos3]
+            v: vec![pos1, pos2, pos3],
+            color: vec![Pos3::default();3],
+            normal: vec![Pos3::default();3],
         }
     }
 
     pub fn from_vec(vec: Vec<Pos3>) -> Self {
         Self {
-            poses: vec
+            v: vec,
+            color: vec![Pos3::default();3],
+            normal: vec![Pos3::default();3],
         }
     }
 
@@ -44,8 +50,8 @@ impl Triangle {
         let mut edges: Vec<(u32, u32)> = Vec::new();
         for i in 0..3 {
             let j = if i == 2 {0} else {i + 1};
-            let p1 = &self.poses[i];
-            let p2 = &self.poses[j];
+            let p1 = &self.v[i];
+            let p2 = &self.v[j];
 
             let x = (p1.x + (p2.x - p1.x) * (y - p1.y) / (p2.y - p1.y)).floor() as u32;
             if x < sx || x > ex {
@@ -92,8 +98,8 @@ impl Triangle {
         let mut target_x: Option<u32> = None;
         for i in 0..3 {
             let j = if i == 2 {0} else {i + 1};
-            let p1 = &self.poses[i];
-            let p2 = &self.poses[j];
+            let p1 = &self.v[i];
+            let p2 = &self.v[j];
 
             let x: f32 = p1.x + (p2.x - p1.x) * (y - p1.y) / (p2.y - p1.y);
             if x < sx as f32 || x >= ex as f32 {
@@ -152,18 +158,18 @@ impl Triangle {
     }
 
     pub fn get_edge(&self) -> (u32, u32, u32, u32) {
-        let min_x = min(min(self.poses[0].x, self.poses[1].x), self.poses[2].x);
-        let max_x = max(max(self.poses[0].x, self.poses[1].x), self.poses[2].x);
-        let min_y = min(min(self.poses[0].y, self.poses[1].y), self.poses[2].y);
-        let max_y = max(max(self.poses[0].y, self.poses[1].y), self.poses[2].y);
+        let min_x = min(min(self.v[0].x, self.v[1].x), self.v[2].x);
+        let max_x = max(max(self.v[0].x, self.v[1].x), self.v[2].x);
+        let min_y = min(min(self.v[0].y, self.v[1].y), self.v[2].y);
+        let max_y = max(max(self.v[0].y, self.v[1].y), self.v[2].y);
         (min_x.floor() as u32, max_x.ceil() as u32, min_y.floor() as u32, max_y.ceil() as u32)
     }
 
     pub fn get_surface_equation(&self) -> (f32, f32, f32, f32){
-        let a = (self.poses[1].y - self.poses[0].y) * (self.poses[2].z - self.poses[0].z) - (self.poses[1].z - self.poses[0].z) * (self.poses[2].y - self.poses[0].y);
-        let b = (self.poses[2].x - self.poses[0].x) * (self.poses[1].z - self.poses[0].z) - (self.poses[1].x - self.poses[0].x) * (self.poses[2].z - self.poses[0].z);
-        let c = (self.poses[1].x - self.poses[0].x) * (self.poses[2].y - self.poses[0].y) - (self.poses[2].x - self.poses[0].x) * (self.poses[1].y - self.poses[0].y);
-        let d =  -(a * self.poses[0].x + b * self.poses[0].y + c * self.poses[0].z);
+        let a = (self.v[1].y - self.v[0].y) * (self.v[2].z - self.v[0].z) - (self.v[1].z - self.v[0].z) * (self.v[2].y - self.v[0].y);
+        let b = (self.v[2].x - self.v[0].x) * (self.v[1].z - self.v[0].z) - (self.v[1].x - self.v[0].x) * (self.v[2].z - self.v[0].z);
+        let c = (self.v[1].x - self.v[0].x) * (self.v[2].y - self.v[0].y) - (self.v[2].x - self.v[0].x) * (self.v[1].y - self.v[0].y);
+        let d =  -(a * self.v[0].x + b * self.v[0].y + c * self.v[0].z);
         (a, b, c, d)
     }
 
@@ -176,10 +182,11 @@ impl Triangle {
         let mut last_cross_vec: Option<Vector3> = None;
         for i in 0..3 {
             let j = if i == 2 {0} else {i + 1};
-            let vec1 = &self.poses[j] - &self.poses[i];
-            let vec2 = pos - &self.poses[i];
+            let vec1 = &self.v[j] - &self.v[i];
+            let vec2 = pos - &self.v[i];
             let cross = vec2.cross(&vec1);
 
+            //todo: 假定三角形顶点是逆时针定义的，那么只要有一个cross product的z为负值，那么就可以判定在三角形外
             // println!("cur last is {:?}", last_cross_vec);
             if let Some(_last_cross_vec) = &last_cross_vec {
                 if _last_cross_vec.dot(&cross) < 0. {
@@ -194,7 +201,17 @@ impl Triangle {
     }
 
     pub fn to_render_obj(&self) -> RenderObject {
-        RenderObject::from_vec(self.poses.clone(), vec![0, 1, 2])
+        RenderObject::from_vec(self.v.clone(), vec![0, 1, 2])
+    }
+}
+
+impl Triangle {
+    pub fn get_color(&self, x: usize, y:usize) -> Vector3 {
+        return Vector3::new(0., 0., 0.);
+    }
+
+    pub fn get_normal(&self, x: usize, y:usize) -> Vector3 {
+        return Vector3::new(0., 0., 0.);
     }
 }
 
