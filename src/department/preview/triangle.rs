@@ -41,6 +41,55 @@ impl Triangle {
 
     pub fn get_horizon_edge(&self, y: f32, sx: u32, ex: u32) -> Option<(u32, u32)> {
         let mut target_x: Option<u32> = None;
+        let mut edges: Vec<(u32, u32)> = Vec::new();
+        for i in 0..3 {
+            let j = if i == 2 {0} else {i + 1};
+            let p1 = &self.poses[i];
+            let p2 = &self.poses[j];
+
+            let x = (p1.x + (p2.x - p1.x) * (y - p1.y) / (p2.y - p1.y)).floor() as u32;
+            if x < sx || x > ex {
+                continue;
+            }
+            
+            let _sx = std::cmp::max(sx, x - 2);
+            let _ex = std::cmp::min(ex, x + 2) + 1;
+
+            let mut l = _ex + 1;
+            let mut r = 0;
+            for _i in _sx.._ex {
+                let pos = Pos3::new(_i as f32 + 0.5, y, 0.);
+                if self.in_triangle(&pos) {
+                    l = std::cmp::min(l, _i);
+                    r = std::cmp::max(r, _i);
+                }
+            }
+            if l != _ex + 1 {
+                edges.push((l, r));
+            }
+        }
+
+        if edges.len() == 0 {
+            None
+        }
+        else {
+            let mut l = ex + 1;
+            let mut r = 0;
+
+            for (_l, _r) in edges {
+                l = std::cmp::min(l, _l);
+                l = std::cmp::min(l, _r);
+
+                r = std::cmp::max(r, _l);
+                r = std::cmp::max(r, _r);
+            }
+
+            Some((l, r))
+        }
+    }
+
+    pub fn get_horizon_edge_deprecated(&self, y: f32, sx: u32, ex: u32) -> Option<(u32, u32)> {
+        let mut target_x: Option<u32> = None;
         for i in 0..3 {
             let j = if i == 2 {0} else {i + 1};
             let p1 = &self.poses[i];

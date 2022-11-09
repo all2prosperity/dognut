@@ -53,12 +53,13 @@ impl Camera {
     }
 
     #[profiling::function]
-    pub fn render(&self, width: u32, height: u32, object_buffer: &ObjectBuffer) -> OutputBuffer {
+    pub fn render(&self, width: u32, height: u32, object_buffer: &ObjectBuffer, view: &Matrix) -> OutputBuffer {
         let mut _out = OutputBuffer::new(width, height);
-        let transform_matrix = self.to_transform_matrix();
+        let projection = self.to_transform_matrix();
+        let mvp = (&projection * view).unwrap();
 
         for _tri in object_buffer.iter() {
-            let trans_poses = _tri.poses.iter().map(|x| (&transform_matrix * &(x.to_matrix())).unwrap());
+            let trans_poses = _tri.poses.iter().map(|x| (&mvp * &(x.to_matrix())).unwrap());
             let trans_poses = trans_poses.map(|x| Pos3::from_matrix(&x));
             for pos in trans_poses.clone() {
                 if pos.x < -1. || pos.x > 1. || pos.y > 1. || pos.y < -1.{
@@ -86,7 +87,7 @@ impl Camera {
             //
             for j in sy..ey {
                 if let Some((_sx, _ex)) = surface_tri_zero.get_horizon_edge(j as f32 + 0.5, sx, ex) {
-                    for i in _sx.._ex {
+                    for i in _sx..(_ex + 1) {
                         let pos = Pos3::new(i as f32 + 0.5, j as f32 + 0.5, 0.);
                         let depth = (&depth_matrix * &pos.to_matrix()).unwrap().result();
                         let cur_depth = _out.get_depth(i as usize, j as usize);

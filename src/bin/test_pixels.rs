@@ -15,8 +15,8 @@ use dognut::department::preview::vector::Vector3;
 use dognut::department::preview::render_object::RenderObject;
 use dognut::department::preview::object_loader::ObjectLoader;
 
-const WIDTH: u32 = 320;
-const HEIGHT: u32 = 240;
+const WIDTH: u32 = 800;
+const HEIGHT: u32 = 600;
 const BOX_SIZE: i16 = 64;
 
 /// Representation of the application state. In this example, a box will bounce around the screen.
@@ -146,12 +146,8 @@ impl World {
         let _move_back = Matrix::move_matrix(0., 0., -7.5);
         let _mat = ((&_move_back * &_mat).unwrap() * _move_origin).unwrap();
 
-
-        let mut new_obj = self.obj.clone();
-        new_obj.mul_matrix(&_mat);
-
-        buffer.add_object(new_obj);
-        let _buf = self.camera.render(WIDTH, HEIGHT, &buffer);
+        buffer.add_object(self.obj.clone());
+        let _buf = self.camera.render(WIDTH, HEIGHT, &buffer, &_mat);
 
         frame.copy_from_slice(&_buf.display);
         profiling::finish_frame!();
