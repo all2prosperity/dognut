@@ -8,10 +8,12 @@ fn main() {
     let _vec2 = Vec::from([1., 1., 5., 7., 0., 3.]);
 
     let _d1 = Matrix::from_vec(2, 3, false, _vec).unwrap();
-    let _d2 = Matrix::from_vec(3, 2, true, _vec2).unwrap();
+    let _d2 = Matrix::from_vec(2, 3, false, _vec2).unwrap();
     _d1.debug();
     _d2.debug();
-    if let Some(_matrix) =  _d1.t() * _d2 {
+    let d1_t = _d1.t();
+    d1_t.debug();
+    if let Some(_matrix) = d1_t * _d2 {
         _matrix.debug();
         _matrix.t().debug();
     }
