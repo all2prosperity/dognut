@@ -53,18 +53,18 @@ impl Triangle {
             let p1 = &self.v[i];
             let p2 = &self.v[j];
 
-            let x = (p1.x + (p2.x - p1.x) * (y - p1.y) / (p2.y - p1.y)).floor() as u32;
+            let x = (p1.x() + (p2.x() - p1.x()) * (y - p1.y()) / (p2.y() - p1.y())).floor() as u32;
             if x < sx || x > ex {
                 continue;
             }
-            
+
             let _sx = std::cmp::max(sx, x - 2);
             let _ex = std::cmp::min(ex, x + 2) + 1;
 
             let mut l = _ex + 1;
             let mut r = 0;
             for _i in _sx.._ex {
-                let pos = Pos3::new(_i as f32 + 0.5, y, 0.);
+                let pos = Pos3::from_xyz(_i as f32 + 0.5, y, 0.);
                 if self.in_triangle(&pos) {
                     l = std::cmp::min(l, _i);
                     r = std::cmp::max(r, _i);
@@ -101,15 +101,15 @@ impl Triangle {
             let p1 = &self.v[i];
             let p2 = &self.v[j];
 
-            let x: f32 = p1.x + (p2.x - p1.x) * (y - p1.y) / (p2.y - p1.y);
+            let x: f32 = p1.x() + (p2.x() - p1.x()) * (y - p1.y()) / (p2.y() - p1.y());
             if x < sx as f32 || x >= ex as f32 {
                 continue;
             }
 
             let x = x.floor() as u32 - 1;
-            
+
             for _x in 0..3 {
-                if self.in_triangle(&Pos3::new((x + _x) as f32 + 0.5, y, 0.)) {
+                if self.in_triangle(&Pos3::from_xyz((x + _x) as f32 + 0.5, y, 0.)) {
                     target_x = Some(x + _x);
                     break;
                 }
@@ -126,7 +126,7 @@ impl Triangle {
 
             while l <= r {
                 let mid = (l + r) / 2;
-                if self.in_triangle(&Pos3::new(mid as f32 + 0.5, y, 0.)) {
+                if self.in_triangle(&Pos3::from_xyz(mid as f32 + 0.5, y, 0.)) {
                     r = mid - 1;
                 }
                 else {
@@ -140,7 +140,7 @@ impl Triangle {
             r = ex - 1;
             while l <= r {
                 let mid = (l + r) / 2;
-                if self.in_triangle(&Pos3::new(mid as f32 + 0.5, y, 0.)) {
+                if self.in_triangle(&Pos3::from_xyz(mid as f32 + 0.5, y, 0.)) {
                     l = mid + 1;
                 }
                 else {
@@ -158,24 +158,24 @@ impl Triangle {
     }
 
     pub fn get_edge(&self) -> (u32, u32, u32, u32) {
-        let min_x = min(min(self.v[0].x, self.v[1].x), self.v[2].x);
-        let max_x = max(max(self.v[0].x, self.v[1].x), self.v[2].x);
-        let min_y = min(min(self.v[0].y, self.v[1].y), self.v[2].y);
-        let max_y = max(max(self.v[0].y, self.v[1].y), self.v[2].y);
+        let min_x = min(min(self.v[0].x(), self.v[1].x()), self.v[2].x());
+        let max_x = max(max(self.v[0].x(), self.v[1].x()), self.v[2].x());
+        let min_y = min(min(self.v[0].y(), self.v[1].y()), self.v[2].y());
+        let max_y = max(max(self.v[0].y(), self.v[1].y()), self.v[2].y());
         (min_x.floor() as u32, max_x.ceil() as u32, min_y.floor() as u32, max_y.ceil() as u32)
     }
 
     pub fn get_surface_equation(&self) -> (f32, f32, f32, f32){
-        let a = (self.v[1].y - self.v[0].y) * (self.v[2].z - self.v[0].z) - (self.v[1].z - self.v[0].z) * (self.v[2].y - self.v[0].y);
-        let b = (self.v[2].x - self.v[0].x) * (self.v[1].z - self.v[0].z) - (self.v[1].x - self.v[0].x) * (self.v[2].z - self.v[0].z);
-        let c = (self.v[1].x - self.v[0].x) * (self.v[2].y - self.v[0].y) - (self.v[2].x - self.v[0].x) * (self.v[1].y - self.v[0].y);
-        let d =  -(a * self.v[0].x + b * self.v[0].y + c * self.v[0].z);
+        let a = (self.v[1].y() - self.v[0].y()) * (self.v[2].z() - self.v[0].z()) - (self.v[1].z() - self.v[0].z()) * (self.v[2].y() - self.v[0].y());
+        let b = (self.v[2].x() - self.v[0].x()) * (self.v[1].z() - self.v[0].z()) - (self.v[1].x() - self.v[0].x()) * (self.v[2].z() - self.v[0].z());
+        let c = (self.v[1].x() - self.v[0].x()) * (self.v[2].y() - self.v[0].y()) - (self.v[2].x() - self.v[0].x()) * (self.v[1].y() - self.v[0].y());
+        let d =  -(a * self.v[0].x() + b * self.v[0].y() + c * self.v[0].z());
         (a, b, c, d)
     }
 
-    pub fn get_depth_matrix(&self) -> Matrix {
+    pub fn get_depth_matrix(&self) -> Matrix<1,4> {
         let (a, b, c, d) = self.get_surface_equation();
-        Matrix::from_vec(1, 4, false, vec![-a / c, -b / c, 0., -d / c]).unwrap()
+        Matrix::from_vec( vec![-a / c, -b / c, 0., -d / c])
     }
 
     pub fn in_triangle(&self, pos: &Pos3) -> bool {
@@ -207,11 +207,11 @@ impl Triangle {
 
 impl Triangle {
     pub fn get_color(&self, x: usize, y:usize) -> Vector3 {
-        return Vector3::new(0., 0., 0.);
+        return Vector3::from_xyz(0., 0., 0.);
     }
 
     pub fn get_normal(&self, x: usize, y:usize) -> Vector3 {
-        return Vector3::new(0., 0., 0.);
+        return Vector3::from_xyz(0., 0., 0.);
     }
 }
 

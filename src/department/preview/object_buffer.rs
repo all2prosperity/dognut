@@ -4,7 +4,7 @@ use super::position::Pos3;
 
 #[derive(Debug)]
 pub struct ObjectBuffer {
-    pub object_list: Vec<RenderObject>   
+    pub object_list: Vec<RenderObject>
 }
 
 
@@ -18,7 +18,7 @@ pub struct ObjectBufferIter<'a> {
 impl<'a> ObjectBufferIter<'a> {
     fn new(iter: &'a ObjectBuffer) -> Self {
         Self {
-            iter, 
+            iter,
             obj_idx: 0,
             idx_idx: 0,
         }

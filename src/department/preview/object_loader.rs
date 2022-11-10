@@ -88,13 +88,13 @@ impl ObjectLoader {
                 //     mesh.positions[3 * vtx + 1],
                 //     mesh.positions[3 * vtx + 2]
                 // );
-                vertexes.push(Pos3::new(
+                vertexes.push(Pos3::from_xyz(
                     mesh.positions[3 * vtx],
                     mesh.positions[3 * vtx + 1],
                     mesh.positions[3 * vtx + 2]
                 ));
             }
-        
+
             render_objects.push(RenderObject::from_vec(vertexes, indexes));
         }
 
@@ -125,7 +125,7 @@ impl ObjectLoader {
                 println!("    material.{} = {}", k, v);
             }
         }
-        
+
         render_objects
     }
 }

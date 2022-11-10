@@ -6,9 +6,9 @@ pub struct Matrix<const M: usize, const N: usize> {
 // 0 1 2
 //
 //
-    m: usize,
-    n: usize,
-    elements: Vec<f32>,
+    pub m: usize,
+    pub n: usize,
+    pub elements: Vec<f32>,
 }
 
 pub struct MatrixIter<'a, const M: usize, const N: usize> {
@@ -72,7 +72,7 @@ impl<const M: usize, const N: usize, const K: usize> Mul<&Matrix<N, K>> for &Mat
     }
 }
 
-impl <const M:usize, const N:usize> MulAssign<f32> for Matrix<M,N> {
+impl<const M: usize, const N: usize> MulAssign<f32> for Matrix<M, N> {
     fn mul_assign(&mut self, rhs: f32) {
         self.elements.iter_mut().for_each(|f| *f *= rhs);
     }
@@ -83,9 +83,12 @@ impl<const M: usize, const N: usize> Add for Matrix<M, N> {
     type Output = Matrix<M, N>;
 
     fn add(self, rhs: Self) -> Self::Output {
-        let mut ret = Matrix::<M,N>::new();
+        let mut ret = Matrix::<M, N>::new();
         let mut i = 0;
-        ret.elements.iter_mut().for_each(|f| {*f = self.elements[i] + rhs.elements[i]; i+=1;});
+        ret.elements.iter_mut().for_each(|f| {
+            *f = self.elements[i] + rhs.elements[i];
+            i += 1;
+        });
         ret
     }
 }
@@ -93,60 +96,63 @@ impl<const M: usize, const N: usize> Add for Matrix<M, N> {
 impl<const M: usize, const N: usize> Add for &Matrix<M, N> {
     type Output = Matrix<M, N>;
 
-    fn add(self, rhs:Self) -> Self::Output {
-        let mut ret = Matrix::<M,N>::new();
+    fn add(self, rhs: Self) -> Self::Output {
+        let mut ret = Matrix::<M, N>::new();
         let mut i = 0;
-        ret.elements.iter_mut().for_each(|f| {*f = self.elements[i] + rhs.elements[i]; i+=1;});
+        ret.elements.iter_mut().for_each(|f| {
+            *f = self.elements[i] + rhs.elements[i];
+            i += 1;
+        });
         ret
     }
 }
 
-// impl Sub for Matrix {
-//     type Output = Option<Self>;
-//
-//     fn sub(self, other: Self) -> Option<Self> {
-//         if self.m() != other.m() {
-//             None
-//         } else if self.n() != other.n() {
-//             None
-//         } else {
-//             let mut _s_iter = self.iter();
-//             let mut _o_iter = other.iter();
-//             let mut _elements = Vec::new();
-//             loop {
-//                 if let Some(_item) = _s_iter.next() {
-//                     _elements.push(_item - _o_iter.next().unwrap())
-//                 } else {
-//                     break;
-//                 }
-//             }
-//             Matrix::from_vec(self.m(), self.n(), false, _elements)
-//         }
-//     }
-// }
+impl<const M: usize, const N: usize> Sub for Matrix<M, N> {
+    type Output = Matrix<M, N>;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        let mut ret = Matrix::<M, N>::new();
+        let mut i = 0;
+        ret.elements.iter_mut().for_each(|f| {
+            *f = self.elements[i] - rhs.elements[i];
+            i += 1;
+        });
+        ret
+    }
+}
+
+impl<const M: usize, const N: usize> Sub for &Matrix<M, N> {
+    type Output = Matrix<M, N>;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        let mut ret = Matrix::<M, N>::new();
+        let mut i = 0;
+        ret.elements.iter_mut().for_each(|f| {
+            *f = self.elements[i] - rhs.elements[i];
+            i += 1;
+        });
+        ret
+    }
+}
 
 impl<const M: usize, const N: usize> Matrix<M, N> {
     pub fn new() -> Self {
-        let ms = M;
-        let ns = N;
-        let mut _elements: Vec<f32> = Vec::with_capacity((ms * ns) as usize);
-        _elements.resize((ms * ns) as usize, 0.0);
+
+
+        let mut _elements: Vec<f32> = Vec::with_capacity((M * N) as usize);
+        _elements.resize((M * N) as usize, 0.0);
         Self {
-            m: ms,
-            n: ns,
+            m: M,
+            n: N,
             elements: _elements,
         }
     }
 
-    pub fn from_vec(m: usize, n: usize, t: bool, elements: Vec<f32>) -> Option<Self> {
-        if m * n != elements.len() {
-            None
-        } else {
-            Some(Self {
-                m,
-                n,
-                elements,
-            })
+    pub fn from_vec(elements: Vec<f32>) -> Self {
+        Self {
+            m:M,
+            n:N,
+            elements,
         }
     }
 
@@ -172,7 +178,7 @@ impl<const M: usize, const N: usize> Matrix<M, N> {
         self.n
     }
 
-    pub fn t(&self) -> Matrix<N,M> {
+    pub fn t(&self) -> Matrix<N, M> {
         let mut transposed_elems = self.elements.clone();
         let _n = self.m;
         let _m = self.n;
@@ -209,15 +215,6 @@ impl<const M: usize, const N: usize> Matrix<M, N> {
         self.elements[0]
     }
 
-    pub fn to_identity_matrix(num: usize) -> Self {
-        let mut ret = Self::new();
-
-        for i in 0..num {
-            ret.set(i, i, 1.)
-        }
-        ret
-    }
-
     pub fn mul_num(&mut self, num: f32) -> &Self {
         for i in self.elements.iter_mut() {
             *i *= num;
@@ -246,6 +243,18 @@ impl<const M: usize, const N: usize> Matrix<M, N> {
     //         0., 0., 0., 1.,
     //     ]).unwrap()
     // }
+}
+
+// only for square matrix
+impl<const M: usize> Matrix<M, M> {
+    pub fn to_identity_matrix(num: usize) -> Self {
+        let mut ret = Self::new();
+
+        for i in 0..num {
+            ret.set(i, i, 1.)
+        }
+        ret
+    }
 }
 
 impl<'a, const M: usize, const N: usize> Iterator for MatrixIter<'a, M, N> {
