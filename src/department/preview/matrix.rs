@@ -1,188 +1,170 @@
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
 
 #[derive(Debug, Clone)]
-pub struct Matrix {
-// 0 1 2  m = 2, n = 3
+pub struct Matrix<const M: usize, const N: usize> {
+    // 0 1 2  m = 2, n = 3
 // 0 1 2
 //
 //
-    m: usize,
-    n: usize,
-    t: bool,
-    elements: Vec<f32>,
+    pub m: usize,
+    pub n: usize,
+    pub elements: Vec<f32>,
 }
 
-pub struct MatrixIter<'a> {
-    iter: &'a Matrix,
+pub struct MatrixIter<'a, const M: usize, const N: usize> {
+    iter: &'a Matrix<M, N>,
     x: usize,
     y: usize,
 }
 
-impl<'a> MatrixIter<'a> {
-    fn new(iter: &'a Matrix, x: usize, y: usize) -> Self{
+impl<'a, const M: usize, const N: usize> MatrixIter<'a, M, N> {
+    fn new(iter: &'a Matrix<M, N>, x: usize, y: usize) -> Self {
         Self {
-            iter, x, y
+            iter,
+            x,
+            y,
         }
     }
 }
 
-impl Mul for Matrix {
-    type Output = Option<Self>;
+impl<const M: usize, const N: usize, const K: usize> Mul<Matrix<N, K>> for Matrix<M, N> {
+    type Output = Matrix<M, K>;
 
-    fn mul(self, other: Self) -> Option<Self> {
-        if self.n() != other.m() {
-            None
-        }
-        else {
-            let _m = self.m();
-            let _n = other.n();
-            let _common_len = self.n();
-            let mut _ret = Matrix::new(self.m(), other.n(), false);
-            for i in 0.._m {
-                for j in 0.._n {
-                    let mut _val = 0.;
-                    for k in 0.._common_len {
-                        _val += self.index(i, k) * other.index(k, j);
-                    }
-
-                    _ret.set(i, j, _val);
+    fn mul(self, other: Matrix<N, K>) -> Matrix<M, K> {
+        let _m = self.m();
+        let _n = other.n();
+        let _common_len = self.n();
+        let mut _ret = Matrix::<M, K>::new();
+        for i in 0.._m {
+            for j in 0.._n {
+                let mut _val = 0.;
+                for k in 0.._common_len {
+                    _val += self.index(i, k) * other.index(k, j);
                 }
+
+                _ret.set(i, j, _val);
             }
-
-            Some(_ret)
         }
+        _ret
     }
-
 }
 
-impl Mul for &Matrix {
-    type Output = Option<Matrix>;
 
-    fn mul(self, other: Self) -> Option<Matrix> {
-        if self.n() != other.m() {
-            None
-        }
-        else {
-            let _m = self.m();
-            let _n = other.n();
-            let _common_len = self.n();
-            let mut _ret = Matrix::new(self.m(), other.n(), false);
-            for i in 0.._m {
-                for j in 0.._n {
-                    let mut _val = 0.;
-                    for k in 0.._common_len {
-                        _val += self.index(i, k) * other.index(k, j);
-                    }
+impl<const M: usize, const N: usize, const K: usize> Mul<&Matrix<N, K>> for &Matrix<M, N> {
+    type Output = Matrix<M, K>;
 
-                    _ret.set(i, j, _val);
+    fn mul(self, other: &Matrix<N, K>) -> Self::Output {
+        let _m = self.m();
+        let _n = other.n();
+        let _common_len = self.n();
+        let mut _ret = Matrix::<M, K>::new();
+        for i in 0.._m {
+            for j in 0.._n {
+                let mut _val = 0.;
+                for k in 0.._common_len {
+                    _val += self.index(i, k) * other.index(k, j);
                 }
+
+                _ret.set(i, j, _val);
             }
-
-            Some(_ret)
         }
+        _ret
     }
 }
 
-impl Add for &Matrix {
-    type Output = Option<Matrix>;
-
-    fn add(self, other: Self) -> Option<Matrix> {
-        if self.m() != other.m() {
-            None
-        }
-        else if self.n() != other.n() {
-            None
-        }
-        else {
-            let mut _s_iter = self.iter();
-            let mut _o_iter = other.iter();
-            let mut _elements = Vec::new();
-            loop {
-                if let Some(_item) = _s_iter.next() {
-                    _elements.push(_item + _o_iter.next().unwrap())
-                }
-                else {
-                    break;
-                }
-            }
-            Matrix::from_vec(self.m(), self.n(), false, _elements)
-        }
+impl<const M: usize, const N: usize> MulAssign<f32> for Matrix<M, N> {
+    fn mul_assign(&mut self, rhs: f32) {
+        self.elements.iter_mut().for_each(|f| *f *= rhs);
     }
 }
 
 
-impl Add for Matrix {
-    type Output = Option<Self>;
-
-    fn add(self, other: Self) -> Option<Self> {
-        if self.m() != other.m() {
-            None
-        }
-        else if self.n() != other.n() {
-            None
-        }
-        else {
-            let mut _s_iter = self.iter();
-            let mut _o_iter = other.iter();
-            let mut _elements = Vec::new();
-            loop {
-                if let Some(_item) = _s_iter.next() {
-                    _elements.push(_item + _o_iter.next().unwrap())
-                }
-                else {
-                    break;
-                }
-            }
-            Matrix::from_vec(self.m(), self.n(), false, _elements)
-        }
+impl<const M: usize, const N: usize> AddAssign<f32> for Matrix<M, N> {
+    fn add_assign(&mut self, rhs: f32) {
+        self.elements.iter_mut().for_each(|f| *f += rhs);
     }
 }
 
-impl Sub for Matrix {
-    type Output = Option<Self>;
-
-    fn sub(self, other: Self) -> Option<Self> {
-        if self.m() != other.m() {
-            None
-        }
-        else if self.n() != other.n() {
-            None
-        }
-        else {
-            let mut _s_iter = self.iter();
-            let mut _o_iter = other.iter();
-            let mut _elements = Vec::new();
-            loop {
-                if let Some(_item) = _s_iter.next() {
-                    _elements.push(_item - _o_iter.next().unwrap())
-                }
-                else {
-                    break;
-                }
-            }
-            Matrix::from_vec(self.m(), self.n(), false, _elements)
-        }
+impl<const M: usize, const N: usize> AddAssign<f32> for &mut Matrix<M, N> {
+    fn add_assign(&mut self, rhs: f32) {
+        self.elements.iter_mut().for_each(|f| *f += rhs);
     }
 }
 
-impl Matrix {
-    pub fn new(m: usize, n: usize, t: bool) -> Self{
-        let mut _elements: Vec<f32> = Vec::with_capacity((m * n) as usize);
-        _elements.resize((m * n) as usize, 0.0);
+impl<const M: usize, const N: usize> Add for Matrix<M, N> {
+    type Output = Matrix<M, N>;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let mut ret = Matrix::<M, N>::new();
+        let mut i = 0;
+        ret.elements.iter_mut().for_each(|f| {
+            *f = self.elements[i] + rhs.elements[i];
+            i += 1;
+        });
+        ret
+    }
+}
+
+impl<const M: usize, const N: usize> Add for &Matrix<M, N> {
+    type Output = Matrix<M, N>;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let mut ret = Matrix::<M, N>::new();
+        let mut i = 0;
+        ret.elements.iter_mut().for_each(|f| {
+            *f = self.elements[i] + rhs.elements[i];
+            i += 1;
+        });
+        ret
+    }
+}
+
+impl<const M: usize, const N: usize> Sub for Matrix<M, N> {
+    type Output = Matrix<M, N>;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        let mut ret = Matrix::<M, N>::new();
+        let mut i = 0;
+        ret.elements.iter_mut().for_each(|f| {
+            *f = self.elements[i] - rhs.elements[i];
+            i += 1;
+        });
+        ret
+    }
+}
+
+impl<const M: usize, const N: usize> Sub for &Matrix<M, N> {
+    type Output = Matrix<M, N>;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        let mut ret = Matrix::<M, N>::new();
+        let mut i = 0;
+        ret.elements.iter_mut().for_each(|f| {
+            *f = self.elements[i] - rhs.elements[i];
+            i += 1;
+        });
+        ret
+    }
+}
+
+impl<const M: usize, const N: usize> Matrix<M, N> {
+    pub fn new() -> Self {
+
+
+        let mut _elements: Vec<f32> = Vec::with_capacity((M * N) as usize);
+        _elements.resize((M * N) as usize, 0.0);
         Self {
-            m, n, t, 
-            elements: _elements, 
+            m: M,
+            n: N,
+            elements: _elements,
         }
     }
 
-    pub fn from_vec(m: usize, n: usize, t: bool, elements: Vec<f32>) -> Option<Self>{
-        if m * n != elements.len() {
-            None
-        }
-        else {
-            Some(Self {
-                m, n, t, elements
-            })
+    pub fn from_vec(elements: Vec<f32>) -> Self {
+        Self {
+            m:M,
+            n:N,
+            elements,
         }
     }
 
@@ -201,75 +183,48 @@ impl Matrix {
     }
 
     pub fn m(&self) -> usize {
-        if self.t {
-            self.n
-        }
-        else {
-            self.m
-        }
+        self.m
     }
 
     pub fn n(&self) -> usize {
-        if self.t {
-            self.m
-        }
-        else {
-            self.n
-        }
+        self.n
     }
 
-    pub fn t(&self) -> Self {
+    pub fn t(&self) -> Matrix<N, M> {
+        let mut transposed_elems = self.elements.clone();
+        let _n = self.m;
+        let _m = self.n;
+
+        for i in 0.._m {
+            for j in 0.._n {
+                transposed_elems[i * _n + j] = self.elements[j * self.n + i];
+            }
+        }
+
+
         Matrix {
-            m: self.m,
-            n: self.n,
-            elements: self.elements.clone(),
-            t: !self.t,
+            m: _m,
+            n: _n,
+            elements: transposed_elems,
         }
     }
 
-    pub fn transform_t(&mut self) {
-        self.t = !self.t;
-    }
+    pub fn transform_t(&mut self) {}
 
-    pub fn iter(&self) -> MatrixIter {
+    pub fn iter(&self) -> MatrixIter<M, N> {
         MatrixIter::new(self, 0, 0)
     }
 
     pub fn set(&mut self, x: usize, y: usize, val: f32) {
-        let _idx;
-        if self.t {
-            _idx = y * self.n + x;
-        }
-        else {
-            _idx = x * self.n + y;
-        }
-
-        self.elements[_idx as usize] = val;
+        self.elements[x * self.n + y] = val;
     }
 
-    pub fn index(&self, x: usize, y: usize) -> f32{
-        let _idx;
-        if self.t {
-            _idx = y * self.n + x;
-        }
-        else {
-            _idx = x * self.n + y;
-        }
-
-        self.elements[_idx as usize]
+    pub fn index(&self, x: usize, y: usize) -> f32 {
+        self.elements[x * self.n + y]
     }
 
     pub fn result(&self) -> f32 {
         self.elements[0]
-    }
-
-    pub fn to_identity_matrix(num: usize) ->Self {
-        let mut ret = Self::new(num, num, false);
-        
-        for i in 0..num {
-            ret.set(i, i, 1.)
-        }
-        ret
     }
 
     pub fn mul_num(&mut self, num: f32) -> &Self {
@@ -280,7 +235,7 @@ impl Matrix {
     }
 
     pub fn add_linear(&self) -> Self {
-        let mut ret = Matrix::new(self.m() + 1, self.n() + 1, false);
+        let mut ret = Matrix::new();
 
         for i in 0..self.m() {
             for j in 0..self.n() {
@@ -292,24 +247,35 @@ impl Matrix {
         ret
     }
 
-    pub fn move_matrix(x: f32, y: f32, z: f32) -> Self {
-        Self::from_vec(4, 4, false, vec![
-            1., 0., 0., x,
-            0., 1., 0., y,
-            0., 0., 1., z,
-            0., 0., 0., 1.,
-        ]).unwrap()
+    // pub fn move_matrix(x: f32, y: f32, z: f32) -> Self {
+    //     Self::from_vec(4, 4, false, vec![
+    //         1., 0., 0., x,
+    //         0., 1., 0., y,
+    //         0., 0., 1., z,
+    //         0., 0., 0., 1.,
+    //     ]).unwrap()
+    // }
+}
+
+// only for square matrix
+impl<const M: usize> Matrix<M, M> {
+    pub fn to_identity_matrix(num: usize) -> Self {
+        let mut ret = Self::new();
+
+        for i in 0..num {
+            ret.set(i, i, 1.)
+        }
+        ret
     }
 }
 
-impl<'a> Iterator for MatrixIter<'a> {
+impl<'a, const M: usize, const N: usize> Iterator for MatrixIter<'a, M, N> {
     type Item = f32;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.x == self.iter.m() {
             None
-        }
-        else {
+        } else {
             let _ret = self.iter.index(self.x, self.y);
 
             self.y += 1;
@@ -322,5 +288,3 @@ impl<'a> Iterator for MatrixIter<'a> {
         }
     }
 }
-
-

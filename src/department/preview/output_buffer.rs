@@ -16,7 +16,7 @@ impl OutputBuffer {
         let pixels_num = (width * height) as usize;
         let mut _depth: Vec<f32> = Vec::with_capacity(pixels_num);
         _depth.resize(pixels_num, -2.);
-        
+
         let mut _display: Vec<u8> = Vec::with_capacity(pixels_num * RGB_STEP);
         _display.resize(pixels_num * RGB_STEP, 0);
 
@@ -48,16 +48,12 @@ impl OutputBuffer {
     }
 
     pub fn pos_to_pixel_pos(&self, pos: &Pos3) -> Pos3{
-        let (x, y) = (self.width as f32 / 2. * (pos.x + 1.), self.height as f32 / 2. * (1. - pos.y));
-        Pos3 {
-            x, y, z: 0.
-        }
+        let (x, y) = (self.width as f32 / 2. * (pos.x() + 1.), self.height as f32 / 2. * (1. - pos.y()));
+        Pos3::from_xyz(x, y, 0.)
     }
 
     pub fn pos_to_pixel_pos_with_z(&self, pos: &Pos3) -> Pos3{
-        let (x, y) = (self.width as f32 / 2. * (pos.x + 1.), self.height as f32 / 2. * (1. - pos.y));
-        Pos3 {
-            x, y, z: pos.z
-        }
+        let (x, y) = (self.width as f32 / 2. * (pos.x() + 1.), self.height as f32 / 2. * (1. - pos.y()));
+        Pos3::from_xyz(x,y,pos.z())
     }
 }

@@ -15,9 +15,10 @@ impl RenderObject {
         }
     }
 
-    pub fn mul_matrix(&mut self, mat: &Matrix) {
+    pub fn mul_matrix(&mut self, mat: &Matrix<3,3>) {
         for i in self.vertexes.iter_mut() {
-            *i = Pos3::from_matrix(&(mat * &i.to_matrix()).unwrap());
+            let r3:& Pos3 = i;
+            *i = r3 * mat;
         }
     }
 
