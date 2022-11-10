@@ -54,6 +54,18 @@ impl Pos3 {
         }
     }
 
+    pub fn add_vec(&mut self, vec: &Vector3) {
+        self.x += vec.x;
+        self.y += vec.y;
+        self.z += vec.z;
+    }
+
+    pub fn sub_vec(&mut self, vec: &Vector3) {
+        self.x -= vec.x;
+        self.y -= vec.y;
+        self.z -= vec.z;
+    }
+
     pub fn to_matrix(&self) -> Matrix {
         let _elements = vec![self.x, self.y, self.z, 1.];
         Matrix::from_vec(4, 1, false, _elements).unwrap()

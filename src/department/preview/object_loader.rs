@@ -37,8 +37,16 @@ impl ObjectLoader {
                 i,
                 mesh.face_arities.len()
             );
+            println!("vertex_color:{:?}", mesh.vertex_color.len());
+            println!("normals:{:?}", mesh.normals.len());
+            println!("texcoords:{:?}", mesh.texcoords.len());
+            println!("indices:{:?}", mesh.indices.len());
+            // println!("vertex_color_indices:{:?}", mesh.vertex_color_indices.len());
+            println!("texcoord_indices:{:?}", mesh.texcoord_indices.len());
+            println!("normal_indices:{:?}", mesh.normal_indices.len());
 
             let mut next_face = 0;
+            indexes.extend(mesh.indices.iter().map(|x| *x as usize));
             for face in 0..mesh.face_arities.len() {
                 let end = next_face + mesh.face_arities[face] as usize;
 
@@ -54,18 +62,18 @@ impl ObjectLoader {
                 // println!(" face[{}].indices          = {:?}", face, face_indices);
 
                 if !mesh.texcoord_indices.is_empty() {
-                    // let texcoord_face_indices = &mesh.texcoord_indices[next_face..end];
-                    // println!(
-                    //     " face[{}].texcoord_indices = {:?}",
-                    //     face, texcoord_face_indices
-                    // );
+                    let texcoord_face_indices = &mesh.texcoord_indices[next_face..end];
+                    println!(
+                        " face[{}].texcoord_indices = {:?}",
+                        face, texcoord_face_indices
+                    );
                 }
                 if !mesh.normal_indices.is_empty() {
-                    // let normal_face_indices = &mesh.normal_indices[next_face..end];
-                    // println!(
-                    //     " face[{}].normal_indices   = {:?}",
-                    //     face, normal_face_indices
-                    // );
+                    let normal_face_indices = &mesh.normal_indices[next_face..end];
+                    println!(
+                        " face[{}].normal_indices   = {:?}",
+                        face, normal_face_indices
+                    );
                 }
 
                 next_face = end;

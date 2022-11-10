@@ -12,16 +12,17 @@ use dognut::department::view::camera::Camera;
 use dognut::department::preview::object_buffer::ObjectBuffer;
 use dognut::department::preview::matrix::Matrix;
 use dognut::department::preview::vector::Vector3;
+use dognut::department::preview::position::Pos3;
 use dognut::department::preview::render_object::RenderObject;
 use dognut::department::preview::object_loader::ObjectLoader;
 
-const WIDTH: u32 = 800;
-const HEIGHT: u32 = 600;
+const WIDTH: u32 = 320;
+const HEIGHT: u32 = 240;
 
 /// Representation of the application state. In this example, a box will bounce around the screen.
 struct World {
     camera: Camera,
-    obj: RenderObject,
+    objs: Vec<RenderObject>,
     theta: f32,
 }
 
@@ -68,6 +69,25 @@ fn main() -> Result<(), Error> {
                 return;
             }
 
+            if input.key_pressed(VirtualKeyCode::A) {
+                world.camera.move_view(VirtualKeyCode::A);
+            }
+            else if input.key_pressed(VirtualKeyCode::D) {
+                world.camera.move_view(VirtualKeyCode::D);
+            }
+            else if input.key_pressed(VirtualKeyCode::W) {
+                world.camera.move_view(VirtualKeyCode::W);
+            }
+            else if input.key_pressed(VirtualKeyCode::S) {
+                world.camera.move_view(VirtualKeyCode::S);
+            }
+            else if input.key_pressed(VirtualKeyCode::Q) {
+                world.camera.move_view(VirtualKeyCode::Q);
+            }
+            else if input.key_pressed(VirtualKeyCode::E) {
+                world.camera.move_view(VirtualKeyCode::E);
+            }
+
             // Resize the window
             if let Some(size) = input.window_resized() {
                 pixels.resize_surface(size.width, size.height);
@@ -83,30 +103,16 @@ fn main() -> Result<(), Error> {
 impl World {
     /// Create a new `World` instance that can draw a moving box.
     fn new() -> Self {
-        let objs = ObjectLoader::load_render_obj("G:\\sh3dMod\\FishSoup_Pot.obj");
+        let objs = ObjectLoader::load_render_obj("G:\\sh3dMod\\link.obj");
         for i in &objs {
             println!("i len:{:?}, pos:{:?}", i.indexes.len(), i.vertexes.len());
         }
 
-        // let obj = RenderObject::from_vec(
-        //     vec![
-        //         Pos3::new(-0.5, -0.5, -7.),
-        //         Pos3::new(0.5, -0.5, -7.),
-        //         Pos3::new(0.5, -0.5, -8.),
-        //         Pos3::new(-0.5, -0.5, -8.),
-        //         Pos3::new(-0.5, 0.5, -7.),
-        //         Pos3::new(0.5, 0.5, -7.),
-        //         Pos3::new(0.5, 0.5, -8.),
-        //         Pos3::new(-0.5, 0.5, -8.),
-        //     ],
-        //     vec![0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4],
-        //     );
-        let obj = &objs[1];
-        // println!("obj poses:{:?}", obj.vertexes);
-
         Self {
-            camera: Camera::new(10., 1., -5., -10.),
-            obj: obj.clone(),
+            camera: Camera::new(10., 1., -5., -50., Pos3::new(0., 0., 0.,), 
+                                Vector3::new(0., 0., -1.), 
+                                Vector3::new(0., 1., 0.)),
+            objs: objs,
             theta: 0.,
         }
     }
@@ -123,12 +129,36 @@ impl World {
         let mut buffer = ObjectBuffer::new();
         self.theta += 0.01;
 
+        let mut scale = Matrix::to_identity_matrix(4);
+        scale.mul_num(1.);
+        scale.set(3, 3, 1.);
+
         let _move_origin = Matrix::move_matrix(-0., -0., 0.);
         let _mat = Vector3::new(1., 1., 1.).to_rotation_matrix(self.theta);
-        let _move_back = Matrix::move_matrix(0., 0., -7.5);
+        let _move_back = Matrix::move_matrix(0., 0., -0.0);
         let _mat = ((&_move_back * &_mat).unwrap() * _move_origin).unwrap();
 
-        buffer.add_object(self.obj.clone());
+        let _move = Matrix::from_vec(4, 4, false, vec![
+            1., 0., 0., 0.,
+            0., 1., 0., 0.,
+            0., 0., 1., -17.5,
+            0., 0., 0., 1.,
+        ]).unwrap();
+
+        let _mat = (&scale * &_mat).unwrap();
+        let _mat = (&_move * &_mat).unwrap();
+
+        for i in &self.objs {
+            buffer.add_object(i.clone());
+        }
+        // for _tri in buffer.iter() {
+        //     println!("tri is:{:?}", _tri);
+        //     let trans_poses:Vec<Matrix> = _tri.poses.iter().map(|x| (&_mat * &(x.to_matrix())).unwrap()).collect();
+        //     println!("trans is:{:?}", trans_poses);
+        //     
+        //     break
+        // }
+
         let _buf = self.camera.render(WIDTH, HEIGHT, &buffer, &_mat);
 
         frame.copy_from_slice(&_buf.display);
