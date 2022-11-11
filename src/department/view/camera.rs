@@ -119,8 +119,7 @@ impl Camera {
         let projection = self.perspective_projection_mat();
         let view = self.to_view_matrix();
 
-        let mvp =  model * &view;
-        let mvp =  mvp * projection;
+        let mvp =  model * &view * projection;
 
         for _tri in object_buffer.iter() {
             let trans_poses = _tri.v.iter().map(|x| &x.to_homogeneous() * &mvp);

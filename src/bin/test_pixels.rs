@@ -104,13 +104,13 @@ fn main() -> Result<(), Error> {
 impl World {
     /// Create a new `World` instance that can draw a moving box.
     fn new() -> Self {
-        let objs = ObjectLoader::load_render_obj("./model/cube.obj");
+        let objs = ObjectLoader::load_render_obj("./model/Link/link.obj");
         for i in &objs {
             println!("i len:{:?}, pos:{:?}", i.indexes.len(), i.vertexes.len());
         }
 
         Self {
-            camera: Camera::new(10., 1., -5., -50., Pos3::from_xyz(0., 0., 0.,),
+            camera: Camera::new(10., 1., -3., -20., Pos3::from_xyz(0., 0., 0.,),
                                 Vector3::from_xyz(0., 0., -1.),
                                 Vector3::from_xyz(0., 1., 0.)),
             objs: objs,
@@ -143,7 +143,7 @@ impl World {
             1., 0., 0., 0.,
             0., 1., 0., 0.,
             0., 0., 1., 0.,
-            0., 0., -17.5, 1.,
+            0., 0., -5.0, 1.,
         ]);
 
         let _mat = _mat * scale;
