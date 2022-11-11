@@ -72,6 +72,14 @@ impl<const M: usize, const N: usize, const K: usize> Mul<&Matrix<N, K>> for &Mat
     }
 }
 
+impl<const M: usize, const N: usize> Mul<f32> for Matrix<M, N> {
+    type Output = Matrix<M,N>;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        Self::Output::from_vec(self.elements.iter().map(|f| f*rhs).collect())
+    }
+}
+
 impl<const M: usize, const N: usize> MulAssign<f32> for Matrix<M, N> {
     fn mul_assign(&mut self, rhs: f32) {
         self.elements.iter_mut().for_each(|f| *f *= rhs);
@@ -259,10 +267,10 @@ impl<const M: usize, const N: usize> Matrix<M, N> {
 
 // only for square matrix
 impl<const M: usize> Matrix<M, M> {
-    pub fn to_identity_matrix(num: usize) -> Self {
+    pub fn identity_matrix() -> Self {
         let mut ret = Self::new();
 
-        for i in 0..num {
+        for i in 0..M {
             ret.set(i, i, 1.)
         }
         ret

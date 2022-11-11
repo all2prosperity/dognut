@@ -46,17 +46,17 @@ impl Camera {
             },
             VirtualKeyCode::S => {
                 let vec = self.forward.cross(&self.up);
-                self.pos.sub_vec(&self.forward);
+                self.pos -= &self.forward;
             },
             VirtualKeyCode::A => {
-                let r = self.up.to_rotation_matrix(- std::f32::consts::PI / 180.);
+                let r = self.up.rotation_matrix(- std::f32::consts::PI / 180.);
                 let vec = self.forward.cross(&self.up);
-                self.forward = Vector3::from_matrix((r * self.forward.to_linear_matrix()).unwrap());
+                self.forward = &self.forward * &r;
             },
             VirtualKeyCode::D => {
-                let r = self.up.to_rotation_matrix(std::f32::consts::PI / 180.);
+                let r = self.up.rotation_matrix(std::f32::consts::PI / 180.);
                 let vec = self.forward.cross(&self.up);
-                self.forward = Vector3::from_matrix((r * self.forward.to_linear_matrix()).unwrap());
+                self.forward = &self.forward * &r;
             },
             _ => {},
         };
@@ -91,18 +91,18 @@ impl Camera {
     }
 
     pub fn to_view_matrix(&self) -> HMat{
-        let t = Matrix::from_vec(vec![
-            1., 0., 0., -self.pos.x,
-            0., 1., 0., -self.pos.y,
-            0., 0., 1., -self.pos.z,
+        let t = HMat::from_vec(vec![
+            1., 0., 0., -self.pos.x(),
+            0., 1., 0., -self.pos.y(),
+            0., 0., 1., -self.pos.z(),
             0., 0., 0., 1.,
         ]);
         let g_t = self.forward.cross(&self.up);
 
-        let mut r = Matrix::from_vec( vec![
-            g_t.x, self.up.x, -self.forward.x, 0.,
-            g_t.y, self.up.y, -self.forward.y, 0.,
-            g_t.z, self.up.z, -self.forward.z, 0.,
+        let mut r = HMat::from_vec( vec![
+            g_t.x(), self.up.x(), -self.forward.x(), 0.,
+            g_t.y(), self.up.y(), -self.forward.y(), 0.,
+            g_t.z(), self.up.z(), -self.forward.z(), 0.,
             0., 0., 0., 1.,
         ]);
         let rt = r.t();
@@ -116,8 +116,8 @@ impl Camera {
         let projection = self.to_transform_matrix();
         let view = self.to_view_matrix();
 
-        let mvp = (&view * model).unwrap();
-        let mvp = (&projection * &mvp).unwrap();
+        let mvp = &view * model;
+        let mvp = &projection * &mvp;
 
         for _tri in object_buffer.iter() {
             let trans_poses = _tri.v.iter().map(|x| &mvp * &x.to_homogeneous());

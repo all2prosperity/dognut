@@ -1,5 +1,5 @@
 use std::borrow::BorrowMut;
-use std::ops::AddAssign;
+use std::ops::{AddAssign, SubAssign};
 use super::matrix::Matrix;
 
 pub type Vector3 = Matrix<1,3>;
@@ -16,6 +16,14 @@ impl AddAssign<&Vector3> for Vector3 {
     fn add_assign(&mut self, rhs: &Self) {
         for i  in 0..3 {
             self.elements[i] += rhs.elements[i];
+        }
+    }
+}
+
+impl SubAssign<&Vector3> for Vector3 {
+    fn sub_assign(&mut self, rhs: &Vector3) {
+        for i in 0..3 {
+            self.elements[i] -= rhs.elements[i];
         }
     }
 }
@@ -67,21 +75,19 @@ impl Vector3 {
         self
     }
 
-    // pub fn to_rotation_matrix(&self, theta: f32) -> Self{
-    //     let mut _clone = self.clone();
-    //     _clone.norm();
-    //     let n = _clone.to_matrix();
-    //
-    //     let cos = theta.cos();
-    //     let mut mat1 = Matrix::to_identity_matrix(3);
-    //     mat1.mul_num(cos);
-    //
-    //     let mut mat2 = (&n * &n.t()).unwrap();
-    //     mat2.mul_num(1. - cos);
-    //
-    //     let mut mat3 = _clone.to_cross_matrix();
-    //     mat3.mul_num(theta.sin());
-    //     let first = (&mat1 + &mat2).unwrap();
-    //     (&first + &mat3).unwrap().add_linear()
-    // }
+    pub fn rotation_matrix(&self, theta: f32) -> Matrix<3,3>{
+        let mut vt = self.clone();
+        let v = vt.norm();
+        let (sin_t, cos_t) = theta.sin_cos();
+
+        let (x, y, z) = (v.x(), v.y(), v.z());
+        let cminus1 = 1. - cos_t;
+
+        Matrix::<3,3>::from_vec(vec![
+            x.powi(2) * cminus1 + cos_t, x * y * cminus1 - z * sin_t, x * z * cminus1 + y * sin_t,
+            x * y * cminus1 + z * sin_t, y.powi(2) * cminus1 + cos_t, y * z * cminus1 - x * sin_t,
+            x * z * cminus1 - y * sin_t, y * z * cminus1 + x*sin_t, z.powi(2) * cminus1  + cos_t
+            ]
+        )
+    }
 }
