@@ -255,14 +255,14 @@ impl<const M: usize, const N: usize> Matrix<M, N> {
         ret
     }
 
-    // pub fn move_matrix(x: f32, y: f32, z: f32) -> Self {
-    //     Self::from_vec(4, 4, false, vec![
-    //         1., 0., 0., x,
-    //         0., 1., 0., y,
-    //         0., 0., 1., z,
-    //         0., 0., 0., 1.,
-    //     ]).unwrap()
-    // }
+    pub fn translate_matrix(x: f32, y: f32, z: f32) -> Self {
+        Self::from_vec(vec![
+            1., 0., 0., x,
+            0., 1., 0., y,
+            0., 0., 1., z,
+            0., 0., 0., 1.,
+        ])
+    }
 }
 
 // only for square matrix

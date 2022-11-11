@@ -74,20 +74,4 @@ impl Vector3 {
         self.elements[2] = self.elements[2] / mag;
         self
     }
-
-    pub fn rotation_matrix(&self, theta: f32) -> Matrix<3,3>{
-        let mut vt = self.clone();
-        let v = vt.norm();
-        let (sin_t, cos_t) = theta.sin_cos();
-
-        let (x, y, z) = (v.x(), v.y(), v.z());
-        let cminus1 = 1. - cos_t;
-
-        Matrix::<3,3>::from_vec(vec![
-            x.powi(2) * cminus1 + cos_t, x * y * cminus1 - z * sin_t, x * z * cminus1 + y * sin_t,
-            x * y * cminus1 + z * sin_t, y.powi(2) * cminus1 + cos_t, y * z * cminus1 - x * sin_t,
-            x * z * cminus1 - y * sin_t, y * z * cminus1 + x*sin_t, z.powi(2) * cminus1  + cos_t
-            ]
-        )
-    }
 }

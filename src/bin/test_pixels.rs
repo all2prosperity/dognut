@@ -8,6 +8,7 @@ use winit::event::{Event, VirtualKeyCode};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
+use dognut::department::preview::homo_transformation::HomoTransform;
 use dognut::department::view::camera::Camera;
 use dognut::department::preview::object_buffer::ObjectBuffer;
 use dognut::department::preview::matrix::Matrix;
@@ -103,15 +104,15 @@ fn main() -> Result<(), Error> {
 impl World {
     /// Create a new `World` instance that can draw a moving box.
     fn new() -> Self {
-        let objs = ObjectLoader::load_render_obj("G:\\sh3dMod\\link.obj");
+        let objs = ObjectLoader::load_render_obj("./model/cube.obj");
         for i in &objs {
             println!("i len:{:?}, pos:{:?}", i.indexes.len(), i.vertexes.len());
         }
 
         Self {
-            camera: Camera::new(10., 1., -5., -50., Pos3::new(0., 0., 0.,), 
-                                Vector3::new(0., 0., -1.), 
-                                Vector3::new(0., 1., 0.)),
+            camera: Camera::new(10., 1., -5., -50., Pos3::from_xyz(0., 0., 0.,),
+                                Vector3::from_xyz(0., 0., -1.),
+                                Vector3::from_xyz(0., 1., 0.)),
             objs: objs,
             theta: 0.,
         }
@@ -129,24 +130,24 @@ impl World {
         let mut buffer = ObjectBuffer::new();
         self.theta += 0.01;
 
-        let mut scale = Matrix::to_identity_matrix(4);
+        let mut scale = Matrix::<4,4>::identity_matrix();
         scale.mul_num(1.);
         scale.set(3, 3, 1.);
 
-        let _move_origin = Matrix::move_matrix(-0., -0., 0.);
-        let _mat = Vector3::new(1., 1., 1.).to_rotation_matrix(self.theta);
-        let _move_back = Matrix::move_matrix(0., 0., -0.0);
-        let _mat = ((&_move_back * &_mat).unwrap() * _move_origin).unwrap();
+        let _move_origin = HomoTransform::translation((-0., -0., 0.));
+        let _mat = HomoTransform::rotation_matrix(&Vector3::from_xyz(1., 1., 1.), self.theta);
+        let _move_back = HomoTransform::translation((0., 0., -0.0));
+        let _mat = _move_origin * _mat * _move_back;
 
-        let _move = Matrix::from_vec(4, 4, false, vec![
+        let _move = Matrix::<4,4>::from_vec(vec![
             1., 0., 0., 0.,
             0., 1., 0., 0.,
-            0., 0., 1., -17.5,
-            0., 0., 0., 1.,
-        ]).unwrap();
+            0., 0., 1., 0.,
+            0., 0., -17.5, 1.,
+        ]);
 
-        let _mat = (&scale * &_mat).unwrap();
-        let _mat = (&_move * &_mat).unwrap();
+        let _mat = _mat * scale;
+        let _mat = _mat * _move;
 
         for i in &self.objs {
             buffer.add_object(i.clone());

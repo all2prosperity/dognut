@@ -17,7 +17,8 @@ impl ObjectLoader {
             .expect("Failed to OBJ load file");
 
         // Note: If you don't mind missing the materials, you can generate a default.
-        let materials = materials.expect("Failed to load MTL file");
+
+        let materials = materials.unwrap_or_default();
 
         println!("Number of models          = {}", models.len());
         println!("Number of materials       = {}", materials.len());

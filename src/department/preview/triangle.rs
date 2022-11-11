@@ -111,7 +111,7 @@ impl Triangle {
         (a, b, c, d)
     }
 
-    pub fn get_depth_matrix(&self) -> Matrix<1,4> {
+    pub fn get_depth_matrix(&self) -> Matrix<4,1> {
         let (a, b, c, d) = self.get_surface_equation();
         Matrix::from_vec( vec![-a / c, -b / c, 0., -d / c])
     }

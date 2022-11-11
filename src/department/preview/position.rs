@@ -43,18 +43,18 @@ impl Pos3 {
         Pos3::from_vec(vec![x, y, z])
     }
 
-    pub fn from_matrix(matrix: &Matrix<4, 1>) -> Self {
+    pub fn from_matrix(matrix: &Matrix<1, 4>) -> Self {
         let (x, y, z, w) = (
             matrix.index(0, 0),
-            matrix.index(1, 0),
-            matrix.index(2, 0),
-            matrix.index(3, 0),
+            matrix.index(0, 1),
+            matrix.index(0, 2),
+            matrix.index(0, 3),
         );
 
         Self::from_xyz(x / w, y / w, z / w)
     }
 
-    pub fn to_homogeneous(&self) -> Matrix<4, 1> {
+    pub fn to_homogeneous(&self) -> Matrix<1, 4> {
         let _elements = vec![self.x(), self.y(), self.z(), 1.];
         Matrix::from_vec(_elements)
     }
