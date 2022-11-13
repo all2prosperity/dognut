@@ -11,6 +11,8 @@ pub struct Matrix<const M: usize, const N: usize> {
     pub elements: Vec<f32>,
 }
 
+pub type HMat = Matrix<4,4>;
+
 pub struct MatrixIter<'a, const M: usize, const N: usize> {
     iter: &'a Matrix<M, N>,
     x: usize,

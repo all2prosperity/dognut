@@ -4,3 +4,4 @@ pub mod net;
 mod control;
 pub mod tui;
 pub mod pipeline;
+pub mod model;

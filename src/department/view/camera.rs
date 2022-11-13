@@ -1,9 +1,9 @@
 use winit::event::VirtualKeyCode;
 use crate::department::preview::homo_transformation::{HomoTransform, Transform};
 use crate::department::preview::position::Pos3;
-use crate::department::preview::matrix::Matrix;
+use crate::department::preview::matrix::{HMat, Matrix};
 use crate::department::preview::object_buffer::ObjectBuffer;
-use crate::department::preview::triangle::Triangle;
+use crate::department::model::triangle::Triangle;
 use crate::department::preview::output_buffer::OutputBuffer;
 use crate::department::preview::vector::Vector3;
 
@@ -15,12 +15,12 @@ pub struct Camera {
     pos: Pos3,
     forward: Vector3,
     up: Vector3,
+    perspective_projection: HMat
 }
-
-type HMat = Matrix<4,4>;
 
 impl Camera {
     pub fn new(fov_y: f32, ratio: f32, n: f32, z: f32, pos: Pos3, forward: Vector3, up: Vector3) -> Self{
+        let persp =  Camera::perspective_projection_mat(fov_y, ratio, n, z);
         Self {
             fov_y,
             ratio,
@@ -29,6 +29,7 @@ impl Camera {
             pos,
             forward,
             up,
+            perspective_projection: persp,
         }
     }
 
@@ -64,16 +65,16 @@ impl Camera {
         };
     }
 
-    pub fn perspective_projection_mat(&self) -> HMat {
-        let fov_x = self.fov_y * self.ratio;
-        let (n, f, l, r, b, t) = (self.n, self.z, -fov_x / 2., fov_x / 2., -self.fov_y / 2., self.fov_y / 2.);
+    pub fn perspective_projection_mat(fov_y: f32, ratio: f32, n: f32, z: f32,) -> HMat {
+        let fov_x = fov_y * ratio;
+        let (n, f, l, r, b, t) = (n, z, -fov_x / 2., fov_x / 2., -fov_y / 2., fov_y / 2.);
 
         let persp = HMat::from_vec(
                          vec![
-                            self.n, 0., 0., 0.,
-                            0., self.n, 0., 0.,
-                            0., 0., self.n + self.z, 1.,
-                            0., 0., - self.n * self.z, 0.,
+                            n, 0., 0., 0.,
+                            0., n, 0., 0.,
+                            0., 0., n + z, 1.,
+                            0., 0., -n * z, 0.,
                          ]);
 
         let ort_scale = HMat::from_vec(vec![
@@ -116,15 +117,15 @@ impl Camera {
     //pub fn render(&self, width: u32, height: u32, object_buffer: &ObjectBuffer, view: &HMat) -> OutputBuffer {
     pub fn render(&self, width: u32, height: u32, object_buffer: &ObjectBuffer, model: &HMat) -> OutputBuffer {
         let mut _out = OutputBuffer::new(width, height);
-        let projection = self.perspective_projection_mat();
+
         let view = self.to_view_matrix();
 
-        let mvp =  model * &view * projection;
+        let mvp = &(model * &view) * &self.perspective_projection;
 
         for _tri in object_buffer.iter() {
             let trans_poses = _tri.v.iter().map(|x| &x.to_homogeneous() * &mvp);
-            let trans_poses = trans_poses.map(|x| Pos3::from_matrix(&x));
-            for pos in trans_poses.clone() {
+            let trans_poses:Vec<Pos3> = trans_poses.map(|x| Pos3::from_matrix(&x)).collect();
+            for  pos in &trans_poses {
                 if pos.x() < -1. || pos.x() > 1. || pos.y() > 1. || pos.y() < -1.{
                     println!("will return: {:?}", pos);
                     return _out;
@@ -132,11 +133,11 @@ impl Camera {
             }
 
             let surface_tri_zero = Triangle::from_vec(
-                trans_poses.clone().map(|x| _out.pos_to_pixel_pos(&x)).collect()
+                trans_poses.iter().map(|x| _out.pos_to_pixel_pos(&x)).collect()
                 );
 
             let surface_tri_tilt = Triangle::from_vec(
-                trans_poses.map(|x| _out.pos_to_pixel_pos_with_z(&x)).collect()
+                trans_poses.iter().map(|x| _out.pos_to_pixel_pos_with_z(&x)).collect()
                 );
 
             // println!("tilt:{:?}", surface_tri_tilt);

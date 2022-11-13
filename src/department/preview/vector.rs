@@ -2,6 +2,29 @@ use std::borrow::BorrowMut;
 use std::ops::{AddAssign, SubAssign};
 use super::matrix::Matrix;
 
+pub type Vec2 = Matrix<1, 2>;
+
+
+impl Default for Vec2 {
+    fn default() -> Self {
+        Vec2{
+            m:1,
+            n:2,
+            elements: vec![0., 0.]
+        }
+    }
+}
+
+impl Vec2 {
+    pub fn from_xy(x: f32, y:f32) -> Self {
+        Vec2{
+            m:1,
+            n:2,
+            elements: vec![x,y]
+        }
+    }
+}
+
 pub type Vector3 = Matrix<1,3>;
 
 impl AddAssign for Vector3 {

@@ -1,13 +1,15 @@
-use super::position::Pos3;
-use super::vector::Vector3;
-use super::matrix::Matrix;
-use super::render_object::RenderObject;
+use std::collections::BTreeMap;
+use crate::department::preview::position::Pos3;
+use crate::department::preview::vector::{Vec2, Vector3};
+use crate::department::preview::matrix::Matrix;
+use crate::department::preview::render_object::RenderObject;
 
 #[derive(Debug)]
 pub struct Triangle {
     pub v: Vec<Pos3>,
     pub color: Vec<Pos3>,
     pub normal: Vec<Pos3>,
+    pub tex_coords:Vec<Vec2>,
 }
 
 pub fn max(l: f32, r: f32) -> f32{
@@ -34,6 +36,7 @@ impl Triangle {
             v: vec![pos1, pos2, pos3],
             color: vec![Pos3::default();3],
             normal: vec![Pos3::default();3],
+            tex_coords: vec![Vec2::default(); 3]
         }
     }
 
@@ -42,6 +45,7 @@ impl Triangle {
             v: vec,
             color: vec![Pos3::default();3],
             normal: vec![Pos3::default();3],
+            tex_coords: vec![Vec2::default(); 3]
         }
     }
 
@@ -140,6 +144,10 @@ impl Triangle {
 
     pub fn to_render_obj(&self) -> RenderObject {
         RenderObject::from_vec(self.v.clone(), vec![0, 1, 2])
+    }
+
+    fn barycentric_2d(&self, p:(f32, f32)) {
+
     }
 }
 

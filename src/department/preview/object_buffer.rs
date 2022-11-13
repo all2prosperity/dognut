@@ -1,4 +1,4 @@
-use super::triangle::Triangle;
+use crate::department::model::triangle::Triangle;
 use super::render_object::RenderObject;
 use super::position::Pos3;
 

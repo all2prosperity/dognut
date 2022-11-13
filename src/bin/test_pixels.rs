@@ -11,7 +11,7 @@ use winit_input_helper::WinitInputHelper;
 use dognut::department::preview::homo_transformation::HomoTransform;
 use dognut::department::view::camera::Camera;
 use dognut::department::preview::object_buffer::ObjectBuffer;
-use dognut::department::preview::matrix::Matrix;
+use dognut::department::preview::matrix::{HMat, Matrix};
 use dognut::department::preview::vector::Vector3;
 use dognut::department::preview::position::Pos3;
 use dognut::department::preview::render_object::RenderObject;
@@ -139,7 +139,7 @@ impl World {
         let _move_back = HomoTransform::translation((0., 0., -0.0));
         let _mat = _move_origin * _mat * _move_back;
 
-        let _move = Matrix::<4,4>::from_vec(vec![
+        let _move = HMat::from_vec(vec![
             1., 0., 0., 0.,
             0., 1., 0., 0.,
             0., 0., 1., 0.,

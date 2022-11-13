@@ -1,4 +1,4 @@
-use crate::department::preview::triangle::Triangle;
+use crate::department::model::triangle::Triangle;
 use crate::department::preview::vector::Vector3;
 
 #[derive(Debug)]
