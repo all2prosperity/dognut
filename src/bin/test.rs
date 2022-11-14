@@ -18,6 +18,15 @@ fn main() {
     d1_t  *= 3.;
     d1_t.debug();
 
+
+    let origin = Matrix::<3, 3>::from_vec(vec![
+        1., 2., 3.,
+        4., 5., 6.,
+        7., 8., 10.,
+    ]);
+
+    origin.inverse_matrix();
+
     // let _vector1 = Vector3::new(0., 0., 1.);
     // let _vector3 = Vector3::new(0., 1., 0.);
     // let mut v1 = Vector3::new(1.24,10.8, 9.6);
