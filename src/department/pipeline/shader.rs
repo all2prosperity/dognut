@@ -18,6 +18,7 @@ impl LambertianShader {
         if l < 0. {
             l = 0.;
         }
-        tri.get_color(x, y) * l
+        let bar = tri.barycentric_2d((x as f32, y as f32));
+        tri.get_color(&bar) * l
     }
 }

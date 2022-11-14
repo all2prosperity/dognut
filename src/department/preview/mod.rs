@@ -6,3 +6,4 @@ pub mod output_buffer;
 pub mod render_object;
 pub mod object_loader;
 pub mod homo_transformation;
+pub mod matrix_builder;

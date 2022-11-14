@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use log::__private_api_log;
 use crate::department::preview::position::Pos3;
 use crate::department::preview::vector::{Vec2, Vector3};
 use crate::department::preview::matrix::Matrix;
@@ -7,8 +8,8 @@ use crate::department::preview::render_object::RenderObject;
 #[derive(Debug)]
 pub struct Triangle {
     pub v: Vec<Pos3>,
-    pub color: Vec<Pos3>,
-    pub normal: Vec<Pos3>,
+    pub color: Vec<Vector3>,
+    pub normal: Vec<Vector3>,
     pub tex_coords:Vec<Vec2>,
 }
 
@@ -146,14 +147,26 @@ impl Triangle {
         RenderObject::from_vec(self.v.clone(), vec![0, 1, 2])
     }
 
-    fn barycentric_2d(&self, p:(f32, f32)) {
+    fn unpack_v(&self) -> (&Vector3, &Vector3, &Vector3) {
+        (&self.v[0], &self.v[1], &self.v[2])
+    }
 
+    pub fn barycentric_2d(&self, p:(f32, f32)) ->Vector3 {
+        let (mut alpha, mut beta,mut gamma) = (0f32, 0f32, 0f32);
+        let (v1, v2, v3) = self.unpack_v();
+
+        let denominator = (v2.y() - v3.y()) * (v1.x() - v3.x()) + (v3.x() - v2.x()) * (v1.y() - v3.y());
+
+        alpha = ((v2.y() - v3.y()) * (p.0 - v3.x()) + (v3.x() - v2.x()) * (p.1 -v3.y())  ) / denominator;
+        beta = ((v3.y() - v1.y()) * (p.0 - v3.x()) + (v1.x() - v3.x()) * (p.1 -v3.y())  ) / denominator;
+        gamma = 1. - alpha - beta;
+        Vector3::from_xyz(alpha, beta, gamma)
     }
 }
 
 impl Triangle {
-    pub fn get_color(&self, x: usize, y:usize) -> Vector3 {
-        return Vector3::from_xyz(0., 0., 0.);
+    pub fn get_color(&self, bary:&Vector3) -> Vector3 {
+        Vector3::from_xyz(0.9, 0.9, 0.9)
     }
 
     pub fn get_normal(&self, x: usize, y:usize) -> Vector3 {

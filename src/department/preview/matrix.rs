@@ -212,7 +212,7 @@ impl<const M: usize, const N: usize> Matrix<M, N> {
         }
 
 
-        Matrix {
+        Matrix::<N, M> {
             m: _m,
             n: _n,
             elements: transposed_elems,
