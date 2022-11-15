@@ -8,7 +8,7 @@ use crate::department::preview::render_object::RenderObject;
 #[derive(Debug)]
 pub struct Triangle {
     pub v: Vec<Pos3>,
-    pub color: Vec<Vector3>,
+    pub color: Matrix<3,3>,
     pub normal: Vec<Vector3>,
     pub tex_coords:Vec<Vec2>,
 }
@@ -33,9 +33,12 @@ pub fn min(l: f32, r: f32) -> f32 {
 
 impl Triangle {
     pub fn new(pos1: Pos3, pos2: Pos3, pos3: Pos3) -> Self {
+        let c = {
+            Matrix::from_rows({vec![Vector3::default();3]})
+        };
         Self {
             v: vec![pos1, pos2, pos3],
-            color: vec![Pos3::default();3],
+            color: c,
             normal: vec![Pos3::default();3],
             tex_coords: vec![Vec2::default(); 3]
         }
@@ -44,7 +47,7 @@ impl Triangle {
     pub fn from_vec(vec: Vec<Pos3>) -> Self {
         Self {
             v: vec,
-            color: vec![Pos3::default();3],
+            color: {Matrix::from_rows({vec![Vector3::default();3]})},
             normal: vec![Pos3::default();3],
             tex_coords: vec![Vec2::default(); 3]
         }
@@ -166,7 +169,12 @@ impl Triangle {
 
 impl Triangle {
     pub fn get_color(&self, bary:&Vector3) -> Vector3 {
-        Vector3::from_xyz(0.9, 0.9, 0.9)
+        let color_mat = Matrix::<3,3>::from_rows({
+            vec![Vector3::from_xyz(255.,0.,0.),
+            Vector3::from_xyz(0., 255., 0.),
+            Vector3::from_xyz(0., 0., 255.)]
+        });
+        bary * &color_mat
     }
 
     pub fn get_normal(&self, x: usize, y:usize) -> Vector3 {

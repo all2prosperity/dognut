@@ -170,6 +170,18 @@ impl<const M: usize, const N: usize> Matrix<M, N> {
         }
     }
 
+    pub fn from_rows(mut rows:Vec<Matrix<1, N>>) -> Matrix<M, N> {
+        let mut elem = Vec::<f32>::with_capacity(M*N);
+        for i in 0..rows.len() {
+           elem.append( & mut rows[i].elements)
+        }
+        Self {
+            m: M,
+            n: N,
+            elements: elem,
+        }
+    }
+
     pub fn from_vec(elements: Vec<f32>) -> Self {
         Self {
             m:M,
