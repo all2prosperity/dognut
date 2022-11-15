@@ -8,7 +8,7 @@ use winit::event::{Event, VirtualKeyCode};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
-use dognut::department::preview::homo_transformation::HomoTransform;
+use dognut::department::preview::homo_transformation::{HomoTransform, Transform};
 use dognut::department::view::camera::Camera;
 use dognut::department::preview::object_buffer::ObjectBuffer;
 use dognut::department::preview::matrix::{HMat, Matrix};
@@ -104,13 +104,13 @@ fn main() -> Result<(), Error> {
 impl World {
     /// Create a new `World` instance that can draw a moving box.
     fn new() -> Self {
-        let objs = ObjectLoader::load_render_obj("./model/Link/link.obj");
+        let objs = ObjectLoader::load_render_obj("./model/cube.obj");
         for i in &objs {
             println!("i len:{:?}, pos:{:?}", i.indexes.len(), i.vertexes.len());
         }
 
         Self {
-            camera: Camera::new(10., 1., -3., -20., Pos3::from_xyz(0., 0., 0.,),
+            camera: Camera::new(45., (WIDTH / HEIGHT) as f32, -3., -50., Pos3::from_xyz(0., 0., 0.,),
                                 Vector3::from_xyz(0., 0., -1.),
                                 Vector3::from_xyz(0., 1., 0.)),
             objs: objs,
@@ -128,16 +128,17 @@ impl World {
     fn draw(&mut self, frame: &mut [u8]) {
         profiling::scope!("Main Thread");
         let mut buffer = ObjectBuffer::new();
-        self.theta += 0.01;
+        self.theta += 0.02;
 
         let mut scale = Matrix::<4,4>::identity_matrix();
         scale.mul_num(1.);
         scale.set(3, 3, 1.);
 
         let _move_origin = HomoTransform::translation((-0., -0., 0.));
-        let _mat = HomoTransform::rotation_matrix(&Vector3::from_xyz(1., 1., 1.), self.theta);
+        let rotate = Transform::rotation_mat(&Vector3::from_xyz(0.,0.,0.), self.theta);
         let _move_back = HomoTransform::translation((0., 0., -0.0));
-        let _mat = _move_origin * _mat * _move_back;
+        let _mat = _move_origin * rotate * _move_back;
+        let _mat = HomoTransform::identity_matrix();
 
         let _move = HMat::from_vec(vec![
             1., 0., 0., 0.,

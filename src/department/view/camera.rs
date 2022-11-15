@@ -1,3 +1,4 @@
+use std::f32::consts::PI;
 use winit::event::VirtualKeyCode;
 use crate::department::preview::homo_transformation::{HomoTransform, Transform};
 use crate::department::preview::position::Pos3;
@@ -12,7 +13,7 @@ pub struct Camera {
     ratio: f32,
     n: f32,
     z: f32,
-    pos: Pos3,
+    eye: Pos3,
     forward: Vector3,
     up: Vector3,
     perspective_projection: HMat
@@ -26,7 +27,7 @@ impl Camera {
             ratio,
             n,
             z,
-            pos,
+            eye: pos,
             forward,
             up,
             perspective_projection: persp,
@@ -37,44 +38,54 @@ impl Camera {
         match input {
             VirtualKeyCode::Q => {
                 let vec = self.up.cross(&self.forward);
-                self.pos += vec;
+                self.eye += vec;
             },
             VirtualKeyCode::E => {
                 let vec = self.forward.cross(&self.up);
-                self.pos += vec;
+                self.eye += vec;
             },
             VirtualKeyCode::W => {
-                self.pos += &self.forward;
+                self.eye += &self.forward;
             },
             VirtualKeyCode::S => {
                 let vec = self.forward.cross(&self.up);
-                self.pos -= &self.forward;
+                self.eye -= &self.forward;
             },
             VirtualKeyCode::A => {
-                let r = Transform::rotation_matrix(&self.up, -std::f32::consts::PI / 180.);
-                let vec = self.forward.cross(&self.up);
-
-                self.forward = &self.forward * &r;
+                // let r = Transform::rotation_matrix(&self.up, -std::f32::consts::PI / 180.);
+                // let vec = self.forward.cross(&self.up);
+                //
+                // self.forward = &self.forward * &r;
             },
             VirtualKeyCode::D => {
-                let r = Transform::rotation_matrix(&self.up, std::f32::consts::PI / 180.);
-                let vec = self.forward.cross(&self.up);
-                self.forward = &self.forward * &r;
+                // let r = Transform::rotation_matrix(&self.up, std::f32::consts::PI / 180.);
+                // let vec = self.forward.cross(&self.up);
+                // self.forward = &self.forward * &r;
             },
             _ => {},
         };
     }
 
-    pub fn perspective_projection_mat(fov_y: f32, ratio: f32, n: f32, z: f32,) -> HMat {
-        let fov_x = fov_y * ratio;
-        let (n, f, l, r, b, t) = (n, z, -fov_x / 2., fov_x / 2., -fov_y / 2., fov_y / 2.);
+    fn calc_lrtbnf(half_fov_y_degree: f32, ratio: f32, n: f32, f: f32) -> (f32, f32, f32, f32, f32, f32) {
+        let tan_y = ((half_fov_y_degree / 180.) * PI).tan();
+        let y = ((n * tan_y) * 2.).abs();
+        let x = y * ratio;
+
+        (-x/2., x/2., y/2., -y/2., n, f)
+    }
+
+    pub fn perspective_projection_mat(fov_y: f32, ratio: f32, n: f32, z: f32) -> HMat {
+        // let tan_camera =  ((fov_y / 180.) * PI).tan();
+        // let y = (n * tan_camera) * 2.;
+        // let fov_x = fov_y * ratio;
+        let (l, r, t, b, n, f) = Camera::calc_lrtbnf(fov_y / 2., ratio, n , z);
 
         let persp = HMat::from_vec(
                          vec![
                             n, 0., 0., 0.,
                             0., n, 0., 0.,
-                            0., 0., n + z, 1.,
-                            0., 0., -n * z, 0.,
+                            0., 0., n + f, 1.,
+                            0., 0., -n * f, 0.,
                          ]);
 
         let ort_scale = HMat::from_vec(vec![
@@ -95,18 +106,24 @@ impl Camera {
     }
 
     pub fn to_view_matrix(&self) -> HMat{
+        let mut fwd = self.forward.clone();
+        fwd.norm();
+        let w =  fwd * -1f32;
+        let mut u = self.up.cross(&self.forward);
+        u.norm();
+        let v = w.cross(&u);
         let t = HMat::from_vec(vec![
             1., 0., 0., 0.,
             0., 1., 0., 0.,
             0., 0., 1., 0.,
-            -self.pos.x(), -self.pos.y(), -self.pos.z(), 1.,
+            -self.eye.x(), -self.eye.y(), -self.eye.z(), 1.,
         ]);
-        let g_t = self.forward.cross(&self.up);
+        //let g_t = self.forward.cross(&self.up);
 
         let r = HMat::from_vec( vec![
-            g_t.x(), self.up.x(), -self.forward.x(), 0.,
-            g_t.y(), self.up.y(), -self.forward.y(), 0.,
-            g_t.z(), self.up.z(), -self.forward.z(), 0.,
+            u.x(), v.x(), w.x(), 0.,
+            u.y(), v.y(), w.y(), 0.,
+            u.z(), v.z(), w.z(), 0.,
             0., 0., 0., 1.,
         ]);
 
