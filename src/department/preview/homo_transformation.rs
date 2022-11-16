@@ -1,3 +1,4 @@
+use std::convert::identity;
 use crate::department::preview::matrix::Matrix;
 use crate::department::preview::vector::Vector3;
 
@@ -33,6 +34,15 @@ impl HomoTransform {
             0.,0.,0.,1.
         ]
         )
+    }
+
+    pub fn scale(factor: (f32, f32, f32)) -> Self {
+        let mut s = Self::identity_matrix();
+        s.set(0,0,factor.0);
+        s.set(1,1,factor.1);
+        s.set(2,2, factor.2);
+
+        s
     }
 }
 

@@ -104,7 +104,7 @@ fn main() -> Result<(), Error> {
 impl World {
     /// Create a new `World` instance that can draw a moving box.
     fn new() -> Self {
-        let objs = ObjectLoader::load_render_obj("./model/Link/link.obj");
+        let objs = ObjectLoader::load_render_obj("./model/Link/link_adult.obj");
         for i in &objs {
             println!("i len:{:?}, pos:{:?}", i.indexes.len(), i.vertexes.len());
         }
@@ -130,7 +130,8 @@ impl World {
         let mut buffer = ObjectBuffer::new();
         self.theta += 0.02;
 
-        let mut scale = Matrix::<4,4>::identity_matrix();
+        // link_adult is too big
+        let mut scale = HomoTransform::scale((0.01, 0.01, 0.01));
         scale.mul_num(1.);
         scale.set(3, 3, 1.);
 
@@ -139,7 +140,7 @@ impl World {
         // let _move_back = HomoTransform::translation((0., 0., -0.0));
         // let _mat = _move_origin * rotate * _move_back;
         // let _mat = HomoTransform::identity_matrix();
-        let _mat = rotate;
+        let _mat = scale * rotate;
 
         let _move = HMat::from_vec(vec![
             1., 0., 0., 0.,
@@ -148,8 +149,8 @@ impl World {
             0., 0., -5.0, 1.,
         ]);
 
-        let _mat = _mat * scale;
-        let _mat = _mat * _move;
+        //let _mat = _mat * scale;
+        //let _mat = _mat * _move;
 
         for i in &self.objs {
             buffer.add_object(i.clone());
