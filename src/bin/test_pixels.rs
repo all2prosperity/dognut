@@ -104,15 +104,15 @@ fn main() -> Result<(), Error> {
 impl World {
     /// Create a new `World` instance that can draw a moving box.
     fn new() -> Self {
-        let objs = ObjectLoader::load_render_obj("./model/cube.obj");
+        let objs = ObjectLoader::load_render_obj("./model/Link/link.obj");
         for i in &objs {
             println!("i len:{:?}, pos:{:?}", i.indexes.len(), i.vertexes.len());
         }
 
         Self {
-            camera: Camera::new(45., (WIDTH / HEIGHT) as f32, -3., -50., Pos3::from_xyz(0., 0., 0.,),
+            camera: Camera::new(45., (WIDTH / HEIGHT) as f32, -5., -50., Pos3::from_xyz(0., 0., 10.,),
                                 Vector3::from_xyz(0., 0., -1.),
-                                Vector3::from_xyz(0., 1., 0.)),
+                                Vector3::from_xyz(0., -1., 0.)),
             objs: objs,
             theta: 0.,
         }
@@ -135,10 +135,11 @@ impl World {
         scale.set(3, 3, 1.);
 
         let _move_origin = HomoTransform::translation((-0., -0., 0.));
-        let rotate = Transform::rotation_mat(&Vector3::from_xyz(0.,0.,0.), self.theta);
-        let _move_back = HomoTransform::translation((0., 0., -0.0));
-        let _mat = _move_origin * rotate * _move_back;
-        let _mat = HomoTransform::identity_matrix();
+        let rotate = Transform::rotation_mat(&Vector3::from_xyz(0.,1.,0.), self.theta);
+        // let _move_back = HomoTransform::translation((0., 0., -0.0));
+        // let _mat = _move_origin * rotate * _move_back;
+        // let _mat = HomoTransform::identity_matrix();
+        let _mat = rotate;
 
         let _move = HMat::from_vec(vec![
             1., 0., 0., 0.,
