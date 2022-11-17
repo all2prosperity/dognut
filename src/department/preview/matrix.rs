@@ -190,6 +190,25 @@ impl<const M: usize, const N: usize> Matrix<M, N> {
         }
     }
 
+    pub fn cut<const SUBM: usize, const SUBN: usize>(&self, x: usize, y: usize) -> Matrix<SUBM, SUBN> {
+        let mut ret = Matrix::<SUBM, SUBN>::new();
+        for i in 0..SUBM {
+            for j in 0..SUBN {
+                ret.set(i, j, self.index(x + i, y + j));
+            }
+        }
+
+        ret
+    }
+
+    pub fn paste<const SUBM: usize, const SUBN: usize>(&mut self, other: &Matrix<SUBM, SUBN>, x: usize, y: usize) {
+        for i in 0..SUBM {
+            for j in 0..SUBN {
+                self.set(x + i, y + j, other.index(i, j));
+            }
+        }
+    }
+
     pub fn debug(&self) {
         let mut _print = String::from("");
         for i in 0..(self.m()) {
@@ -289,6 +308,57 @@ impl<const M: usize> Matrix<M, M> {
         }
         ret
     }
+
+    pub fn upper_triangular_matrix_inverse(&self) -> Self {
+        self.clone()
+    }
+    
+
+    pub fn inverse_matrix(&self) 
+            where [(); M / 2]:,
+                [(); M - M / 2]:, 
+    {
+        let mut es: Vec<Self> = Vec::new();
+        let mut us: Vec<Self> = Vec::new();
+        let mut u = self.clone();
+        let mut l = Self::identity_matrix();
+        let mut l_1 = Self::identity_matrix();
+        for i in 1..M {
+            for j in 0..i {
+                let mut e = Self::identity_matrix();
+                let mut divisor = u.index(j, j);
+                let mut dividend = 0.;
+
+                for k in 0..M {
+                    if k != j {
+                        dividend += e.index(i, k) * u.index(k, j);
+                    } 
+                }
+
+                let val = -dividend / divisor;
+                e.set(i, j, val);
+
+                u = &e * &u;
+                println!("cur is {}, {}:", i + 1, j);
+                e.debug();
+                u.debug();
+                l_1 = &e * &l_1;
+
+                let mut _tmp = Self::identity_matrix();
+                _tmp.set(i, j, -val);
+                l = &l * &_tmp;
+            }
+        }
+
+        u.upper_triangular_matrix_inverse();
+
+        println!("end:");
+        l.debug();
+        l_1.debug();
+        u.debug();
+        let ret = l * l_1;
+        ret.debug();
+    }
 }
 
 impl<'a, const M: usize, const N: usize> Iterator for MatrixIter<'a, M, N> {
@@ -310,3 +380,5 @@ impl<'a, const M: usize, const N: usize> Iterator for MatrixIter<'a, M, N> {
         }
     }
 }
+
+
