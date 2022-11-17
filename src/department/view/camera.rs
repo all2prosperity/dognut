@@ -3,7 +3,7 @@ use winit::event::VirtualKeyCode;
 use crate::department::preview::homo_transformation::{HomoTransform, Transform};
 use crate::department::preview::position::Pos3;
 use crate::department::preview::matrix::{HMat, Matrix};
-use crate::department::preview::object_buffer::ObjectBuffer;
+use crate::department::model::object_buffer::ObjectBuffer;
 use crate::department::model::triangle::Triangle;
 use crate::department::preview::output_buffer::OutputBuffer;
 use crate::department::preview::vector::Vector3;

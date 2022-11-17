@@ -1,6 +1,6 @@
+use crate::department::model::render_object::RenderObject;
 use crate::department::model::triangle::Triangle;
-use super::render_object::RenderObject;
-use super::position::Pos3;
+use crate::department::preview::position::Pos3;
 
 #[derive(Debug)]
 pub struct ObjectBuffer {

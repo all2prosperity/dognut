@@ -3,7 +3,7 @@ use log::__private_api_log;
 use crate::department::preview::position::Pos3;
 use crate::department::preview::vector::{Vec2, Vector3};
 use crate::department::preview::matrix::Matrix;
-use crate::department::preview::render_object::RenderObject;
+use crate::department::model::render_object::RenderObject;
 
 #[derive(Debug)]
 pub struct Triangle {

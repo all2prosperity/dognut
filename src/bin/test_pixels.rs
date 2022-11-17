@@ -10,12 +10,12 @@ use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
 use dognut::department::preview::homo_transformation::{HomoTransform, Transform};
 use dognut::department::view::camera::Camera;
-use dognut::department::preview::object_buffer::ObjectBuffer;
+use dognut::department::model::object_buffer::ObjectBuffer;
 use dognut::department::preview::matrix::{HMat, Matrix};
 use dognut::department::preview::vector::Vector3;
 use dognut::department::preview::position::Pos3;
-use dognut::department::preview::render_object::RenderObject;
-use dognut::department::preview::object_loader::ObjectLoader;
+use dognut::department::model::render_object::RenderObject;
+use dognut::department::model::object_loader::ObjectLoader;
 
 const WIDTH: u32 = 320;
 const HEIGHT: u32 = 240;
