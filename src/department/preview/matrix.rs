@@ -297,27 +297,10 @@ impl<const M: usize> Matrix<M, M> {
         ret
     }
 
-    pub fn upper_triangular_matrix_inverse(&self) -> Self
-            where [(); M / 2]:,
-                [(); M - M / 2]:, {
-        if M == 1 {
-            return Self::from_vec(vec![1. / self.index(0, 0)]);
-        }
-
-        // const small: usize = M / 2;
-        // let big = M - small;
-        
-        let left_up = self.cut::<{M / 2}, {M / 2}>(0, 0);
-        let right_bottom = self.cut::<{M - M / 2}, {M - M / 2}>(M / 2, M / 2);
-        let up_right = self.cut::<{M / 2}, {M - M / 2}>(0, M / 2);
-
-        let left_up_1 = left_up.upper_triangular_matrix_inverse();
-        let right_bottom_1 = right_bottom.upper_triangular_matrix_inverse();
-        let mut ret = Self::new();
-        ret.paste(&left_up_1, 0, 0);
-
-        ret
+    pub fn upper_triangular_matrix_inverse(&self) -> Self {
+        self.clone()
     }
+    
 
     pub fn inverse_matrix(&self) 
             where [(); M / 2]:,
