@@ -1,6 +1,7 @@
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
+use dognut_macros::TriangularInverse;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, TriangularInverse)]
 pub struct Matrix<const M: usize, const N: usize> {
     // 0 1 2  m = 2, n = 3
 // 0 1 2
@@ -309,14 +310,7 @@ impl<const M: usize> Matrix<M, M> {
         ret
     }
 
-    pub fn upper_triangular_matrix_inverse(&self) -> Self {
-        self.clone()
-    }
-    
-
-    pub fn inverse_matrix(&self) 
-            where [(); M / 2]:,
-                [(); M - M / 2]:, 
+    pub fn l_u_split(&self) -> Option<(Self, Self, Self)>
     {
         let mut es: Vec<Self> = Vec::new();
         let mut us: Vec<Self> = Vec::new();
@@ -339,9 +333,18 @@ impl<const M: usize> Matrix<M, M> {
                 e.set(i, j, val);
 
                 u = &e * &u;
-                println!("cur is {}, {}:", i + 1, j);
-                e.debug();
-                u.debug();
+                
+                let mut can_inverse = false;
+                for k in 0..M {
+                    if u.index(i, k) != 0. {
+                        can_inverse = true;
+                        break;
+                    }
+                }
+                if !can_inverse {
+                    return None;
+                }
+
                 l_1 = &e * &l_1;
 
                 let mut _tmp = Self::identity_matrix();
@@ -350,14 +353,15 @@ impl<const M: usize> Matrix<M, M> {
             }
         }
 
-        u.upper_triangular_matrix_inverse();
+        // u.upper_triangular_matrix_inverse();
+        Some((l, l_1, u))
 
-        println!("end:");
-        l.debug();
-        l_1.debug();
-        u.debug();
-        let ret = l * l_1;
-        ret.debug();
+        // println!("end:");
+        // l.debug();
+        // l_1.debug();
+        // u.debug();
+        // let ret = l * l_1;
+        // ret.debug();
     }
 }
 

@@ -25,7 +25,27 @@ fn main() {
         7., 8., 10.,
     ]);
 
-    origin.inverse_matrix();
+    if let Some((l, l_1, u)) = origin.l_u_split() {
+        println!("u is :");
+        let u_1 = u.upper_triangular_matrix_inverse();
+        u.debug();
+        u_1.debug();
+    }
+
+    if let Some(inv) = origin.inverse_matrix() {
+        println!("inv is :");
+        inv.debug();
+        let ret = inv * origin;
+        ret.debug();
+    }
+
+    let m_2 = Matrix::<2, 2>::from_vec(vec![
+        -3., -6.,
+        0., 1.
+    ]);
+    let ret = m_2.upper_triangular_matrix_inverse();
+    ret.debug();
+    (m_2 * ret).debug();
 
     // let _vector1 = Vector3::new(0., 0., 1.);
     // let _vector3 = Vector3::new(0., 1., 0.);

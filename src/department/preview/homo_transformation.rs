@@ -1,4 +1,3 @@
-use std::convert::identity;
 use crate::department::preview::matrix::Matrix;
 use crate::department::preview::vector::Vector3;
 

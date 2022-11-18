@@ -1,4 +1,3 @@
-use std::borrow::BorrowMut;
 use std::ops::{AddAssign, SubAssign};
 use super::matrix::Matrix;
 
