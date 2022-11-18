@@ -22,6 +22,14 @@ impl Vec2 {
             elements: vec![x,y]
         }
     }
+
+    pub fn u(&self) -> f32 {
+        self.elements[0]
+    }
+
+    pub fn v(&self) -> f32 {
+        self.elements[1]
+    }
 }
 
 pub type Vector3 = Matrix<1,3>;

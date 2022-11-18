@@ -8,7 +8,7 @@ use crate::department::model::render_object::RenderObject;
 #[derive(Debug)]
 pub struct Triangle {
     pub v: Vec<Pos3>,
-    pub color: Matrix<3,3>,
+    pub color: Option<Matrix<3,3>>,
     pub normal: Vec<Vector3>,
     pub tex_coords:Vec<Vec2>,
 }
@@ -33,12 +33,9 @@ pub fn min(l: f32, r: f32) -> f32 {
 
 impl Triangle {
     pub fn new(pos1: Pos3, pos2: Pos3, pos3: Pos3) -> Self {
-        let c = {
-            Matrix::from_rows({vec![Vector3::default();3]})
-        };
         Self {
             v: vec![pos1, pos2, pos3],
-            color: c,
+            color: None,
             normal: vec![Pos3::default();3],
             tex_coords: vec![Vec2::default(); 3]
         }
@@ -47,10 +44,26 @@ impl Triangle {
     pub fn from_vec(vec: Vec<Pos3>) -> Self {
         Self {
             v: vec,
-            color: {Matrix::from_rows({vec![Vector3::default();3]})},
+            color: None,
             normal: vec![Pos3::default();3],
             tex_coords: vec![Vec2::default(); 3]
         }
+    }
+
+    pub fn from_mesh_vec(vec: Vec<Vector3>, normal: Vec<Vector3>, tex: Vec<Vec2>) -> Self {
+        Self {
+            v: vec,
+            color: None,
+            normal,
+            tex_coords: tex,
+        }
+    }
+
+    pub fn set_color_row(&mut self, color_row: Vec<Vector3>) {
+        if color_row.len() == 3 {
+            self.color = Some(Matrix::<3,3>::from_rows(color_row));
+        }
+
     }
 
     pub fn get_horizon_edge(&self, y: f32, sx: u32, ex: u32) -> Option<(u32, u32)> {

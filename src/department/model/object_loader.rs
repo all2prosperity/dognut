@@ -1,6 +1,10 @@
+use std::path::Path;
+use image::GenericImageView;
 use tobj;
 use crate::department::model::render_object::RenderObject;
+use crate::department::model::triangle_resources::TriangleResources;
 use crate::department::preview::position::Pos3;
+use crate::department::preview::vector::Vec2;
 
 
 pub struct ObjectLoader {
@@ -8,10 +12,11 @@ pub struct ObjectLoader {
 }
 
 impl ObjectLoader {
-    pub fn load_render_obj(file_name: &str) -> Vec<RenderObject> {
+    pub fn load_render_obj(path: &str) -> Vec<RenderObject> {
+        let model_path = Path::new(path);
         let (models, materials) =
             tobj::load_obj(
-                file_name,
+                path,
                 &tobj::LoadOptions::default()
             )
             .expect("Failed to OBJ load file");
@@ -29,7 +34,6 @@ impl ObjectLoader {
             let mut indexes: Vec<usize> = Vec::new();
 
             let mesh = &m.mesh;
-            println!("");
             println!("model[{}].name             = \'{}\'", i, m.name);
             println!("model[{}].mesh.material_id = {:?}", i, mesh.material_id);
 
@@ -90,13 +94,6 @@ impl ObjectLoader {
             assert!(mesh.positions.len() % 3 == 0);
 
             for vtx in 0..mesh.positions.len() / 3 {
-                // println!(
-                //     "              position[{}] = ({}, {}, {})",
-                //     vtx,
-                //     mesh.positions[3 * vtx],
-                //     mesh.positions[3 * vtx + 1],
-                //     mesh.positions[3 * vtx + 2]
-                // );
                 vertexes.push(Pos3::from_xyz(
                     mesh.positions[3 * vtx],
                     mesh.positions[3 * vtx + 1],
@@ -104,7 +101,10 @@ impl ObjectLoader {
                 ));
             }
 
-            render_objects.push(RenderObject::from_vec(vertexes, indexes));
+            let render_o = RenderObject::from_vec(vertexes, indexes);
+
+
+            render_objects.push(render_o);
         }
 
         for (i, m) in materials.iter().enumerate() {
@@ -136,5 +136,36 @@ impl ObjectLoader {
         }
 
         render_objects
+    }
+
+    // only load one resources for now
+    pub fn load_triangle_resources(path: &str) -> TriangleResources {
+        let model_path = Path::new(path);
+        let (mut models, materials) =
+            tobj::load_obj(
+                path,
+                &tobj::LoadOptions::default()
+            )
+                .expect("Failed to OBJ load file");
+        assert!(models.len() > 0);
+
+        let mut mat = materials.unwrap_or_default();
+
+        let mut triangle_resources = TriangleResources::new(models.pop().unwrap());
+
+        let model = &triangle_resources.model;
+
+        println!("we've got {} triangles in total.", model.mesh.indices.len() /3 );
+
+        if let Some(i) = model.mesh.material_id {
+            if model_path.is_relative() {
+                let texture_path = model_path.parent().unwrap().join(Path::new(&mat[i].diffuse_texture));
+                let texture = image::open(texture_path).unwrap();
+                triangle_resources.image = Some(texture);
+                triangle_resources.material = mat.pop();
+            }
+        }
+
+        triangle_resources
     }
 }

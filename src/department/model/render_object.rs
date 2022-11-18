@@ -1,11 +1,12 @@
 use crate::department::preview::position::Pos3;
 use crate::department::preview::matrix::Matrix;
+use crate::department::preview::vector::Vec2;
 
 #[derive(Debug, Clone)]
 pub struct RenderObject {
     pub vertexes: Vec<Pos3>,
     pub normals: Vec<Pos3>,
-    pub texcoords: Vec<Pos3>,
+    pub texcoords: Vec<Vec2>,
     pub indexes: Vec<usize>,
     pub normal_indexes: Vec<usize>,
     pub tex_indexes: Vec<usize>,
