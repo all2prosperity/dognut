@@ -181,13 +181,20 @@ impl Triangle {
 }
 
 impl Triangle {
-    pub fn get_color(&self, bary:&Vector3) -> Vector3 {
-        let color_mat = Matrix::<3,3>::from_rows({
-            vec![Vector3::from_xyz(255.,0.,0.),
-            Vector3::from_xyz(0., 255., 0.),
-            Vector3::from_xyz(0., 0., 255.)]
-        });
-        bary * &color_mat
+    pub fn get_color_rgba(&self, bary:&Vector3) -> [u8;4] {
+        return if let Some(color_mat) = &self.color {
+            let res = bary * color_mat;
+            [res.x() as u8, res.y() as u8, res.z() as u8, 255]
+        } else {
+            let color_mat = Matrix::<3, 3>::from_rows({
+                vec![Vector3::from_xyz(255., 0., 0.),
+                     Vector3::from_xyz(0., 255., 0.),
+                     Vector3::from_xyz(0., 0., 255.)]
+            });
+            let res = bary * &color_mat;
+            [res.x() as u8, res.y() as u8, res.z() as u8, 255]
+        }
+
     }
 
     pub fn get_normal(&self, x: usize, y:usize) -> Vector3 {

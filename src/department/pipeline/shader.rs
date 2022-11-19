@@ -20,6 +20,7 @@ impl LambertianShader {
             intensity = 0.;
         }
         let bar = tri.barycentric_2d((x as f32, y as f32));
-        tri.get_color(&bar) * intensity
+        //tri.get_color_rgba(&bar) * intensity
+        Vector3::default()
     }
 }

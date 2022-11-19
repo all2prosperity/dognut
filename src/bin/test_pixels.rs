@@ -16,6 +16,7 @@ use dognut::department::preview::vector::Vector3;
 use dognut::department::preview::position::Pos3;
 use dognut::department::model::render_object::RenderObject;
 use dognut::department::model::object_loader::ObjectLoader;
+use dognut::department::model::triangle_resources::TriangleResources;
 
 const WIDTH: u32 = 320;
 const HEIGHT: u32 = 240;
@@ -24,6 +25,7 @@ const HEIGHT: u32 = 240;
 struct World {
     camera: Camera,
     objs: Vec<RenderObject>,
+    resources: TriangleResources,
     theta: f32,
 }
 
@@ -104,16 +106,18 @@ fn main() -> Result<(), Error> {
 impl World {
     /// Create a new `World` instance that can draw a moving box.
     fn new() -> Self {
-        let objs = ObjectLoader::load_render_obj("./model/Link/link_adult.obj");
+        let objs = ObjectLoader::load_render_obj("./model/cube.obj");
         for i in &objs {
             println!("i len:{:?}, pos:{:?}", i.indexes.len(), i.vertexes.len());
         }
+        let res = ObjectLoader::load_triangle_resources("./model/Link/link_adult.obj");
 
         Self {
             camera: Camera::new(45., (WIDTH / HEIGHT) as f32, -5., -50., Pos3::from_xyz(0., 0., 10.,),
                                 Vector3::from_xyz(0., 0., -1.),
                                 Vector3::from_xyz(0., -1., 0.)),
             objs: objs,
+            resources: res,
             theta: 0.,
         }
     }
@@ -132,6 +136,7 @@ impl World {
 
         // link_adult is too big
         let mut scale = HomoTransform::scale((0.01, 0.01, 0.01));
+        //let mut scale = HomoTransform::identity_matrix();
         scale.mul_num(1.);
         scale.set(3, 3, 1.);
 
@@ -155,15 +160,10 @@ impl World {
         for i in &self.objs {
             buffer.add_object(i.clone());
         }
-        // for _tri in buffer.iter() {
-        //     println!("tri is:{:?}", _tri);
-        //     let trans_poses:Vec<Matrix> = _tri.poses.iter().map(|x| (&_mat * &(x.to_matrix())).unwrap()).collect();
-        //     println!("trans is:{:?}", trans_poses);
-        //     
-        //     break
-        // }
 
-        let _buf = self.camera.render(WIDTH, HEIGHT, &buffer, &_mat);
+        //let _buf = self.camera.render(WIDTH, HEIGHT, &buffer, &_mat);
+
+        let _buf = self.camera.render_triangle_obejct(WIDTH, HEIGHT, &self.resources, &_mat);
 
         frame.copy_from_slice(&_buf.display);
         profiling::finish_frame!();

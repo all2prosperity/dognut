@@ -14,7 +14,7 @@ impl<'a> Iterator for TriangleIter<'a> {
     type Item = Triangle;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.triangle_idx >= (&self.resources.model.mesh.indices.len() / 3) {
+        if self.triangle_idx >= self.resources.model.mesh.indices.len()  {
             return None;
         }
 
@@ -30,29 +30,31 @@ impl<'a> Iterator for TriangleIter<'a> {
             let ti = m.texcoord_indices[i] as usize;
 
             points.push(Vector3::from_xyz(
-                m.positions[pi],
-                m.positions[pi + 1],
-                m.positions[pi + 2],
+                m.positions[pi*3],
+                m.positions[pi*3 + 1],
+                m.positions[pi*3 + 2],
             ));
             normals.push(Vector3::from_xyz(
-                m.normals[ni],
-                m.normals[ni + 1],
-                m.normals[ni + 2],
+                m.normals[ni*3],
+                m.normals[ni*3 + 1],
+                m.normals[ni*3 + 2],
             ));
 
             tex_coords.push(Vec2::from_xy(
-                m.texcoords[ti],
-                m.texcoords[ti + 1],
+                m.texcoords[ti*2],
+                m.texcoords[ti*2 + 1],
             ))
         }
         self.triangle_idx += 3;
+
+
 
         let mut colors = Vec::<Vector3>::new();
         if let Some(img) = &self.resources.image {
             let (width ,height) = img.dimensions();
             for tex_coord in &tex_coords {
                 let c = img.get_pixel((tex_coord.u() * width as f32) as u32, (tex_coord.v() * height as f32) as u32);
-                colors.push(Vector3::from_xyz(c.0[0] as f32 / 255., c.0[1] as f32 / 255., c.0[2] as f32 /255.));
+                colors.push(Vector3::from_xyz(c.0[0] as f32 , c.0[1] as f32 , c.0[2] as f32 ));
             }
         }
 
