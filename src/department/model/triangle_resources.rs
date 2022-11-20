@@ -7,6 +7,7 @@ use crate::department::preview::vector::{Vec2, Vector3};
 pub struct TriangleIter<'a> {
     pub resources: &'a TriangleResources,
     pub triangle_idx: usize,
+    max_idx: usize,
 }
 
 
@@ -14,7 +15,7 @@ impl<'a> Iterator for TriangleIter<'a> {
     type Item = Triangle;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.triangle_idx >= self.resources.model.mesh.indices.len()  {
+        if self.triangle_idx >= self.max_idx  {
             return None;
         }
 
@@ -85,9 +86,11 @@ impl TriangleResources {
     }
 
     pub fn iter(&self) -> TriangleIter {
+        let max = self.model.mesh.indices.len();
         TriangleIter{
             resources: self,
             triangle_idx: 0,
+            max_idx: max
         }
     }
 }

@@ -7,9 +7,7 @@ use crate::department::preview::position::Pos3;
 use crate::department::preview::vector::Vec2;
 
 
-pub struct ObjectLoader {
-
-}
+pub struct ObjectLoader {}
 
 impl ObjectLoader {
     pub fn load_render_obj(path: &str) -> Vec<RenderObject> {
@@ -17,9 +15,9 @@ impl ObjectLoader {
         let (models, materials) =
             tobj::load_obj(
                 path,
-                &tobj::LoadOptions::default()
+                &tobj::LoadOptions::default(),
             )
-            .expect("Failed to OBJ load file");
+                .expect("Failed to OBJ load file");
 
         // Note: If you don't mind missing the materials, you can generate a default.
 
@@ -58,8 +56,7 @@ impl ObjectLoader {
                 let face_indices = &mesh.indices[next_face..end];
                 if face_indices.len() != 3 {
                     // println!(" face[{}].indices          = {:?}", face, face_indices);
-                }
-                else {
+                } else {
                     for i in face_indices {
                         indexes.push(*i as usize);
                     }
@@ -97,7 +94,7 @@ impl ObjectLoader {
                 vertexes.push(Pos3::from_xyz(
                     mesh.positions[3 * vtx],
                     mesh.positions[3 * vtx + 1],
-                    mesh.positions[3 * vtx + 2]
+                    mesh.positions[3 * vtx + 2],
                 ));
             }
 
@@ -144,7 +141,7 @@ impl ObjectLoader {
         let (mut models, materials) =
             tobj::load_obj(
                 path,
-                &tobj::LoadOptions::default()
+                &tobj::LoadOptions::default(),
             )
                 .expect("Failed to OBJ load file");
         assert!(models.len() > 0);
@@ -155,7 +152,7 @@ impl ObjectLoader {
 
         let model = &triangle_resources.model;
 
-        println!("we've got {} triangles in total.", model.mesh.indices.len() /3 );
+        println!("we've got {} triangles in total.", model.mesh.indices.len() / 3);
 
         if let Some(i) = model.mesh.material_id {
             if model_path.is_relative() {

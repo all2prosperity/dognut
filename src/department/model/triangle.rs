@@ -1,25 +1,26 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
+
 use log::__private_api_log;
+
+use crate::department::model::render_object::RenderObject;
+use crate::department::preview::matrix::Matrix;
 use crate::department::preview::position::Pos3;
 use crate::department::preview::vector::{Vec2, Vector3};
-use crate::department::preview::matrix::Matrix;
-use crate::department::model::render_object::RenderObject;
 
 #[derive(Debug)]
 pub struct Triangle {
     pub v: Vec<Pos3>,
-    pub color: Option<Matrix<3,3>>,
+    pub color: Option<Matrix<3, 3>>,
     pub normal: Vec<Vector3>,
-    pub tex_coords:Vec<Vec2>,
+    pub tex_coords: Vec<Vec2>,
     pub trans_v: Option<Vec<Pos3>>,
 }
 
-pub fn max(l: f32, r: f32) -> f32{
+pub fn max(l: f32, r: f32) -> f32 {
     if l < r {
         r
-    }
-    else {
+    } else {
         l
     }
 }
@@ -27,8 +28,7 @@ pub fn max(l: f32, r: f32) -> f32{
 pub fn min(l: f32, r: f32) -> f32 {
     if l < r {
         l
-    }
-    else {
+    } else {
         r
     }
 }
@@ -38,7 +38,7 @@ impl Triangle {
         Self {
             v: vec![pos1, pos2, pos3],
             color: None,
-            normal: vec![Pos3::default();3],
+            normal: vec![Pos3::default(); 3],
             tex_coords: vec![Vec2::default(); 3],
             trans_v: None,
         }
@@ -48,7 +48,7 @@ impl Triangle {
         Self {
             v: vec,
             color: None,
-            normal: vec![Pos3::default();3],
+            normal: vec![Pos3::default(); 3],
             tex_coords: vec![Vec2::default(); 3],
             trans_v: None,
         }
@@ -66,9 +66,8 @@ impl Triangle {
 
     pub fn set_color_row(&mut self, color_row: Vec<Vector3>) {
         if color_row.len() == 3 {
-            self.color = Some(Matrix::<3,3>::from_rows(color_row));
+            self.color = Some(Matrix::<3, 3>::from_rows(color_row));
         }
-
     }
 
     pub fn get_horizon_edge(&self, y: f32, sx: u32, ex: u32) -> Option<(u32, u32)> {
@@ -76,7 +75,7 @@ impl Triangle {
         //let ex = ex as i32;
         let mut edges: Vec<(u32, u32)> = Vec::new();
         for i in 0..3 {
-            let j = if i == 2 {0} else {i + 1};
+            let j = if i == 2 { 0 } else { i + 1 };
             let p1 = &self.v[i];
             let p2 = &self.v[j];
 
@@ -104,8 +103,7 @@ impl Triangle {
 
         if edges.len() == 0 {
             None
-        }
-        else {
+        } else {
             let mut l = ex as u32 + 1;
             let mut r = 0;
 
@@ -129,23 +127,23 @@ impl Triangle {
         (min_x.floor() as u32, max_x.ceil() as u32, min_y.floor() as u32, max_y.ceil() as u32)
     }
 
-    pub fn get_surface_equation(&self) -> (f32, f32, f32, f32){
+    pub fn get_surface_equation(&self) -> (f32, f32, f32, f32) {
         let a = (self.v[1].y() - self.v[0].y()) * (self.v[2].z() - self.v[0].z()) - (self.v[1].z() - self.v[0].z()) * (self.v[2].y() - self.v[0].y());
         let b = (self.v[2].x() - self.v[0].x()) * (self.v[1].z() - self.v[0].z()) - (self.v[1].x() - self.v[0].x()) * (self.v[2].z() - self.v[0].z());
         let c = (self.v[1].x() - self.v[0].x()) * (self.v[2].y() - self.v[0].y()) - (self.v[2].x() - self.v[0].x()) * (self.v[1].y() - self.v[0].y());
-        let d =  -(a * self.v[0].x() + b * self.v[0].y() + c * self.v[0].z());
+        let d = -(a * self.v[0].x() + b * self.v[0].y() + c * self.v[0].z());
         (a, b, c, d)
     }
 
-    pub fn get_depth_matrix(&self) -> Matrix<4,1> {
+    pub fn get_depth_matrix(&self) -> Matrix<4, 1> {
         let (a, b, c, d) = self.get_surface_equation();
-        Matrix::from_vec( vec![-a / c, -b / c, 0., -d / c])
+        Matrix::from_vec(vec![-a / c, -b / c, 0., -d / c])
     }
 
     pub fn in_triangle(&self, pos: &Pos3) -> bool {
         let mut last_cross_vec: Option<Vector3> = None;
         for i in 0..3 {
-            let j = if i == 2 {0} else {i + 1};
+            let j = if i == 2 { 0 } else { i + 1 };
             let vec1 = &self.v[j] - &self.v[i];
             let vec2 = pos - &self.v[i];
             let cross = vec2.cross(&vec1);
@@ -172,21 +170,21 @@ impl Triangle {
         (&self.v[0], &self.v[1], &self.v[2])
     }
 
-    pub fn barycentric_2d(&self, p:(f32, f32)) ->Vector3 {
-        let (mut alpha, mut beta,mut gamma) = (0f32, 0f32, 0f32);
+    pub fn barycentric_2d(&self, p: (f32, f32)) -> Vector3 {
+        let (mut alpha, mut beta, mut gamma) = (0f32, 0f32, 0f32);
         let (v1, v2, v3) = self.unpack_v();
 
         let denominator = (v2.y() - v3.y()) * (v1.x() - v3.x()) + (v3.x() - v2.x()) * (v1.y() - v3.y());
 
-        alpha = ((v2.y() - v3.y()) * (p.0 - v3.x()) + (v3.x() - v2.x()) * (p.1 -v3.y())  ) / denominator;
-        beta = ((v3.y() - v1.y()) * (p.0 - v3.x()) + (v1.x() - v3.x()) * (p.1 -v3.y())  ) / denominator;
+        alpha = ((v2.y() - v3.y()) * (p.0 - v3.x()) + (v3.x() - v2.x()) * (p.1 - v3.y())) / denominator;
+        beta = ((v3.y() - v1.y()) * (p.0 - v3.x()) + (v1.x() - v3.x()) * (p.1 - v3.y())) / denominator;
         gamma = 1. - alpha - beta;
         Vector3::from_xyz(alpha, beta, gamma)
     }
 }
 
 impl Triangle {
-    pub fn get_color_rgba(&self, bary:&Vector3) -> [u8;4] {
+    pub fn get_color_rgba(&self, bary: &Vector3) -> [u8; 4] {
         return if let Some(color_mat) = &self.color {
             let res = bary * color_mat;
             [res.x() as u8, res.y() as u8, res.z() as u8, 255]
@@ -198,17 +196,17 @@ impl Triangle {
             });
             let res = bary * &color_mat;
             [res.x() as u8, res.y() as u8, res.z() as u8, 255]
-        }
+        };
     }
 
 
     pub fn get_uv(&self, bary: &Vector3) -> Vec2 {
-        let m = Matrix::<3,2>::from_rows(self.tex_coords.clone());
+        let m = Matrix::<3, 2>::from_rows(self.tex_coords.clone());
         let out = bary * &m;
         out
     }
 
-    pub fn get_normal(&self, x: usize, y:usize) -> Vector3 {
+    pub fn get_normal(&self, x: usize, y: usize) -> Vector3 {
         return Vector3::from_xyz(0., 0., 0.);
     }
 }
