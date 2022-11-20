@@ -1,5 +1,6 @@
 use image;
 use super::position::Pos3;
+use super::matrix::Matrix;
 pub type Display = image::ImageBuffer<image::Rgba<u8>, Vec<u8>>;
 
 pub struct OutputBuffer {
@@ -45,6 +46,17 @@ impl OutputBuffer {
 
     pub fn pos_to_pixel(&self, x: f32, y: f32) -> (f32, f32) {
         (self.width as f32 / 2. * (x + 1.), self.height as f32 / 2. * (1. - y))
+    }
+
+    pub fn to_view_pixel_matrix(&self) -> Matrix<4, 4>{
+        let half_width = self.width as f32 / 2.;
+        let half_height = self.height as f32 / 2.;
+        Matrix::<4, 4>::from_vec(vec![
+            half_width, 0., 0., 0.,
+            0., -half_height, 0., 0.,
+            0., 0., 1., 0.,
+            half_width, half_height, 0., 1.,
+        ])
     }
 
     pub fn pos_to_pixel_pos(&self, pos: &Pos3) -> Pos3{

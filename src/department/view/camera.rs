@@ -194,28 +194,34 @@ impl Camera {
         let view = self.to_view_matrix();
 
         let mvp = &(model * &view) * &self.perspective_projection;
+        let view_port = _out.to_view_pixel_matrix();
+        let mvp = &mvp * &view_port;
 
         for _tri in triangle_res.iter() {
-            let trans_poses = _tri.v.iter().map(|x| &x.to_homogeneous() * &mvp);
-            let trans_poses:Vec<Pos3> = trans_poses.map(|x| Pos3::from_matrix(&x)).collect();
-            for  pos in &trans_poses {
-                if pos.x() < -1. || pos.x() > 1. || pos.y() > 1. || pos.y() < -1.{
-                    println!("will return: {:?}", pos);
-                    return _out;
-                }
-            }
+            let trans_poses = _tri.v.iter()
+                .map(|x| &x.to_homogeneous() * &mvp)
+                .map(|x| Pos3::from_matrix(&x));
+
+            // for  pos in &trans_poses {
+            //     if pos.x() < -1. || pos.x() > 1. || pos.y() > 1. || pos.y() < -1.{
+            //         println!("will return: {:?}", pos);
+            //         return _out;
+            //     }
+            // }
 
             let surface_tri_zero = Triangle::from_vec(
-                trans_poses.iter().map(|x| _out.pos_to_pixel_pos(&x)).collect()
+                trans_poses.clone().map(|x| Pos3::from_xyz(x.x(), x.y(), 0.0)).collect()
             );
 
             let surface_tri_tilt = Triangle::from_vec(
-                trans_poses.iter().map(|x| _out.pos_to_pixel_pos_with_z(&x)).collect()
+                trans_poses.collect()
             );
 
-            // println!("tilt:{:?}", surface_tri_tilt);
 
-            // println!("surface tri {:?}", surface_tri_tilt);
+            // println!("trans:{:?}", trans_poses);
+            // println!("tilt:{:?}", surface_tri_tilt);
+            // println!("view port: {:?}", trans_poses.iter().map(|x| &x.to_homogeneous() * &view_port).collect::<Vec<Matrix<1, 4>>>());
+            // println!("test {:?}", surface_tri_tilt_test);
 
             let (sx, ex, sy, ey) = surface_tri_zero.get_edge();
             let depth_matrix = surface_tri_tilt.get_depth_matrix();
