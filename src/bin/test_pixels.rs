@@ -112,7 +112,7 @@ impl World {
         for i in &objs {
             println!("i len:{:?}, pos:{:?}", i.indexes.len(), i.vertexes.len());
         }
-        let res = ObjectLoader::load_triangle_resources("./res/cube2/cube.obj");
+        let res = ObjectLoader::load_triangle_resources("./res/cube/.obj");
 
         Self {
             camera: Camera::new(45., (WIDTH / HEIGHT) as f32, -5., -50., Pos3::from_xyz(0., 0., 10.,),

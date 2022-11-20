@@ -198,6 +198,8 @@ impl Camera {
         let view_port = _out.to_view_pixel_matrix();
         let mvp = &mvp * &view_port;
 
+        let image = triangle_res.image.as_ref().unwrap();
+
         for _tri in triangle_res.iter() {
             let trans_poses = _tri.v.iter()
                 .map(|x| &x.to_homogeneous() * &mvp)
