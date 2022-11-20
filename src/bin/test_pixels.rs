@@ -3,6 +3,7 @@
 
 use log::error;
 use pixels::{Error, Pixels, SurfaceTexture};
+use pixels::wgpu::Color;
 use winit::dpi::LogicalSize;
 use winit::event::{Event, VirtualKeyCode};
 use winit::event_loop::{ControlFlow, EventLoop};
@@ -48,6 +49,7 @@ fn main() -> Result<(), Error> {
         let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
         Pixels::new(WIDTH, HEIGHT, surface_texture)?
     };
+    pixels.set_clear_color(Color::WHITE);
     let mut world = World::new();
 
     event_loop.run(move |event, _, control_flow| {
@@ -106,11 +108,11 @@ fn main() -> Result<(), Error> {
 impl World {
     /// Create a new `World` instance that can draw a moving box.
     fn new() -> Self {
-        let objs = ObjectLoader::load_render_obj("./model/cube.obj");
+        let objs = ObjectLoader::load_render_obj("./res/cube.obj");
         for i in &objs {
             println!("i len:{:?}, pos:{:?}", i.indexes.len(), i.vertexes.len());
         }
-        let res = ObjectLoader::load_triangle_resources("./model/Link/link_adult.obj");
+        let res = ObjectLoader::load_triangle_resources("./res/cube2/cube.obj");
 
         Self {
             camera: Camera::new(45., (WIDTH / HEIGHT) as f32, -5., -50., Pos3::from_xyz(0., 0., 10.,),
@@ -135,8 +137,8 @@ impl World {
         self.theta += 0.02;
 
         // link_adult is too big
-        let mut scale = HomoTransform::scale((0.01, 0.01, 0.01));
-        //let mut scale = HomoTransform::identity_matrix();
+        //let mut scale = HomoTransform::scale((0.01, 0.01, 0.01));
+        let mut scale = HomoTransform::identity_matrix();
         scale.mul_num(1.);
         scale.set(3, 3, 1.);
 

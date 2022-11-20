@@ -1,4 +1,5 @@
 use std::f32::consts::PI;
+use image::GenericImageView;
 use winit::event::VirtualKeyCode;
 use crate::department::preview::homo_transformation::{HomoTransform, Transform};
 use crate::department::preview::position::Pos3;
@@ -235,11 +236,13 @@ impl Camera {
                         let pos = Pos3::from_xyz(i as f32 + 0.5, j as f32 + 0.5, 0.);
                         let depth = (&pos.to_homogeneous() * &depth_matrix).result();
                         let cur_depth = _out.get_depth(i as usize, j as usize);
+                        let bar  = surface_tri_zero.barycentric_2d((pos.x(), pos.y()));
                         if depth > cur_depth {
                             _out.set_depth(i as usize, j as usize, depth);
+                            let uv = _tri.get_uv(&bar);
+                            let color = image.get_pixel(uv.u() as u32, uv.v() as u32);
 
-                            let color = _tri.get_color_rgba(&middle);
-                            _out.put_pixel(i, j, &color);
+                            _out.put_pixel(i, j, &color.0);
                         }
                     }
                 }

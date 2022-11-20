@@ -19,6 +19,9 @@ impl<'a> Iterator for TriangleIter<'a> {
         }
 
 
+        let (width ,height) = self.resources.image.as_ref().unwrap().dimensions();
+        let (width, height) = (width - 1, height - 1);
+
         let m = &self.resources.model.mesh;
         let mut points = Vec::<Vector3>::new();
         let mut normals = Vec::<Vector3>::new();
@@ -41,25 +44,26 @@ impl<'a> Iterator for TriangleIter<'a> {
             ));
 
             tex_coords.push(Vec2::from_xy(
-                m.texcoords[ti*2],
-                m.texcoords[ti*2 + 1],
+                m.texcoords[ti*2] * width as f32,
+                m.texcoords[ti*2 + 1] * height as f32,
             ))
         }
         self.triangle_idx += 3;
 
 
 
-        let mut colors = Vec::<Vector3>::new();
-        if let Some(img) = &self.resources.image {
-            let (width ,height) = img.dimensions();
-            for tex_coord in &tex_coords {
-                let c = img.get_pixel((tex_coord.u() * width as f32) as u32, (tex_coord.v() * height as f32) as u32);
-                colors.push(Vector3::from_xyz(c.0[0] as f32 , c.0[1] as f32 , c.0[2] as f32 ));
-            }
-        }
+        // let mut colors = Vec::<Vector3>::new();
+        // if let Some(img) = &self.resources.image {
+        //     let (width ,height) = img.dimensions();
+        //     let (width, height) = (width - 1, height - 1);
+        //     for tex_coord in &tex_coords {
+        //         let c = img.get_pixel((tex_coord.u() * width as f32) as u32, (tex_coord.v() * height as f32) as u32);
+        //         colors.push(Vector3::from_xyz(c.0[0] as f32 , c.0[1] as f32 , c.0[2] as f32 ));
+        //     }
+        // }
 
         let mut tri = Triangle::from_mesh_vec(points, normals, tex_coords);
-        tri.set_color_row(colors);
+        // tri.set_color_row(colors);
         Some(tri)
     }
 }

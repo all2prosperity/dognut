@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::collections::BTreeMap;
 use log::__private_api_log;
 use crate::department::preview::position::Pos3;
@@ -11,6 +12,7 @@ pub struct Triangle {
     pub color: Option<Matrix<3,3>>,
     pub normal: Vec<Vector3>,
     pub tex_coords:Vec<Vec2>,
+    pub trans_v: Option<Vec<Pos3>>,
 }
 
 pub fn max(l: f32, r: f32) -> f32{
@@ -37,7 +39,8 @@ impl Triangle {
             v: vec![pos1, pos2, pos3],
             color: None,
             normal: vec![Pos3::default();3],
-            tex_coords: vec![Vec2::default(); 3]
+            tex_coords: vec![Vec2::default(); 3],
+            trans_v: None,
         }
     }
 
@@ -46,7 +49,8 @@ impl Triangle {
             v: vec,
             color: None,
             normal: vec![Pos3::default();3],
-            tex_coords: vec![Vec2::default(); 3]
+            tex_coords: vec![Vec2::default(); 3],
+            trans_v: None,
         }
     }
 
@@ -56,6 +60,7 @@ impl Triangle {
             color: None,
             normal,
             tex_coords: tex,
+            trans_v: None,
         }
     }
 
@@ -194,7 +199,13 @@ impl Triangle {
             let res = bary * &color_mat;
             [res.x() as u8, res.y() as u8, res.z() as u8, 255]
         }
+    }
 
+
+    pub fn get_uv(&self, bary: &Vector3) -> Vec2 {
+        let m = Matrix::<3,2>::from_rows(self.tex_coords.clone());
+        let out = bary * &m;
+        out
     }
 
     pub fn get_normal(&self, x: usize, y:usize) -> Vector3 {
