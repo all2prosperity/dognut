@@ -38,6 +38,8 @@ clap = {version="4.*", features = ["derive"]}
 tokio = {version="1", features=["full"]}
 dognut_macros = {path = "../dognut_macros"}
 
+log4rs = "*"
+
 [dependencies.image]
 version = "0.24"
 default-features = false

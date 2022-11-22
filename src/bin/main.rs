@@ -1,23 +1,22 @@
-use dognut;
+use dognut::department::net::router;
+use dognut::department::common::constant;
+use std::{thread, env};
+use tokio::net::{TcpListener};
+use log::info;
 
-use tui::backend::CrosstermBackend;
-use tui::Terminal;
-use department::preview::*;
+fn main () {
+    let mut rt = tokio::runtime::Runtime::new().unwrap();
+    let host_str = format!("{}:{}", constant::HOST, constant::PORT);
+    dognut::department::common::logger::App::trivial_conf();
 
-use winit::{
-    event::*,
-    event_loop::{ControlFlow, EventLoop},
-    window::WindowBuilder,
-};
-use dognut::department::preview::matrix;
-use dognut::department::preview::vector::Vector3;
+    rt.block_on(async {
+        let addr = env::args()
+            .nth(1)
+            .unwrap_or_else(|| {host_str});
 
+        let mut lis = TcpListener::bind(&addr).await.expect("can't bind socket");
+        info!("Server listen on {}", addr);
 
-
-fn main() {
-    let stdout = std::io::stdout();
-    let backend=  CrosstermBackend::new(stdout);
-    let tem = Terminal::new(backend).unwrap();
-
-    pollster::block_on(state::run());
+        router::ws_accept(&mut lis).await;
+    });
 }
