@@ -112,7 +112,7 @@ impl World {
         for i in &objs {
             println!("i len:{:?}, pos:{:?}", i.indexes.len(), i.vertexes.len());
         }
-        let res = ObjectLoader::load_triangle_resources("./res/cube/.obj");
+        let res = ObjectLoader::load_triangle_resources("./res/nice_cube/nice_cube.obj");
 
         Self {
             camera: Camera::new(45., (WIDTH / HEIGHT) as f32, -5., -50., Pos3::from_xyz(0., 0., 10.,),
@@ -137,10 +137,9 @@ impl World {
         self.theta += 0.02;
 
         // link_adult is too big
-        //let mut scale = HomoTransform::scale((0.01, 0.01, 0.01));
+        //let mut scale = HomoTransform::scale((0.1, 0.1, 0.1));
         let mut scale = HomoTransform::identity_matrix();
-        scale.mul_num(1.);
-        scale.set(3, 3, 1.);
+
 
         let _move_origin = HomoTransform::translation((-0., -0., 0.));
         let rotate = Transform::rotation_mat(&Vector3::from_xyz(0.,1.,0.), self.theta);

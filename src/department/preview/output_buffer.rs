@@ -16,7 +16,7 @@ impl OutputBuffer {
     pub fn new(width: u32, height: u32) -> Self {
         let pixels_num = (width * height) as usize;
         let mut _depth: Vec<f32> = Vec::with_capacity(pixels_num);
-        _depth.resize(pixels_num, -2.);
+        _depth.resize(pixels_num, f32::NEG_INFINITY);
 
         let mut _display: Vec<u8> = Vec::with_capacity(pixels_num * RGB_STEP);
         _display.resize(pixels_num * RGB_STEP, 0);
