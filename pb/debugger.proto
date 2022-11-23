@@ -1,0 +1,15 @@
+syntax = "proto3";
+package proto.debugger;
+
+message DebugInfo {
+    uint32 triangleIndex = 1;
+}
+
+message Void {
+
+}
+
+
+service DebugServer {
+    rpc onGetDebugInfo(DebugInfo) returns(Void);
+}
