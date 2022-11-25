@@ -110,12 +110,6 @@ impl Camera {
     }
 
     pub fn to_view_matrix(&self) -> HMat{
-        let mut fwd = self.forward.clone();
-        fwd.norm();
-        let w =  fwd * -1f32;
-        let mut u = self.up.cross(&self.forward);
-        u.norm();
-        let v = w.cross(&u);
         let t = HMat::from_vec(vec![
             1., 0., 0., 0.,
             0., 1., 0., 0.,
@@ -124,12 +118,7 @@ impl Camera {
         ]);
         //let g_t = self.forward.cross(&self.up);
 
-        let r = HMat::from_vec( vec![
-            u.x(), v.x(), w.x(), 0.,
-            u.y(), v.y(), w.y(), 0.,
-            u.z(), v.z(), w.z(), 0.,
-            0., 0., 0., 1.,
-        ]);
+        let r = self.forward.to_rotate_negative_z_matrix(&self.up);
 
         t * r
     }
@@ -199,6 +188,7 @@ impl Camera {
         let mvp = &(model * &view) * &self.perspective_projection;
         let view_port = _out.to_view_pixel_matrix();
         let mvp = &mvp * &view_port;
+        let mvp_1 = mvp.inverse_matrix();
 
         let image = triangle_res.image.as_ref().unwrap();
 
@@ -206,7 +196,6 @@ impl Camera {
             let trans_poses = _tri.v.iter()
                 .map(|x| &x.to_homogeneous() * &mvp)
                 .map(|x| Pos3::from_matrix(&x));
-
 
             let mut is_continue = false;
             for  pos in trans_poses.clone() {
@@ -232,11 +221,25 @@ impl Camera {
             // println!("tilt:{:?}", surface_tri_tilt);
             // println!("view port: {:?}", trans_poses.iter().map(|x| &x.to_homogeneous() * &view_port).collect::<Vec<Matrix<1, 4>>>());
             // println!("test {:?}", surface_tri_tilt_test);
+            
 
             let (sx, ex, sy, ey) = surface_tri_zero.get_edge();
             let depth_matrix = surface_tri_tilt.get_depth_matrix();
 
             let middle = Vector3::from_xyz(0.33,0.33,0.33);
+
+            let rotate_origin_matrix = _tri.get_rotate_negative_z_matrix();
+            let fix_matrix = match &mvp_1 {
+                Some(_mvp_1) => Some(_mvp_1 * &rotate_origin_matrix),
+                None => None,
+            };
+            let tri_origin_neg_z = Triangle::from_vec(
+                _tri
+                .v
+                .iter()
+                .map(|x| Pos3::from_matrix(&(&x.to_homogeneous() * &rotate_origin_matrix)))
+                .collect()
+                );
 
             for j in sy..ey {
                 if let Some((_sx, _ex)) = surface_tri_zero.get_horizon_edge(j as f32 + 0.5, sx, ex) {
@@ -245,7 +248,16 @@ impl Camera {
                         let pos = Pos3::from_xyz(i as f32 + 0.5, j as f32 + 0.5, 0.);
                         let depth = (&pos.to_homogeneous() * &depth_matrix).result();
                         let cur_depth = _out.get_depth(i as usize, j as usize);
-                        let bar  = surface_tri_zero.barycentric_2d((pos.x(), pos.y()));
+
+                        let bar = if let Some(_fix) = &fix_matrix {
+                            let virtual_pos = Pos3::from_xyz(pos.x(), pos.y(), depth);
+                            let pos_origin = Pos3::from_matrix(&(&virtual_pos.to_homogeneous() * &_fix));
+                            tri_origin_neg_z.barycentric_2d((pos_origin.x(), pos_origin.y()))
+                        }
+                        else {
+                            surface_tri_zero.barycentric_2d((pos.x(), pos.y()))
+                        };
+
                         if depth > cur_depth {
                             _out.set_depth(i as usize, j as usize, depth);
                             let uv = _tri.get_uv(&bar);

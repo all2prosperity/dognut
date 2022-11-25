@@ -35,7 +35,8 @@ fn main() {
     if let Some(inv) = origin.inverse_matrix() {
         println!("inv is :");
         inv.debug();
-        let ret = inv * origin;
+        let ret = origin * inv;
+
         ret.debug();
     }
 

@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 use log::__private_api_log;
 
 use crate::department::model::render_object::RenderObject;
-use crate::department::preview::matrix::Matrix;
+use crate::department::preview::matrix::{Matrix, HMat};
 use crate::department::preview::position::Pos3;
 use crate::department::preview::vector::{Vec2, Vector3};
 
@@ -160,6 +160,15 @@ impl Triangle {
         }
 
         true
+    }
+
+    pub fn get_rotate_negative_z_matrix(&self) -> HMat {
+        let v1 = (&self.v[0] - &self.v[1]) as Vector3;
+        let v2 = (&self.v[0] - &self.v[2]) as Vector3;
+
+        let normal = v1.cross(&v2);
+
+        normal.to_rotate_negative_z_matrix(&v1)
     }
 
     pub fn to_render_obj(&self) -> RenderObject {

@@ -1,4 +1,6 @@
 use super::matrix::Matrix;
+use super::vector::Vector3;
+use std::ops::Sub;
 
 // #[derive(Debug, Clone)]
 // pub struct Pos3 {
@@ -10,15 +12,6 @@ use super::matrix::Matrix;
 
 pub type Pos3 = Matrix<1, 3>;
 
-
-// impl Sub for &Pos3 {
-//     type Output = Vector3;
-//
-//     fn sub(self, other: Self) -> Vector3 {
-//         let _matrix = (self.to_matrix() - other.to_matrix()).unwrap();
-//         Vector3::from_matrix(_matrix)
-//     }
-// }
 //
 // impl Sub for Pos3 {
 //     type Output = Vector3;

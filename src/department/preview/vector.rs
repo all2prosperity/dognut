@@ -1,5 +1,5 @@
 use std::ops::{AddAssign, SubAssign};
-use super::matrix::Matrix;
+use super::matrix::{Matrix, HMat};
 
 pub type Vec2 = Matrix<1, 2>;
 
@@ -103,5 +103,22 @@ impl Vector3 {
         self.elements[1] = self.elements[1] / mag;
         self.elements[2] = self.elements[2] / mag;
         self
+    }
+
+    pub fn to_rotate_negative_z_matrix(&self, up: &Self) -> HMat{
+        let mut fwd = self.clone();
+        fwd.norm();
+        
+        let w =  fwd * -1f32;
+        let mut u = up.cross(&self);
+        u.norm();
+        let v = w.cross(&u);
+
+        HMat::from_vec( vec![
+            u.x(), v.x(), w.x(), 0.,
+            u.y(), v.y(), w.y(), 0.,
+            u.z(), v.z(), w.z(), 0.,
+            0., 0., 0., 1.,
+        ])
     }
 }
