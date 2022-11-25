@@ -5,6 +5,6 @@ pub mod util;
 pub mod wgpu;
 pub mod proto {
     pub mod debugger {
-        include!(concat!(env!("OUT_DIR"), "/debugger.rs"));
+        include!(concat!(env!("OUT_DIR"), "/proto.debugger.rs"));
     }
 }
