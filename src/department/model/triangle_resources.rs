@@ -46,7 +46,7 @@ impl<'a> Iterator for TriangleIter<'a> {
 
             tex_coords.push(Vec2::from_xy(
                 m.texcoords[ti*2] * width as f32,
-                m.texcoords[ti*2 + 1] * height as f32,
+                height as f32 - m.texcoords[ti*2 + 1] * height as f32,
             ))
         }
         self.triangle_idx += 3;

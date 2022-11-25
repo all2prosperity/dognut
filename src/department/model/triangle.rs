@@ -70,7 +70,7 @@ impl Triangle {
         }
     }
 
-    pub fn get_horizon_edge(&self, y: f32, sx: u32, ex: u32) -> Option<(u32, u32)> {
+    pub fn get_horizon_edge(&self, y: f32, sx: i32, ex: i32) -> Option<(u32, u32)> {
         //let sx = sx ;
         //let ex = ex as i32;
         let mut edges: Vec<(u32, u32)> = Vec::new();
@@ -79,8 +79,8 @@ impl Triangle {
             let p1 = &self.v[i];
             let p2 = &self.v[j];
 
-            let x = (p1.x() + (p2.x() - p1.x()) * (y - p1.y()) / (p2.y() - p1.y())).floor() as u32;
-            if x < sx as u32 || x > ex as u32 {
+            let x = (p1.x() + (p2.x() - p1.x()) * (y - p1.y()) / (p2.y() - p1.y())).floor() as i32;
+            if x < sx || x > ex {
                 continue;
             }
 
@@ -119,12 +119,12 @@ impl Triangle {
         }
     }
 
-    pub fn get_edge(&self) -> (u32, u32, u32, u32) {
+    pub fn get_edge(&self) -> (i32, i32, i32, i32) {
         let min_x = min(min(self.v[0].x(), self.v[1].x()), self.v[2].x());
         let max_x = max(max(self.v[0].x(), self.v[1].x()), self.v[2].x());
         let min_y = min(min(self.v[0].y(), self.v[1].y()), self.v[2].y());
         let max_y = max(max(self.v[0].y(), self.v[1].y()), self.v[2].y());
-        (min_x.floor() as u32, max_x.ceil() as u32, min_y.floor() as u32, max_y.ceil() as u32)
+        (min_x.floor() as i32, max_x.ceil() as i32, min_y.floor() as i32, max_y.ceil() as i32)
     }
 
     pub fn get_surface_equation(&self) -> (f32, f32, f32, f32) {

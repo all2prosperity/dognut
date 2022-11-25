@@ -180,7 +180,7 @@ impl Camera {
                             _out.set_depth(i as usize, j as usize, depth);
                             let color = (255 as f32 * (depth + 1.) / 2.).floor() as u8;
                             // println!("depth:{:?}, {:?}", depth, color);
-                            _out.put_pixel(i, j, &[color, color, color, color]);
+                            _out.put_pixel(i, j.try_into().unwrap(), &[color, color, color, color]);
                         }
                     }
                 }
@@ -207,12 +207,17 @@ impl Camera {
                 .map(|x| &x.to_homogeneous() * &mvp)
                 .map(|x| Pos3::from_matrix(&x));
 
-            // for  pos in &trans_poses {
-            //     if pos.x() < -1. || pos.x() > 1. || pos.y() > 1. || pos.y() < -1.{
-            //         println!("will return: {:?}", pos);
-            //         return _out;
-            //     }
-            // }
+
+            let mut is_continue = false;
+            for  pos in trans_poses.clone() {
+                if pos.x() < 0. || pos.x() > width as f32 || pos.y() > height as f32 || pos.y() < 0.{
+                    is_continue = true;
+                    break
+                }
+            }
+            if is_continue {
+                continue
+            }
 
             let surface_tri_zero = Triangle::from_vec(
                 trans_poses.clone().map(|x| Pos3::from_xyz(x.x(), x.y(), 0.0)).collect()
@@ -246,7 +251,7 @@ impl Camera {
                             let uv = _tri.get_uv(&bar);
                             let color = image.get_pixel(uv.u() as u32, uv.v() as u32);
 
-                            _out.put_pixel(i, j, &color.0);
+                            _out.put_pixel(i, j.try_into().unwrap(), &color.0);
                         }
                     }
                 }

@@ -25,7 +25,6 @@ const HEIGHT: u32 = 240;
 /// Representation of the application state. In this example, a box will bounce around the screen.
 struct World {
     camera: Camera,
-    objs: Vec<RenderObject>,
     resources: TriangleResources,
     theta: f32,
 }
@@ -108,17 +107,12 @@ fn main() -> Result<(), Error> {
 impl World {
     /// Create a new `World` instance that can draw a moving box.
     fn new() -> Self {
-        let objs = ObjectLoader::load_render_obj("./res/cube.obj");
-        for i in &objs {
-            println!("i len:{:?}, pos:{:?}", i.indexes.len(), i.vertexes.len());
-        }
-        let res = ObjectLoader::load_triangle_resources("./res/nice_cube/nice_cube.obj");
+        let res = ObjectLoader::load_triangle_resources("./res/Link/link_adult.obj");
 
         Self {
             camera: Camera::new(45., (WIDTH / HEIGHT) as f32, -5., -50., Pos3::from_xyz(0., 0., 10.,),
                                 Vector3::from_xyz(0., 0., -1.),
                                 Vector3::from_xyz(0., -1., 0.)),
-            objs: objs,
             resources: res,
             theta: 0.,
         }
@@ -137,8 +131,8 @@ impl World {
         self.theta += 0.02;
 
         // link_adult is too big
-        //let mut scale = HomoTransform::scale((0.1, 0.1, 0.1));
-        let mut scale = HomoTransform::identity_matrix();
+        let mut scale = HomoTransform::scale((0.05, 0.05, 0.05));
+        // let mut scale = HomoTransform::identity_matrix();
 
 
         let _move_origin = HomoTransform::translation((-0., -0., 0.));
@@ -152,15 +146,12 @@ impl World {
             1., 0., 0., 0.,
             0., 1., 0., 0.,
             0., 0., 1., 0.,
-            0., 0., -5.0, 1.,
+            0., -3., -5.0, 1.,
         ]);
 
         //let _mat = _mat * scale;
-        //let _mat = _mat * _move;
+        let _mat = _mat * _move;
 
-        for i in &self.objs {
-            buffer.add_object(i.clone());
-        }
 
         //let _buf = self.camera.render(WIDTH, HEIGHT, &buffer, &_mat);
 
