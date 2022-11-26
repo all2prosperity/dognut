@@ -22,19 +22,18 @@ pub struct RasterRunner<> {
 
 impl RasterRunner {
     pub fn new(tx: Sender<Box<Vec<u8>>>, camera: Camera, shader: Box<dyn Shader>) -> Self {
-
         Self {
             tx,
             model_mat: HomoTransform::identity_matrix(),
             view_mat: camera.to_view_matrix(),
             proj_mat: camera.perspective_projection.clone(),
             camera,
-            shader
+            shader,
         }
     }
 
 
-    pub fn render_frame(&self, dimension:(u32, u32), triangle_res: &TriangleResources) {
+    pub fn render_frame(&self, dimension: (u32, u32), triangle_res: &TriangleResources) -> OutputBuffer {
         let mut out = OutputBuffer::new(dimension.0, dimension.1);
         let mv = &self.model_mat * &self.view_mat;
         let mvp = &mv * &self.proj_mat;
@@ -43,9 +42,10 @@ impl RasterRunner {
 
         for mut triangle in triangle_res.iter() {
             let screen = triangle.clip_return_screen_no_divide(&mvp, &view_port);
-            let screen_divide:Vec<Vector3> = screen.iter().map(|v| {
-                let d = v / v.index(0,3);
-                Vector3::from_xyz(d.index(0,0), d.index(0,1), d.index(0,2))}).collect();
+            let screen_divide: Vec<Vector3> = screen.iter().map(|v| {
+                let d = v / v.index(0, 3);
+                Vector3::from_xyz(d.index(0, 0), d.index(0, 1), d.index(0, 2))
+            }).collect();
 
             let (sx, ex, sy, ey) = Triangle::bounding_box(&screen_divide);
 
@@ -53,30 +53,33 @@ impl RasterRunner {
             for i in sx..ex {
                 for j in sy..ey {
                     let p = Vector3::from_xyz(i as f32 + 0.5, j as f32 + 0.5, 0.);
-                    if Triangle::inside_triangle(&p, &screen_divide) {
-                        let bar = Triangle::barycentric_2d_out((p.x(), p.y()), &screen_divide);
-                        let reci = 1. / (bar.x() / screen[0].w() + bar.y() / screen[1].w() + bar.z() / screen[2].w() );
-                        let bar_correct = Vector3::from_xyz(
-                            (bar.x() / screen[0].w()) / reci,
-                            (bar.y() / screen[1].w()) / reci,
-                            (bar.z() / screen[2].w()) / reci,
-                        );
 
-                        let z_current = bar_correct.dot(&Vector3::from_xyz(screen_divide[0].z(),
-                        screen_divide[1].z(),
-                        screen_divide[2].z()));
+                    let bar = Triangle::barycentric_2d_out((p.x(), p.y()), &screen_divide);
 
-                        if z_current > out.get_depth(p.x() as usize, p.y() as usize) {
-                            out.set_depth(p.x() as usize, p.y() as usize, z_current);
-                            let uv = triangle.get_uv(&bar_correct);
-                            let color = image.get_pixel(uv.u() as u32, uv.v() as u32);
-                            out.put_pixel(i, j, &color.0);
-                        }
+                    if bar.x() < 0. || bar.y() < 0. || bar.z() < 0. {
+                        continue;
+                    }
+
+                    let reci = 1. / (bar.x() / screen[0].w() + bar.y() / screen[1].w() + bar.z() / screen[2].w());
+                    let bar_correct = Vector3::from_xyz(
+                        (bar.x() / screen[0].w()) * reci,
+                        (bar.y() / screen[1].w()) * reci,
+                        (bar.z() / screen[2].w()) * reci,
+                    );
+
+                    let z_current = bar_correct.dot(&Vector3::from_xyz(screen_divide[0].z(),
+                                                                       screen_divide[1].z(),
+                                                                       screen_divide[2].z()));
+
+                    if z_current > out.get_depth(p.x() as usize, p.y() as usize) {
+                        out.set_depth(p.x() as usize, p.y() as usize, z_current);
+                        let uv = triangle.get_uv(&bar_correct);
+                        let color = image.get_pixel(uv.u() as u32, uv.v() as u32);
+                        out.put_pixel(i, j, &color.0);
                     }
                 }
             }
-
-
         }
+        out
     }
 }

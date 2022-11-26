@@ -15,7 +15,7 @@ pub struct Args {
     pub term: bool,
 
     /// object path to load, only support triangulated obj.
-    #[arg(long, default_value_t=String::from("./res/cube/cube.obj"))]
+    #[arg(long, default_value_t=String::from("./res/plane/plane.obj"))]
     pub obj_path: String,
 
     /// only render a jpeg picture
