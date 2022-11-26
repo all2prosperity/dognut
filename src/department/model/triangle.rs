@@ -4,9 +4,10 @@ use std::collections::BTreeMap;
 use log::__private_api_log;
 
 use crate::department::model::render_object::RenderObject;
+use crate::department::preview::homo_transformation::HomoTransform;
 use crate::department::preview::matrix::{Matrix, HMat};
 use crate::department::preview::position::Pos3;
-use crate::department::preview::vector::{Vec2, Vector3};
+use crate::department::preview::vector::{HVec4, Vec2, Vector3};
 
 #[derive(Debug)]
 pub struct Triangle {
@@ -14,7 +15,7 @@ pub struct Triangle {
     pub color: Option<Matrix<3, 3>>,
     pub normal: Vec<Vector3>,
     pub tex_coords: Vec<Vec2>,
-    pub trans_v: Option<Vec<Pos3>>,
+    pub clip_v: Option<Vec<HVec4>>,
 }
 
 pub fn max(l: f32, r: f32) -> f32 {
@@ -40,7 +41,7 @@ impl Triangle {
             color: None,
             normal: vec![Pos3::default(); 3],
             tex_coords: vec![Vec2::default(); 3],
-            trans_v: None,
+            clip_v: None,
         }
     }
 
@@ -50,7 +51,7 @@ impl Triangle {
             color: None,
             normal: vec![Pos3::default(); 3],
             tex_coords: vec![Vec2::default(); 3],
-            trans_v: None,
+            clip_v: None,
         }
     }
 
@@ -60,7 +61,7 @@ impl Triangle {
             color: None,
             normal,
             tex_coords: tex,
-            trans_v: None,
+            clip_v: None,
         }
     }
 
@@ -127,6 +128,37 @@ impl Triangle {
         (min_x.floor() as i32, max_x.ceil() as i32, min_y.floor() as i32, max_y.ceil() as i32)
     }
 
+    pub fn bounding_box(v: &Vec<Vector3>) -> (u32, u32, u32, u32) {
+        let min_x = min(min(v[0].x(), v[1].x()), v[2].x());
+        let max_x = max(max(v[0].x(), v[1].x()), v[2].x());
+        let min_y = min(min(v[0].y(), v[1].y()), v[2].y());
+        let max_y = max(max(v[0].y(), v[1].y()), v[2].y());
+        (min_x.floor() as u32, max_x.ceil() as u32, min_y.floor() as u32, max_y.ceil() as u32)
+    }
+
+
+    pub fn inside_triangle(pos: &Vector3, v: &Vec<Vector3>) -> bool {
+        let mut last_cross_vec: Option<Vector3> = None;
+        for i in 0..3 {
+            let j = if i == 2 { 0 } else { i + 1 };
+            let vec1 = &v[j] - &v[i];
+            let vec2 = pos - &v[i];
+            let cross = vec2.cross(&vec1);
+
+            //todo: 假定三角形顶点是逆时针定义的，那么只要有一个cross product的z为负值，那么就可以判定在三角形外
+            // println!("cur last is {:?}", last_cross_vec);
+            if let Some(_last_cross_vec) = &last_cross_vec {
+                if _last_cross_vec.dot(&cross) < 0. {
+                    return false;
+                }
+            }
+
+            last_cross_vec = Some(cross);
+        }
+
+        true
+    }
+
     pub fn get_surface_equation(&self) -> (f32, f32, f32, f32) {
         let a = (self.v[1].y() - self.v[0].y()) * (self.v[2].z() - self.v[0].z()) - (self.v[1].z() - self.v[0].z()) * (self.v[2].y() - self.v[0].y());
         let b = (self.v[2].x() - self.v[0].x()) * (self.v[1].z() - self.v[0].z()) - (self.v[1].x() - self.v[0].x()) * (self.v[2].z() - self.v[0].z());
@@ -189,6 +221,28 @@ impl Triangle {
         beta = ((v3.y() - v1.y()) * (p.0 - v3.x()) + (v1.x() - v3.x()) * (p.1 - v3.y())) / denominator;
         gamma = 1. - alpha - beta;
         Vector3::from_xyz(alpha, beta, gamma)
+    }
+
+    pub fn barycentric_2d_out(p: (f32, f32), v: &Vec<Vector3>) -> Vector3 {
+        let (mut alpha, mut beta, mut gamma) = (0f32, 0f32, 0f32);
+        let (v1, v2, v3) = (&v[0], &v[1], &v[2]);
+
+        let denominator = (v2.y() - v3.y()) * (v1.x() - v3.x()) + (v3.x() - v2.x()) * (v1.y() - v3.y());
+
+        alpha = ((v2.y() - v3.y()) * (p.0 - v3.x()) + (v3.x() - v2.x()) * (p.1 - v3.y())) / denominator;
+        beta = ((v3.y() - v1.y()) * (p.0 - v3.x()) + (v1.x() - v3.x()) * (p.1 - v3.y())) / denominator;
+        gamma = 1. - alpha - beta;
+        Vector3::from_xyz(alpha, beta, gamma)
+    }
+
+
+    // after mvp and perspective divide
+    pub fn clip_return_screen_no_divide(&mut self, mvp: &HomoTransform, view_port: &HomoTransform) -> Vec<HVec4>{
+        let clip_v:Vec<HVec4> = self.v.iter().map(|v| &v.to_homogeneous() * &mvp).collect();
+        let screen_v:Vec<HVec4> = clip_v.iter().map(|c| c * view_port).collect();
+        self.clip_v = Some(clip_v);
+
+        screen_v
     }
 }
 

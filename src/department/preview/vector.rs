@@ -4,6 +4,9 @@ use super::matrix::{Matrix, HMat};
 pub type Vec2 = Matrix<1, 2>;
 
 
+pub type HVec4 = Matrix<1,4>;
+
+
 impl Default for Vec2 {
     fn default() -> Self {
         Vec2{
@@ -120,5 +123,41 @@ impl Vector3 {
             u.z(), v.z(), w.z(), 0.,
             0., 0., 0., 1.,
         ])
+    }
+}
+
+impl HVec4 {
+    pub fn from_v3(v: Vector3) -> Self {
+        let mut ele = v.elements.clone();
+        ele.push(1.);
+        Self {
+            m:1,
+            n:4,
+            elements: ele,
+        }
+    }
+
+
+
+    pub fn persp_divide(&mut self){
+        for i in 0..self.n {
+            self.elements[i] /= self.elements[3];
+        }
+    }
+
+    pub fn x(&self) -> f32{
+        self.elements[0]
+    }
+
+    pub fn y(&self) -> f32{
+        self.elements[1]
+    }
+
+    pub fn z(&self) -> f32{
+        self.elements[2]
+    }
+
+    pub fn w(&self) -> f32{
+        self.elements[3]
     }
 }

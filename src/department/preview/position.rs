@@ -1,3 +1,4 @@
+use crate::department::preview::vector::HVec4;
 use super::matrix::Matrix;
 use super::vector::Vector3;
 use std::ops::Sub;
@@ -45,7 +46,7 @@ impl Pos3 {
         Self::from_xyz(x / w, y / w, z / w)
     }
 
-    pub fn to_homogeneous(&self) -> Matrix<1, 4> {
+    pub fn to_homogeneous(&self) -> HVec4 {
         let _elements = vec![self.x(), self.y(), self.z(), 1.];
         Matrix::from_vec(_elements)
     }

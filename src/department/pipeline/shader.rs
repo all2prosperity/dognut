@@ -9,13 +9,19 @@ pub struct LambertianShader {
     light_intensity: f32,
 }
 
+pub trait Shader {
+    fn shade(&self, x: usize, y: usize, tri: &Triangle) -> Vector3;
+}
+
 impl LambertianShader {
-    pub fn new(light_source:Vector3, kd: f32, light_intensity: f32) -> Self {
+    pub fn new(light_source: Vector3, kd: f32, light_intensity: f32) -> Self {
         Self { light_source, kd, light_intensity }
     }
+}
 
-    pub fn shade(&self,x:usize, y:usize, tri: &Triangle) -> Vector3 {
-        let mut intensity =  self.light_source.dot(&tri.get_normal(x, y));
+impl Shader for LambertianShader {
+    fn shade(&self, x: usize, y: usize, tri: &Triangle) -> Vector3 {
+        let mut intensity = self.light_source.dot(&tri.get_normal(x, y));
         if intensity < 0. {
             intensity = 0.;
         }

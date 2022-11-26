@@ -20,7 +20,7 @@ pub struct Camera {
     eye: Pos3,
     forward: Vector3,
     up: Vector3,
-    perspective_projection: HMat
+    pub perspective_projection: HMat
 }
 
 impl Camera {
@@ -186,7 +186,7 @@ impl Camera {
         let view = self.to_view_matrix();
 
         let mvp = &(model * &view) * &self.perspective_projection;
-        let view_port = _out.to_view_pixel_matrix();
+        let view_port = _out.to_view_port_matrix();
         let mvp = &mvp * &view_port;
         let mvp_1 = mvp.inverse_matrix();
 

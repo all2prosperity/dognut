@@ -34,7 +34,7 @@ winit_input_helper = "0.13"
 profiling = "1.0.7"
 wgpu = "0.*"
 winit = "0.*"
-crossbeam-channel = {version = "0.5.*", optional=true} # for thread synchronize
+crossbeam-channel = {version = "0.5.*"} # for thread synchronize
 clap = {version="4.*", features = ["derive"]}
 
 tokio = {version="1", features=["full"]}

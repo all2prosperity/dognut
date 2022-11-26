@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
+use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Sub};
 use dognut_macros::TriangularInverse;
 
 #[derive(Debug, Clone, TriangularInverse)]
@@ -80,6 +80,14 @@ impl<const M: usize, const N: usize> Mul<f32> for Matrix<M, N> {
 
     fn mul(self, rhs: f32) -> Self::Output {
         Self::Output::from_vec(self.elements.iter().map(|f| f*rhs).collect())
+    }
+}
+
+impl<const M: usize, const N: usize> Div<f32> for &Matrix<M, N> {
+    type Output = Matrix<M,N>;
+
+    fn div(self, rhs: f32) -> Self::Output {
+        Self::Output::from_vec(self.elements.iter().map(|f| f/rhs).collect())
     }
 }
 

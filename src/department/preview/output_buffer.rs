@@ -7,7 +7,7 @@ pub struct OutputBuffer {
     width: u32,
     height: u32,
     pub display: Vec<u8>,
-    depth: Vec<f32>,
+    pub depth: Vec<f32>,
 }
 
 const RGB_STEP: usize = 4;
@@ -48,7 +48,7 @@ impl OutputBuffer {
         (self.width as f32 / 2. * (x + 1.), self.height as f32 / 2. * (1. - y))
     }
 
-    pub fn to_view_pixel_matrix(&self) -> Matrix<4, 4>{
+    pub fn to_view_port_matrix(&self) -> Matrix<4, 4>{
         let half_width = self.width as f32 / 2.;
         let half_height = self.height as f32 / 2.;
         Matrix::<4, 4>::from_vec(vec![
