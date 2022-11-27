@@ -6,3 +6,4 @@ pub mod tui;
 pub mod pipeline;
 pub mod model;
 pub mod common;
+pub mod types;
