@@ -10,18 +10,19 @@ use crate::department::preview::vector::Vector3;
 use crate::department::view::camera::Camera;
 
 
-pub struct RasterRunner<> {
+pub struct RasterRunner {
     tx: Sender<Box<Vec<u8>>>,
     model_mat: HomoTransform,
     view_mat: HomoTransform,
     proj_mat: HomoTransform,
     camera: Camera,
     shader: Box<dyn Shader>,
+    tui: bool
 }
 
 
 impl RasterRunner {
-    pub fn new(tx: Sender<Box<Vec<u8>>>, camera: Camera, shader: Box<dyn Shader>) -> Self {
+    pub fn new(tx: Sender<Box<Vec<u8>>>, camera: Camera, shader: Box<dyn Shader>, tui: bool) -> Self {
         Self {
             tx,
             model_mat: HomoTransform::identity_matrix(),
@@ -29,12 +30,16 @@ impl RasterRunner {
             proj_mat: camera.perspective_projection.clone(),
             camera,
             shader,
+            tui,
         }
+    }
+    
+    pub fn set_model(&mut self, m: HomoTransform) {
+        self.model_mat = m;
     }
 
 
-    pub fn render_frame(&self, dimension: (u32, u32), triangle_res: &TriangleResources) -> OutputBuffer {
-        let mut out = OutputBuffer::new(dimension.0, dimension.1);
+    pub fn render_frame(&self, triangle_res: &TriangleResources, out:&mut OutputBuffer) {
         let mv = &self.model_mat * &self.view_mat;
         let mvp = &mv * &self.proj_mat;
         let view_port = out.to_view_port_matrix();
@@ -81,6 +86,5 @@ impl RasterRunner {
                 }
             }
         }
-        out
     }
 }
