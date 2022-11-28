@@ -67,6 +67,7 @@ impl RasterRunner {
                         (bar.z() / screen[2].w()) * reci,
                     );
 
+
                     let z_current = bar_correct.dot(&Vector3::from_xyz(screen_divide[0].z(),
                                                                        screen_divide[1].z(),
                                                                        screen_divide[2].z()));

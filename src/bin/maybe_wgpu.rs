@@ -23,17 +23,12 @@ const HEIGHT: u32 = 480;
 
 fn main() -> Result<(), Error>{
     let arg = Args::parse();
-    //
-    // if arg.use_gpu {
-    //     std::thread::spawn()
-    // }
-
     let (rx, tx) = crossbeam_channel::unbounded();
 
     let camera=  Camera::new(45., (WIDTH / HEIGHT) as f32,
                              -5., -50., Vector3::from_xyz(0., 0., 10.,),
                              Vector3::from_xyz(0., 0., -1.),
-                             Vector3::from_xyz(0., 1., 0.));
+                             Vector3::from_xyz(0., -1., 0.));
 
     let raster = RasterRunner::new(rx.clone(), camera,
                       Box::new(LambertianShader::new(Vector3::from_xyz(0., 0., 1.),
@@ -43,6 +38,13 @@ fn main() -> Result<(), Error>{
 
     println!("obj resources path is {}", &arg.obj_path);
     let res = ObjectLoader::load_triangle_resources(&arg.obj_path);
+
+
+    if arg.render_a_picture {
+        let out = raster.render_frame((WIDTH, HEIGHT), &res);
+        out.save_to_image("./img");
+        return Ok(());
+    }
 
     env_logger::init();
     let event_loop = EventLoop::new();

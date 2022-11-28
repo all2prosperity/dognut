@@ -1,4 +1,7 @@
+use std::path::Path;
 use image;
+use image::{ImageBuffer, ImageFormat, RgbaImage};
+use log::error;
 use super::position::Pos3;
 use super::matrix::Matrix;
 pub type Display = image::ImageBuffer<image::Rgba<u8>, Vec<u8>>;
@@ -67,5 +70,14 @@ impl OutputBuffer {
     pub fn pos_to_pixel_pos_with_z(&self, pos: &Pos3) -> Pos3{
         let (x, y) = (self.width as f32 / 2. * (pos.x() + 1.), self.height as f32 / 2. * (1. - pos.y()));
         Pos3::from_xyz(x,y,pos.z())
+    }
+
+
+    pub fn save_to_image(&self, path: &str) {
+        let mut img = RgbaImage::new(self.width, self.height);
+        img.copy_from_slice(self.display.as_slice());
+        if let Err(e) = img.save_with_format(Path::new(path), ImageFormat::Png) {
+            error!("could not save image {}", e);
+        }
     }
 }
