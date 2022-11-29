@@ -20,6 +20,7 @@ pub struct Camera {
     eye: Pos3,
     forward: Vector3,
     up: Vector3,
+    pub model: HomoTransform,
     pub perspective_projection: HMat
 }
 
@@ -34,6 +35,7 @@ impl Camera {
             eye: pos,
             forward,
             up,
+            model: HomoTransform::identity_matrix(),
             perspective_projection: persp,
         }
     }

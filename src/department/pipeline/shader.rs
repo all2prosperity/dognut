@@ -1,32 +1,68 @@
 use std::cmp::max;
 use crate::department::model::triangle::Triangle;
+use crate::department::preview::homo_transformation::HomoTransform;
+use crate::department::preview::matrix::Matrix;
 use crate::department::preview::vector::Vector3;
+use crate::department::view::camera::Camera;
 
-#[derive(Debug)]
+//#[derive(Debug)]
 pub struct LambertianShader {
+    model_view: HomoTransform,
+    model_view_IT: HomoTransform,
     light_source: Vector3,
-    kd: f32,
+    ka: f32,
+    ks_index: f32,
     light_intensity: f32,
+    tui: bool,
 }
 
 pub trait Shader {
-    fn shade(&self, x: usize, y: usize, tri: &Triangle) -> Vector3;
+    fn shade(&self, normal: &Vec<Vector3>, diffuse: &[u8; 4], bar: &Vector3) -> [u8;4];
 }
 
-impl LambertianShader {
-    pub fn new(light_source: Vector3, kd: f32, light_intensity: f32) -> Self {
-        Self { light_source, kd, light_intensity }
+impl LambertianShader{
+    pub fn new(light_source: Vector3, ka: f32, light_intensity: f32, cam: &Camera, tui: bool) -> Self {
+        let mv = &cam.model * &cam.to_view_matrix();
+        let mut mv_it = HomoTransform::identity_matrix();
+        if let Some(inverse) = mv.inverse_matrix() {
+            mv_it = inverse.t();
+        }
+
+        let ls = &light_source.to_homogeneous() * &mv;
+        let mut ls = Vector3::from_xyz(ls.x() / ls.w(), ls.y() / ls.w(), ls.z() / ls.w());
+        ls.norm();
+        Self {
+            light_source: ls,
+            ka,
+            light_intensity,
+            model_view: mv,
+            model_view_IT: mv_it,
+            ks_index: 10.,
+            tui: false,
+        }
     }
 }
 
 impl Shader for LambertianShader {
-    fn shade(&self, x: usize, y: usize, tri: &Triangle) -> Vector3 {
-        let mut intensity = self.light_source.dot(&tri.get_normal(x, y));
-        if intensity < 0. {
-            intensity = 0.;
-        }
-        let bar = tri.barycentric_2d((x as f32, y as f32));
-        //tri.get_color_rgba(&bar) * intensity
-        Vector3::default()
+    fn shade(&self, normal: &Vec<Vector3>, diffuse: &[u8;4], bar: &Vector3) -> [u8;4] {
+        let n = normal.iter().map(|v| Vector3::from_matrix(&(&v.to_homogeneous() * &self.model_view_IT) )).collect();
+        let nl = Matrix::<3,3>::from_rows(n) * bar.t();
+        let nl = nl.t();
+        let cos = nl.dot(&self.light_source);
+        let mut intensity:f32 = if cos.le(&0.) {
+            0.
+        }else if cos.ge(&1.) {
+            1.
+        }else {
+            cos
+        };
+
+
+
+        let (r, g, b) = (intensity * diffuse[0] as f32, intensity * diffuse[1] as f32, intensity* diffuse[2] as f32);
+
+
+        [r as u8 , g as u8, b as u8, 'c' as u8]
+
     }
 }

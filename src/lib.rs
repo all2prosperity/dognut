@@ -1,5 +1,7 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
+#![feature(iter_array_chunks)]
+
 pub mod department;
 pub mod util;
 pub mod wgpu;

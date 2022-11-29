@@ -40,8 +40,9 @@ impl TuiApp {
         loop {
             self.theta += 0.1;
             self.draw((dimension.0 as u32, dimension.1 as u32), &res);
-            if let Ok(_) = event::poll(Duration::from_millis(1000/25)) {
-                match event::read()? {
+            if let Ok(ready) = event::poll(Duration::from_millis(1000/25)) {
+                if ready {
+                 match event::read()? {
                     Event::FocusGained => {}
                     Event::FocusLost => {}
                     Event::Key(k) => {
@@ -79,6 +80,7 @@ impl TuiApp {
                             KeyCode::KeypadBegin => {}
                             KeyCode::Media(_) => {}
                             KeyCode::Modifier(_) => {}
+                            _ => {}
                         }
 
                     }
@@ -87,6 +89,7 @@ impl TuiApp {
                     Event::Resize(w, h) => {
                         self.draw((w as u32, h as u32), &res);
                     }
+                }
                 }
             }
             execute!(self.stdout, terminal::Clear(ClearType::All));
