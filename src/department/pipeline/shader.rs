@@ -47,7 +47,8 @@ impl Shader for LambertianShader {
     fn shade(&self, normal: &Vec<Vector3>, diffuse: &[u8;4], bar: &Vector3) -> [u8;4] {
         let n = normal.iter().map(|v| Vector3::from_matrix(&(&v.to_homogeneous() * &self.model_view_IT) )).collect();
         let nl = Matrix::<3,3>::from_rows(n) * bar.t();
-        let nl = nl.t();
+        let mut nl = nl.t();
+        nl.norm();
         let cos = nl.dot(&self.light_source);
         let mut intensity:f32 = if cos.le(&0.) {
             0.
