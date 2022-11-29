@@ -28,9 +28,7 @@ impl<'a> OutputBuffer<'a> {
         _depth.resize(pixels_num, f32::NEG_INFINITY);
 
         let mut _display: Vec<u8> = Vec::with_capacity(pixels_num * RGB_STEP);
-        if tui {
-            _display.resize(pixels_num * RGB_STEP, 0);
-        }
+        _display.resize(pixels_num * RGB_STEP, 0);
 
         Self {
             width, height,

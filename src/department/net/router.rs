@@ -26,15 +26,15 @@ async fn listen_from_render(render_recv: Receiver<msg::TransferMsg>) {
         if let Ok(msg) = render_recv.try_recv() {
             match msg {
                 msg::TransferMsg::RenderPc(frame) => {
-                    let mut buf = Vec::<u8>::new();
-                    display::Frame {
-                        data: frame
-                    }.encode_length_delimited(&mut buf);
+                    // let mut buf = Vec::<u8>::new();
+                    // display::Frame {
+                    //     data: frame
+                    // }.encode_length_delimited(&mut buf);
 
 
                     println!("will send to client");
                     for sender in CLIENT_SENDERS.lock().await.iter_mut() {
-                        sender.try_write(&buf);
+                        sender.try_write(&frame);
                     }
                 },
                 _ => ()
