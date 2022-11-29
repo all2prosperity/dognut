@@ -14,7 +14,9 @@ use dognut::department::model::triangle_resources::TriangleResources;
 use dognut::department::pipeline::rasterizer::RasterRunner;
 use dognut::department::pipeline::shader::LambertianShader;
 use dognut::department::preview::homo_transformation::HomoTransform;
+use dognut::department::preview::output_buffer::OutputBuffer;
 use dognut::department::preview::vector::Vector3;
+use dognut::department::tui::TuiApp;
 use dognut::department::view::camera::Camera;
 use dognut::util::Args;
 
@@ -22,29 +24,40 @@ const WIDTH: u32 = 640;
 const HEIGHT: u32 = 480;
 
 fn main() -> Result<(), Error>{
+    env_logger::init();
     let arg = Args::parse();
-    //
-    // if arg.use_gpu {
-    //     std::thread::spawn()
-    // }
-
     let (rx, tx) = crossbeam_channel::unbounded();
 
     let camera=  Camera::new(45., (WIDTH / HEIGHT) as f32,
                              -5., -50., Vector3::from_xyz(0., 0., 10.,),
                              Vector3::from_xyz(0., 0., -1.),
-                             Vector3::from_xyz(0., 1., 0.));
+                             Vector3::from_xyz(0., -1., 0.));
 
     let raster = RasterRunner::new(rx.clone(), camera,
                       Box::new(LambertianShader::new(Vector3::from_xyz(0., 0., 1.),
                                                      0.8, 0.8
-                      )));
+                      )), false);
 
 
     println!("obj resources path is {}", &arg.obj_path);
     let res = ObjectLoader::load_triangle_resources(&arg.obj_path);
 
-    env_logger::init();
+
+    if arg.term {
+        let result = TuiApp::new(raster).run(res);
+        if let Err(e) = result {
+            error!("tui return an error, {}", e.to_string());
+        }
+        return Ok(());
+    }
+
+    if arg.render_a_picture {
+        let mut out = OutputBuffer::new(WIDTH, HEIGHT, false);
+        raster.render_frame( &res, &mut out);
+        out.save_to_image("./img");
+        return Ok(());
+    }
+
     let event_loop = EventLoop::new();
     let mut input = WinitInputHelper::new();
     let window = {
@@ -99,6 +112,7 @@ fn main() -> Result<(), Error>{
 }
 
 fn draw(raster:&RasterRunner,res: &TriangleResources , frame: &mut [u8]) {
-    let buf = raster.render_frame((WIDTH, HEIGHT), res);
-    frame.copy_from_slice(&buf.display);
+    let mut out = OutputBuffer::new(WIDTH, HEIGHT, false);
+    raster.render_frame( res, &mut out);
+    frame.copy_from_slice(&out.display);
 }

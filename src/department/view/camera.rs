@@ -126,7 +126,7 @@ impl Camera {
     #[profiling::function]
     //pub fn render(&self, width: u32, height: u32, object_buffer: &ObjectBuffer, view: &HMat) -> OutputBuffer {
     pub fn render(&self, width: u32, height: u32, object_buffer: &ObjectBuffer, model: &HMat) -> OutputBuffer {
-        let mut _out = OutputBuffer::new(width, height);
+        let mut _out = OutputBuffer::new(width, height, true);
 
         let view = self.to_view_matrix();
 
@@ -181,7 +181,7 @@ impl Camera {
 
 
     pub fn render_triangle_obejct(&self, width: u32, height: u32, triangle_res: &TriangleResources, model: &HMat) -> OutputBuffer {
-        let mut _out = OutputBuffer::new(width, height);
+        let mut _out = OutputBuffer::new(width, height, false);
 
         let view = self.to_view_matrix();
 

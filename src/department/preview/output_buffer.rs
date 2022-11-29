@@ -1,30 +1,43 @@
+use std::io::Stdout;
+use std::path::Path;
+use crossterm::{cursor, execute, queue, style};
+use crossterm::style::Color;
 use image;
+use image::{ImageBuffer, ImageFormat, RgbaImage};
+use crossterm::style::Stylize;
+use log::error;
 use super::position::Pos3;
 use super::matrix::Matrix;
 pub type Display = image::ImageBuffer<image::Rgba<u8>, Vec<u8>>;
 
-pub struct OutputBuffer {
+pub struct OutputBuffer<'a> {
     width: u32,
     height: u32,
     pub display: Vec<u8>,
     pub depth: Vec<f32>,
+    tui: bool,
+    pub stdout: Option<&'a Stdout>,
 }
 
 const RGB_STEP: usize = 4;
 
-impl OutputBuffer {
-    pub fn new(width: u32, height: u32) -> Self {
+impl<'a> OutputBuffer<'a> {
+    pub fn new(width: u32, height: u32, tui: bool) -> Self {
         let pixels_num = (width * height) as usize;
         let mut _depth: Vec<f32> = Vec::with_capacity(pixels_num);
         _depth.resize(pixels_num, f32::NEG_INFINITY);
 
         let mut _display: Vec<u8> = Vec::with_capacity(pixels_num * RGB_STEP);
-        _display.resize(pixels_num * RGB_STEP, 0);
+        if tui {
+            _display.resize(pixels_num * RGB_STEP, 0);
+        }
 
         Self {
             width, height,
             display: _display,
             depth: _depth,
+            tui,
+            stdout: None
         }
     }
 
@@ -37,6 +50,12 @@ impl OutputBuffer {
     }
 
     pub fn put_pixel(&mut self, x: u32, y: u32, rgb: &[u8]) {
+        if self.tui {
+            let mut stdout = self.stdout.unwrap();
+            queue!(stdout, cursor::MoveTo(x as u16, y as u16));
+            queue!(stdout, style::PrintStyledContent("•".with(Color::Rgb {r: rgb[0], g: rgb[1], b:rgb[2]})));
+            return ;
+        }
         let start = (y * self.width + x) as usize * RGB_STEP;
         let buf = &mut self.display[start..(start + RGB_STEP)];
         for i in 0..RGB_STEP {
@@ -67,5 +86,14 @@ impl OutputBuffer {
     pub fn pos_to_pixel_pos_with_z(&self, pos: &Pos3) -> Pos3{
         let (x, y) = (self.width as f32 / 2. * (pos.x() + 1.), self.height as f32 / 2. * (1. - pos.y()));
         Pos3::from_xyz(x,y,pos.z())
+    }
+
+
+    pub fn save_to_image(&self, path: &str) {
+        let mut img = RgbaImage::new(self.width, self.height);
+        img.copy_from_slice(self.display.as_slice());
+        if let Err(e) = img.save_with_format(Path::new(path), ImageFormat::Png) {
+            error!("could not save image {}", e);
+        }
     }
 }
