@@ -7,4 +7,8 @@ pub mod proto {
     pub mod debugger {
         include!(concat!(env!("OUT_DIR"), "/proto.debugger.rs"));
     }
+    pub mod display {
+        include!(concat!(env!("OUT_DIR"), "/proto.display.rs"));
+    }
 }
+

@@ -1,0 +1,12 @@
+syntax = "proto3";
+package proto.display;
+
+message Frame {
+    bytes data = 1;
+}
+
+message Void {
+
+}
+
+

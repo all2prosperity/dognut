@@ -31,7 +31,7 @@ impl App {
             .build(
                 Root::builder()
                     .appender("logfile")
-                    .appender("stderr")
+                    // .appender("stderr")
                     .build(LevelFilter::Trace),
             ).unwrap();
 
@@ -39,7 +39,7 @@ impl App {
     }
 
     pub fn log_only_stderr() {
-        let level = log::LevelFilter::Debug;
+        let level = log::LevelFilter::Info;
 
         let stderr = ConsoleAppender::builder().target(Target::Stderr).build();
 
