@@ -5,6 +5,8 @@ use crate::department::preview::matrix::Matrix;
 use crate::department::preview::vector::Vector3;
 use crate::department::view::camera::Camera;
 
+pub static LUMINANCE_CHARS: [char; 12] = ['.', ',', '-', '~', ':', ';', '=', '!', '*', '#', '$', '@'];
+
 //#[derive(Debug)]
 pub struct LambertianShader {
     model_view: HomoTransform,
@@ -31,6 +33,7 @@ impl LambertianShader{
         let ls = &light_source.to_homogeneous() * &mv;
         let mut ls = Vector3::from_xyz(ls.x() / ls.w(), ls.y() / ls.w(), ls.z() / ls.w());
         ls.norm();
+        ls *= -1.0;
         Self {
             light_source: ls,
             ka,
@@ -45,9 +48,19 @@ impl LambertianShader{
 
 impl Shader for LambertianShader {
     fn shade(&self, normal: &Vec<Vector3>, diffuse: &[u8;4], bar: &Vector3) -> [u8;4] {
-        let n = normal.iter().map(|v| Vector3::from_matrix(&(&v.to_homogeneous() * &self.model_view_IT) )).collect();
-        let nl = Matrix::<3,3>::from_rows(n) * bar.t();
-        let mut nl = nl.t();
+        let mut n = Vec::new();
+        for i in 0..normal.len() {
+            let mut nn = Vector3::from_matrix(&(&normal[i].to_homogeneous() * &self.model_view_IT));
+            nn.norm();
+            n.push(nn);
+        }
+
+        // let n = normal.iter().map(|v| {
+        //     let mut tv = Vector3::from_matrix(&(&v.to_homogeneous() * &self.model_view_IT));
+        //     tv.norm();
+        //     return tv;
+        // } ).collect();
+        let mut nl = bar * &Matrix::<3,3>::from_rows(n);
         nl.norm();
         let cos = nl.dot(&self.light_source);
         let mut intensity:f32 = if cos.le(&0.) {
@@ -57,13 +70,18 @@ impl Shader for LambertianShader {
         }else {
             cos
         };
-
-
+        let index = ((LUMINANCE_CHARS.len() - 1) as f32 * intensity).ceil() as usize;
+        let final_char = LUMINANCE_CHARS[index];
 
         let (r, g, b) = (intensity * diffuse[0] as f32, intensity * diffuse[1] as f32, intensity* diffuse[2] as f32);
 
 
-        [r as u8 , g as u8, b as u8, 'c' as u8]
+        if self.tui {
+            [r as u8 , g as u8, b as u8, final_char as u8]
+        }else {
+            [r as u8 , g as u8, b as u8, diffuse[3]]
+        }
+
 
     }
 }

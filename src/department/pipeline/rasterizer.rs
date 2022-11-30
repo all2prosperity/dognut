@@ -1,6 +1,7 @@
 use crate::department::preview::matrix::Matrix;
 use crossbeam_channel::Sender;
 use image::GenericImageView;
+use log::info;
 use crate::department::model::triangle::Triangle;
 use crate::department::model::triangle_resources::TriangleResources;
 use crate::department::pipeline::shader::Shader;
@@ -82,7 +83,7 @@ impl RasterRunner {
                         let uv = triangle.get_uv(&bar_correct);
                         let color = image.get_pixel(uv.u() as u32, uv.v() as u32);
                         let shade = self.shader.shade(&triangle.normal, &color.0, &bar_correct);
-                        out.put_pixel(i, j, &color.0);
+                        out.put_pixel(i, j, &shade);
                     }
                 }
             }
