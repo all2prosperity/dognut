@@ -36,8 +36,9 @@ fn main() -> Result<(), Error>{
     let shader = LambertianShader::new(Vector3::from_xyz(0., 10., 0.),
                                        0.8, 1.,&camera, arg.term);
 
+
     let raster = RasterRunner::new(rx.clone(), camera,
-                      Box::new(shader), false);
+                      Box::new(shader), arg.term);
 
 
     println!("obj resources path is {}", &arg.obj_path);
