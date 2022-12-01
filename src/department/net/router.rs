@@ -1,12 +1,16 @@
 use tokio::net::{
     TcpListener, TcpStream,
-    tcp::OwnedWriteHalf
+    tcp::OwnedWriteHalf,
+    UdpSocket
 };
-use log::{debug, error};
+use log::{debug, error, info};
+use crate::department::common::constant;
+use crate::department::types::msg::TransferMsg;
 use std::convert::Infallible;
 //use crate::proto::debugger;
 use crossbeam_channel::Receiver;
 use crate::department::types::msg;
+use std::{thread, env};
 use tokio::time::{sleep};
 use std::time::Duration;
 use std::sync::Arc;
@@ -20,19 +24,19 @@ lazy_static! {
     static ref CLIENT_SENDERS: Arc<Mutex<Vec<OwnedWriteHalf>>> = Arc::new(Mutex::new(Vec::new()));
 }
 
+static mut BIND_PORT: u32 = 0;
+
 
 async fn listen_from_render(render_recv: Receiver<msg::TransferMsg>) {
     loop {
         if let Ok(msg) = render_recv.try_recv() {
+
             match msg {
                 msg::TransferMsg::RenderPc(frame) => {
                     // let mut buf = Vec::<u8>::new();
                     // display::Frame {
                     //     data: frame
                     // }.encode_length_delimited(&mut buf);
-
-
-                    println!("will send to client");
                     for sender in CLIENT_SENDERS.lock().await.iter_mut() {
                         sender.try_write(&frame);
                     }
@@ -48,9 +52,48 @@ async fn listen_from_render(render_recv: Receiver<msg::TransferMsg>) {
     }
 }
 
+async fn listen_from_udp() {
+    let mut buf = [0; 1024];
+    for i in 0..(constant::PORT_RANGE) {
+        let host_str = format!("{}:{}", constant::HOST, constant::UDP_PORT + i);
+        if let Ok(sock) = UdpSocket::bind(host_str.clone()).await {
+            println!("listen from udp at:{:?}", host_str);
+            loop {
+                if let Ok((len, addr)) = sock.recv_from(&mut buf).await {
+                    println!("recv buf len:{:?}, addr:{:?}", len, addr);
+                    sock.send_to(&[15, 15, 12], addr).await;
+                }
+                else {
+                    println!("recv buf failed:");
+                }
+            }
+        }
+    }
+}
+
+pub fn net_run(render_recv: Receiver<TransferMsg>) {
+    let mut rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+    // let mut rt = tokio::runtime::Runtime::new().unwrap();
+
+    rt.block_on(async {
+        for i in 0..(constant::PORT_RANGE) {
+            let host_str = format!("{}:{}", constant::HOST, constant::PORT + i);
+            if let Ok(mut lis) = TcpListener::bind(&host_str).await {
+                info!("Server listen on {}", host_str);
+                ws_accept(&mut lis, render_recv).await;
+                unsafe {
+                    BIND_PORT = constant::PORT + i;
+                }
+                break;
+            }
+        }
+    });
+
+}
 
 pub async fn ws_accept( l: &mut TcpListener, render_recv: Receiver<msg::TransferMsg>) -> Result<(), Infallible>{
     tokio::spawn(listen_from_render(render_recv));
+    tokio::spawn(listen_from_udp());
 
     loop {
         match l.accept().await {

@@ -67,8 +67,6 @@ impl Render {
     ///
     /// Assumes the default texture format: `wgpu::TextureFormat::Rgba8UnormSrgb`
     fn draw(&mut self) -> Vec<u8> {
-        let mut buffer = ObjectBuffer::new();
-
         // link_adult is too big
         let mut scale = HomoTransform::scale((0.05, 0.05, 0.05));
         // let mut scale = HomoTransform::identity_matrix();
@@ -91,21 +89,18 @@ impl Render {
         //let _mat = _mat * scale;
         let _mat = _mat * _move;
 
-
-        //let _buf = self.camera.render(WIDTH, HEIGHT, &buffer, &_mat);
-
         let _buf = self.cameras[0].render_triangle_obejct(WIDTH, HEIGHT, &self.resources, &_mat);
 
         _buf.display
     }
 }
 
-pub fn run(sender: Sender<TransferMsg>) {
+pub fn run(render_pc_s: Sender<TransferMsg>, render_cli_s: Sender<TransferMsg>) {
     let mut render = Render::new();
     loop {
         render.update();
         let buf = render.draw();
-        println!("render finish one pic");
-        sender.send(TransferMsg::RenderPc(buf));
+        render_pc_s.send(TransferMsg::RenderPc(buf.clone()));
+        render_cli_s.send(TransferMsg::RenderPc(buf));
     }
 }

@@ -52,7 +52,6 @@ pub fn run(render_recv: Receiver<TransferMsg>) -> Result<(), Error> {
 
     event_loop.run(move |event, _, control_flow| {
         if let Ok(ret) = render_recv.try_recv() {
-            println!("recv ok!");
             match ret {
                 TransferMsg::RenderPc(frame) => {
                     frames.push_back(frame);
