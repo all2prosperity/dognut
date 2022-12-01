@@ -1,5 +1,6 @@
 use std::io::{Write, stdout};
-use crossterm::{queue, QueueableCommand, cursor, style};
+use crossterm::{queue, QueueableCommand, cursor, style, execute};
+use crossterm::cursor::MoveToNextLine;
 use crossterm::style::{Attribute, Color, Stylize};
 use crossterm::terminal::{Clear, ClearType, size};
 
@@ -11,8 +12,10 @@ fn main() {
 
     queue!(stdout, cursor::MoveTo(5,5));
     queue!(stdout, style::PrintStyledContent( format!("width {}", s.0).with(Color::Rgb {r:120,g:0,b:0})));
-    queue!(stdout, cursor::MoveTo(5,6));
+    //queue!(stdout, cursor::MoveTo(5,6));
     queue!(stdout, style::PrintStyledContent( format!("height {}", s.1).with(Color::Rgb {r:0,g:0,b:125})));
+    execute!(stdout, MoveToNextLine(1));
+    queue!(stdout, style::Print("fuck you every day"));
 
     stdout.flush();
 

@@ -1,10 +1,12 @@
 use std::io::Stdout;
 use std::path::Path;
 use crossterm::{cursor, execute, queue, style};
+use crossterm::cursor::{MoveTo, MoveToNextLine};
 use crossterm::style::Color;
 use image;
 use image::{ImageBuffer, ImageFormat, RgbaImage};
 use crossterm::style::Stylize;
+use crossterm::terminal::ClearType;
 use log::error;
 use super::position::Pos3;
 use super::matrix::Matrix;
@@ -48,12 +50,12 @@ impl<'a> OutputBuffer<'a> {
     }
 
     pub fn put_pixel(&mut self, x: u32, y: u32, rgb: &[u8]) {
-        if self.tui {
-            let mut stdout = self.stdout.unwrap();
-            queue!(stdout, cursor::MoveTo(x as u16, y as u16));
-            queue!(stdout, style::PrintStyledContent("•".with(Color::Rgb {r: rgb[0], g: rgb[1], b:rgb[2]})));
-            return ;
-        }
+        // if self.tui {
+        //     let mut stdout = self.stdout.unwrap();
+        //     queue!(stdout, cursor::MoveTo(x as u16, y as u16));
+        //     queue!(stdout, style::PrintStyledContent("•".with(Color::Rgb {r: rgb[0], g: rgb[1], b:rgb[2]})));
+        //     return ;
+        // }
         let start = (y * self.width + x) as usize * RGB_STEP;
         let buf = &mut self.display[start..(start + RGB_STEP)];
         for i in 0..RGB_STEP {
@@ -92,6 +94,26 @@ impl<'a> OutputBuffer<'a> {
         img.copy_from_slice(self.display.as_slice());
         if let Err(e) = img.save_with_format(Path::new(path), ImageFormat::Png) {
             error!("could not save image {}", e);
+        }
+    }
+
+    pub fn queue_to_stdout(&mut self) {
+        if self.stdout.is_none() {
+            return ;
+        }
+
+        let mut stdout = self.stdout.unwrap();
+        execute!(stdout, crossterm::terminal::Clear(ClearType::All));
+        let (mut x, mut y) = (0, 0);
+        for (n, [r,g,b,c]) in self.display.iter().array_chunks().enumerate() {
+            if *c as u8 == 0 {
+                continue;
+            }
+
+            x = n % self.width as usize;
+            y = n / self.width as usize;
+            queue!(stdout, MoveTo(x as u16, y as u16));
+            queue!(stdout, style::PrintStyledContent((*c as char).with(Color::Rgb {r:*r ,g: *g, b:*b})));
         }
     }
 }

@@ -33,10 +33,11 @@ fn main() -> Result<(), Error>{
                              Vector3::from_xyz(0., 0., -1.),
                              Vector3::from_xyz(0., -1., 0.));
 
+    let shader = LambertianShader::new(Vector3::from_xyz(0., 10., 0.),
+                                       0.8, 1.,&camera, arg.term);
+
     let raster = RasterRunner::new(rx.clone(), camera,
-                      Box::new(LambertianShader::new(Vector3::from_xyz(0., 0., 1.),
-                                                     0.8, 0.8
-                      )), false);
+                      Box::new(shader), false);
 
 
     println!("obj resources path is {}", &arg.obj_path);
@@ -54,7 +55,7 @@ fn main() -> Result<(), Error>{
     if arg.render_a_picture {
         let mut out = OutputBuffer::new(WIDTH, HEIGHT, false);
         raster.render_frame( &res, &mut out);
-        out.save_to_image("./img");
+        out.save_to_image("./img.png");
         return Ok(());
     }
 
