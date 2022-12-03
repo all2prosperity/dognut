@@ -43,6 +43,8 @@ clap = {version="4.*", features = ["derive"]}
 tokio = {version="1", features=["full"]}
 dognut_macros = {path = "../dognut_macros"}
 
+ffmpeg-next = "5.*"
+
 log4rs = "1.2.0"
 lazy_static = "*"
 

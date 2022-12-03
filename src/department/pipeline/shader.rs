@@ -1,4 +1,4 @@
-1use std::cmp::max;
+use std::cmp::max;
 use crate::department::model::triangle::Triangle;
 use crate::department::preview::homo_transformation::HomoTransform;
 use crate::department::preview::matrix::Matrix;
