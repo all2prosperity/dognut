@@ -9,7 +9,9 @@ use ffmpeg_next::Codec;
 use ffmpeg_next::codec::Context;
 
 use ffmpeg_next::codec::Id::H264;
+use ffmpeg_next::ffi::{AVFrame};
 use ffmpeg_next::format::Pixel;
+use ffmpeg_next::frame::Video;
 use ffmpeg_next::software::scaling::Flags;
 
 
@@ -17,12 +19,18 @@ pub struct x264Encoder {
     tx: crossbeam_channel::Sender<Vec<u8>>,
     encoder: video::Encoder,
     scale_ctx: scaling::Context,
-
+    dimension: (u32, u32),
     codec: Codec,
 }
 
 
 impl x264Encoder {
+
+    pub fn run() {
+
+    }
+
+
     pub unsafe fn new(tx: crossbeam_channel::Sender<Vec<u8>>, dimension: (u32, u32)) -> Result<Self, ffmpeg::Error> {
         ffmpeg::init()?;
         let codec = codec::encoder::find(H264).expect("can't find h264 encoder");
@@ -38,6 +46,7 @@ impl x264Encoder {
         Ok(Self {
             tx,
             encoder,
+            dimension,
             scale_ctx: scaler,
             codec
         })
@@ -55,6 +64,9 @@ impl x264Encoder {
         (*raw_context).rc_max_rate = 10 * 1000 * 1000;
         (*raw_context).rc_min_rate = 2 * 1000 * 1000;
         (*raw_context).framerate = ffi::AVRational{num:60, den: 1};
+        // disable b frame for realtime streaming
+        (*raw_context).max_b_frames = 0;
+        (*raw_context).has_b_frames = 0;
         let mut k = std::ffi::CString::new("preset").unwrap();
         let mut v = std::ffi::CString::new("fast").unwrap();
         ffi::av_opt_set(raw_context as *mut _, k.as_ptr(), v.as_ptr(), 0);
@@ -62,8 +74,26 @@ impl x264Encoder {
         v = std::ffi::CString::new("keyint=60:min-keyint=60:scenecut=0:force-cfr=1").unwrap();
         ffi::av_opt_set(raw_context as *mut _, k.as_ptr(), v.as_ptr(), 0);
 
-
-
         return Context::wrap(raw_context, None);
+    }
+
+    pub fn send_packets(&mut self, rgba: &[u8]) -> Result<(), ffmpeg::Error> {
+        let rgb_frame =unsafe{self.unwrap_rgba_to_avframe(rgba)} ;
+        let mut yuv = Video::empty();
+        self.scale_ctx.run(&rgb_frame, &mut yuv)?;
+
+        self.encoder.send_frame(&yuv)?;
+
+        //todo: encoder wait on another thread to recv encoded data and send to network;
+        Ok(())
+    }
+
+
+    unsafe fn unwrap_rgba_to_avframe(&self, rgba: &[u8]) -> Video {
+        let mut raw_frame =  ffi::av_frame_alloc();
+        ffi::avpicture_fill(raw_frame as *mut ffi::AVPicture, rgba.clone().as_ptr(), ffi::AVPixelFormat::AV_PIX_FMT_RGBA,
+        self.dimension.0 as c_int, self.dimension.1 as c_int);
+
+        Video::wrap(raw_frame)
     }
 }
