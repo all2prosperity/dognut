@@ -45,6 +45,7 @@ dognut_macros = {path = "../dognut_macros"}
 
 log4rs = "1.2.0"
 lazy_static = "*"
+json = "0.12.4"
 
 [dependencies.image]
 version = "0.24"

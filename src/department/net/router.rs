@@ -61,7 +61,11 @@ async fn listen_from_udp() {
             loop {
                 if let Ok((len, addr)) = sock.recv_from(&mut buf).await {
                     println!("recv buf len:{:?}, addr:{:?}", len, addr);
-                    sock.send_to(&[15, 15, 12], addr).await;
+                    let mut data = json::JsonValue::new_object();
+                    unsafe {
+                        data["port"] = BIND_PORT.into();
+                    }
+                    sock.send_to(&data.dump().as_bytes(), addr).await;
                 }
                 else {
                     println!("recv buf failed:");
@@ -79,11 +83,11 @@ pub fn net_run(render_recv: Receiver<TransferMsg>) {
         for i in 0..(constant::PORT_RANGE) {
             let host_str = format!("{}:{}", constant::HOST, constant::PORT + i);
             if let Ok(mut lis) = TcpListener::bind(&host_str).await {
-                info!("Server listen on {}", host_str);
-                ws_accept(&mut lis, render_recv).await;
+                println!("Server listen on {}", host_str);
                 unsafe {
                     BIND_PORT = constant::PORT + i;
                 }
+                ws_accept(&mut lis, render_recv).await;
                 break;
             }
         }
