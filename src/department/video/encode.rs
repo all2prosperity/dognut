@@ -1,11 +1,12 @@
 use std::ffi::c_int;
+use crossbeam_channel::{RecvError, select};
 use ffmpeg_next as ffmpeg;
 
 use ffmpeg::encoder::video;
 use ffmpeg::codec;
 use ffmpeg::ffi;
 use ffmpeg::software::scaling;
-use ffmpeg_next::Codec;
+use ffmpeg_next::{Codec, Error};
 use ffmpeg_next::codec::Context;
 
 use ffmpeg_next::codec::Id::H264;
@@ -13,9 +14,10 @@ use ffmpeg_next::ffi::{AVFrame};
 use ffmpeg_next::format::Pixel;
 use ffmpeg_next::frame::Video;
 use ffmpeg_next::software::scaling::Flags;
+use log::error;
 
-
-pub struct x264Encoder {
+pub struct rgbaEncoder {
+    rx: crossbeam_channel::Receiver<Box<[u8]>>,
     tx: crossbeam_channel::Sender<Vec<u8>>,
     encoder: video::Encoder,
     scale_ctx: scaling::Context,
@@ -24,14 +26,17 @@ pub struct x264Encoder {
 }
 
 
-impl x264Encoder {
+impl rgbaEncoder {
 
-    pub fn run() {
-
+    pub fn run(rgb_rx: crossbeam_channel::Receiver<Box<[u8]>>, network_tx: crossbeam_channel::Sender<Vec<u8>>, dimension:(u32, u32)) {
+        std::thread::spawn(move || {
+            let encoder = unsafe {Self::new(network_tx, rgb_rx, dimension).expect("ffmpeg encoder init failed") };
+            encoder.run_decoding_pipeline();
+        });
     }
 
 
-    pub unsafe fn new(tx: crossbeam_channel::Sender<Vec<u8>>, dimension: (u32, u32)) -> Result<Self, ffmpeg::Error> {
+    pub unsafe fn new(tx: crossbeam_channel::Sender<Vec<u8>>, rx: crossbeam_channel::Receiver<Box<[u8]>>,  dimension: (u32, u32)) -> Result<Self, ffmpeg::Error> {
         ffmpeg::init()?;
         let codec = codec::encoder::find(H264).expect("can't find h264 encoder");
 
@@ -45,6 +50,7 @@ impl x264Encoder {
 
         Ok(Self {
             tx,
+            rx,
             encoder,
             dimension,
             scale_ctx: scaler,
@@ -95,5 +101,27 @@ impl x264Encoder {
         self.dimension.0 as c_int, self.dimension.1 as c_int);
 
         Video::wrap(raw_frame)
+    }
+
+    pub fn run_decoding_pipeline(mut self) {
+
+        let mut packet = ffmpeg::Packet::empty();
+        loop {
+            let data = match self.rx.recv() {
+                Ok(data) => {
+                    data
+                }
+                Err(err) => {
+                    error!("frame buffer data recv error {:?}", err.to_string());
+                    break;
+                }
+            };
+
+            self.send_packets(&data).expect("must send ok");
+            while self.encoder.receive_packet(&mut packet).is_ok() {
+
+            }
+
+        }
     }
 }
