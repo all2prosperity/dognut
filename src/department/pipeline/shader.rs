@@ -41,7 +41,7 @@ impl LambertianShader{
             model_view: mv,
             model_view_IT: mv_it,
             ks_index: 10.,
-            tui: false,
+            tui,
         }
     }
 }
@@ -54,12 +54,6 @@ impl Shader for LambertianShader {
             nn.norm();
             n.push(nn);
         }
-
-        // let n = normal.iter().map(|v| {
-        //     let mut tv = Vector3::from_matrix(&(&v.to_homogeneous() * &self.model_view_IT));
-        //     tv.norm();
-        //     return tv;
-        // } ).collect();
         let mut nl = bar * &Matrix::<3,3>::from_rows(n);
         nl.norm();
         let cos = nl.dot(&self.light_source);

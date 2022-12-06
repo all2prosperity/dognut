@@ -106,6 +106,7 @@ impl TuiApp {
         self.raster.set_model(HomoTransform::rotation_matrix(&Vector3::from_xyz(0.,1.,0.), self.theta));
         self.raster.render_frame(res, &mut out_buf);
         out_buf.queue_to_stdout();
+        drop(out_buf);
         self.stdout.flush().unwrap();
     }
 
