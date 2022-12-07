@@ -1,4 +1,5 @@
 use std::ffi::c_int;
+use std::thread::JoinHandle;
 use crossbeam_channel::{RecvError, select};
 use ffmpeg_next as ffmpeg;
 
@@ -14,10 +15,13 @@ use ffmpeg_next::ffi::{AVFrame};
 use ffmpeg_next::format::Pixel;
 use ffmpeg_next::frame::Video;
 use ffmpeg_next::software::scaling::Flags;
-use log::error;
+use log::{error, info};
+use std::time::Duration;
+use protobuf::Message;
+use crate::pb;
 
 pub struct rgbaEncoder {
-    rx: crossbeam_channel::Receiver<Box<[u8]>>,
+    rx: crossbeam_channel::Receiver<Vec<u8>>,
     tx: crossbeam_channel::Sender<Vec<u8>>,
     encoder: video::Encoder,
     scale_ctx: scaling::Context,
@@ -28,15 +32,18 @@ pub struct rgbaEncoder {
 
 impl rgbaEncoder {
 
-    pub fn run(rgb_rx: crossbeam_channel::Receiver<Box<[u8]>>, network_tx: crossbeam_channel::Sender<Vec<u8>>, dimension:(u32, u32)) {
-        std::thread::spawn(move || {
+    pub fn run(rgb_rx: crossbeam_channel::Receiver<Vec<u8>>, network_tx: crossbeam_channel::Sender<Vec<u8>>, dimension:(u32, u32)) -> JoinHandle<()>{
+        let handle = std::thread::spawn(move || {
             let encoder = unsafe {Self::new(network_tx, rgb_rx, dimension).expect("ffmpeg encoder init failed") };
             encoder.run_decoding_pipeline();
+            return ();
         });
+
+        return handle;
     }
 
 
-    pub unsafe fn new(tx: crossbeam_channel::Sender<Vec<u8>>, rx: crossbeam_channel::Receiver<Box<[u8]>>,  dimension: (u32, u32)) -> Result<Self, ffmpeg::Error> {
+    pub unsafe fn new(tx: crossbeam_channel::Sender<Vec<u8>>, rx: crossbeam_channel::Receiver<Vec<u8>>,  dimension: (u32, u32)) -> Result<Self, ffmpeg::Error> {
         ffmpeg::init()?;
         let codec = codec::encoder::find(H264).expect("can't find h264 encoder");
 
@@ -100,28 +107,48 @@ impl rgbaEncoder {
         ffi::avpicture_fill(raw_frame as *mut ffi::AVPicture, rgba.clone().as_ptr(), ffi::AVPixelFormat::AV_PIX_FMT_RGBA,
         self.dimension.0 as c_int, self.dimension.1 as c_int);
 
-        Video::wrap(raw_frame)
+
+
+        let mut frame = Video::wrap(raw_frame);
+        frame.set_format(Pixel::RGBA);
+        frame.set_width(self.dimension.0);
+        frame.set_height(self.dimension.1);
+        frame
     }
 
     pub fn run_decoding_pipeline(mut self) {
-
         let mut packet = ffmpeg::Packet::empty();
         loop {
-            let data = match self.rx.recv() {
-                Ok(data) => {
-                    data
-                }
-                Err(err) => {
-                    error!("frame buffer data recv error {:?}", err.to_string());
+            select! {
+                recv(self.rx) -> data =>  {
+                    match data {
+                        Ok(data) => {
+                            self.send_packets(&data).expect("must send ok");
+                        }
+                        Err(err) => {
+                            error!("frame buffer data recv error {:?}", err.to_string());
+                            break;
+                        }
+                    }
+                },
+                default(Duration::from_millis(500)) => (),
+            }
+            while self.encoder.receive_packet(&mut packet).is_ok() {
+                let mut net_packet = pb::avpacket::VideoPacket::new();
+                net_packet.data = packet.data().unwrap().to_vec();
+                net_packet.data_len = net_packet.data.len() as u32;
+                net_packet.dts = packet.dts().unwrap_or(0);
+                net_packet.pts = packet.pts().unwrap_or(0);
+                net_packet.duration = packet.duration();
+                net_packet.flags = 0;
+                let serialized = net_packet.write_to_bytes().unwrap();
+                if self.tx.send(serialized).is_err() {
                     break;
                 }
-            };
-
-            self.send_packets(&data).expect("must send ok");
-            while self.encoder.receive_packet(&mut packet).is_ok() {
-
             }
 
         }
+
+        info!("encoder thread quit");
     }
 }

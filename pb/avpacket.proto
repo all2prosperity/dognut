@@ -1,0 +1,16 @@
+syntax = "proto3";
+package proto.avpacket;
+
+message VideoHeader{
+
+}
+
+message VideoPacket {
+  bytes data = 1;
+  uint32 data_len = 2;
+  int64 pts = 3;
+  int64 dts = 4;
+  int64 duration = 5;
+  int32 flags = 6;
+}
+

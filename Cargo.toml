@@ -39,6 +39,7 @@ wgpu = "0.*"
 winit = "0.*"
 crossbeam-channel = {version = "0.5.*"} # for thread synchronize
 clap = {version="4.*", features = ["derive"]}
+protobuf = "3.2.0"
 
 tokio = {version="1", features=["full"]}
 dognut_macros = {path = "../dognut_macros"}
@@ -54,8 +55,8 @@ version = "0.24"
 default-features = false
 features = ["png", "jpeg"]
 
-[build-dependencies]
-prost-build = "*"
+#[build-dependencies]
+#prost-build = "*"
 
 [features]
 profile-with-puffin = ["profiling/profile-with-puffin"]

@@ -16,7 +16,7 @@ use std::time::Duration;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use lazy_static::lazy_static;
-use crate::proto::display;
+use crate::pb::display;
 use prost::Message;
 
 

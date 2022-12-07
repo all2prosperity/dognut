@@ -12,7 +12,7 @@ use crate::department::view::camera::Camera;
 
 
 pub struct RasterRunner {
-    tx: Sender<Box<Vec<u8>>>,
+    pub tx: Sender<Vec<u8>>,
     model_mat: HomoTransform,
     view_mat: HomoTransform,
     proj_mat: HomoTransform,
@@ -23,7 +23,7 @@ pub struct RasterRunner {
 
 
 impl RasterRunner {
-    pub fn new(tx: Sender<Box<Vec<u8>>>, camera: Camera, shader: Box<dyn Shader>, tui: bool) -> Self {
+    pub fn new(tx: Sender<Vec<u8>>, camera: Camera, shader: Box<dyn Shader>, tui: bool) -> Self {
         Self {
             tx,
             model_mat: HomoTransform::identity_matrix(),

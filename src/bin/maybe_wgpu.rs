@@ -17,6 +17,7 @@ use dognut::department::preview::homo_transformation::HomoTransform;
 use dognut::department::preview::output_buffer::OutputBuffer;
 use dognut::department::preview::vector::Vector3;
 use dognut::department::tui::TuiApp;
+use dognut::department::video::encode::rgbaEncoder;
 use dognut::department::view::camera::Camera;
 use dognut::util::Args;
 
@@ -26,7 +27,8 @@ const HEIGHT: u32 = 480;
 fn main() -> Result<(), Error>{
     env_logger::init();
     let arg = Args::parse();
-    let (rx, tx) = crossbeam_channel::unbounded();
+    let (rgb_tx, rgb_rx) = crossbeam_channel::unbounded::<Vec<u8>>();
+    let (net_tx, net_rx) = crossbeam_channel::unbounded::<Vec<u8>>();
 
     let camera=  Camera::new(45., (WIDTH / HEIGHT) as f32,
                              -5., -50., Vector3::from_xyz(0., 0., 10.,),
@@ -37,9 +39,11 @@ fn main() -> Result<(), Error>{
                                        0.8, 1.,&camera, arg.term);
 
 
-    let raster = RasterRunner::new(rx.clone(), camera,
+    let raster = RasterRunner::new(rgb_tx, camera,
                       Box::new(shader), arg.term);
 
+
+    let handle = rgbaEncoder::run(rgb_rx, net_tx, (WIDTH, HEIGHT));
 
     println!("obj resources path is {}", &arg.obj_path);
     let res = ObjectLoader::load_triangle_resources(&arg.obj_path);
@@ -111,6 +115,8 @@ fn main() -> Result<(), Error>{
             window.request_redraw();
         }
     });
+
+    handle.join().unwrap();
 }
 
 fn draw(raster:&RasterRunner,res: &TriangleResources , frame: &mut [u8]) {

@@ -1,4 +1,4 @@
-mod encode;
+pub mod encode;
 
 pub struct VConvert();
 
