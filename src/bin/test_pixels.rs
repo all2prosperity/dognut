@@ -12,10 +12,10 @@ use winit_input_helper::WinitInputHelper;
 use dognut::department::preview::homo_transformation::{HomoTransform, Transform};
 use dognut::department::view::camera::Camera;
 use dognut::department::model::object_buffer::ObjectBuffer;
-use dognut::department::preview::matrix::{HMat, Matrix};
+use dognut::department::preview::matrix::{HMat};
 use dognut::department::preview::vector::Vector3;
 use dognut::department::preview::position::Pos3;
-use dognut::department::model::render_object::RenderObject;
+
 use dognut::department::model::object_loader::ObjectLoader;
 use dognut::department::model::triangle_resources::TriangleResources;
 
@@ -127,11 +127,11 @@ impl World {
     /// Assumes the default texture format: `wgpu::TextureFormat::Rgba8UnormSrgb`
     fn draw(&mut self, frame: &mut [u8]) {
         profiling::scope!("Main Thread");
-        let mut buffer = ObjectBuffer::new();
+        let _buffer = ObjectBuffer::new();
         self.theta += 0.02;
 
         // link_adult is too big
-        let mut scale = HomoTransform::scale((0.05, 0.05, 0.05));
+        let scale = HomoTransform::scale((0.05, 0.05, 0.05));
         // let mut scale = HomoTransform::identity_matrix();
 
 
