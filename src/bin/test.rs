@@ -25,7 +25,7 @@ fn main() {
         7., 8., 10.,
     ]);
 
-    if let Some((l, l_1, u)) = origin.l_u_split() {
+    if let Some((_l, _l_1, u)) = origin.l_u_split() {
         println!("u is :");
         let u_1 = u.upper_triangular_matrix_inverse();
         u.debug();
