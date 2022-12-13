@@ -1,9 +1,9 @@
 
-use std::io;
-use std::io::Stdout;
+
+
 use std::sync::mpsc::Receiver;
 use std::time::Duration;
-use tui::{backend::CrosstermBackend, Frame, Terminal, TerminalOptions};
+use tui::{Frame};
 use tui::backend::Backend;
 use tokio;
 use tokio::runtime::Runtime;
@@ -24,21 +24,21 @@ impl TermRenderer where {
         }
     }
 
-    pub fn run(mut self) {
+    pub fn run(self) {
         self.rt.block_on(async {
-            &self.update();
+            let _ = &self.update();
         });
     }
 
     async fn update(&self) {
         loop {
-            if let Ok(s) = self.keyboard_rx.recv_timeout(Duration::from_secs(1)) {
+            if let Ok(_s) = self.keyboard_rx.recv_timeout(Duration::from_secs(1)) {
                 
             }
         }
     }
 }
 
-fn ui<B:Backend>(f: &mut Frame<B>, render: &TermRenderer) {
+fn ui<B:Backend>(_f: &mut Frame<B>, _render: &TermRenderer) {
 
 }

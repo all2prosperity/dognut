@@ -1,7 +1,7 @@
-use std::borrow::Borrow;
-use std::collections::BTreeMap;
 
-use log::__private_api_log;
+
+
+
 
 use crate::department::model::render_object::RenderObject;
 use crate::department::preview::homo_transformation::HomoTransform;
@@ -269,7 +269,7 @@ impl Triangle {
         out
     }
 
-    pub fn get_normal(&self, x: usize, y: usize) -> Vector3 {
+    pub fn get_normal(&self, _x: usize, _y: usize) -> Vector3 {
         return Vector3::from_xyz(0., 0., 0.);
     }
 }

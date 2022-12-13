@@ -1,10 +1,10 @@
 use std::io::Stdout;
 use std::path::Path;
-use crossterm::{cursor, execute, queue, style};
-use crossterm::cursor::{MoveTo, MoveToNextLine};
+use crossterm::{execute, queue, style};
+use crossterm::cursor::{MoveTo};
 use crossterm::style::Color;
 use image;
-use image::{ImageBuffer, ImageFormat, RgbaImage};
+use image::{ImageFormat, RgbaImage};
 use crossterm::style::Stylize;
 use crossterm::terminal::ClearType;
 use log::error;

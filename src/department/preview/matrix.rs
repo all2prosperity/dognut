@@ -320,15 +320,15 @@ impl<const M: usize> Matrix<M, M> {
 
     pub fn l_u_split(&self) -> Option<(Self, Self, Self)>
     {
-        let mut es: Vec<Self> = Vec::new();
-        let mut us: Vec<Self> = Vec::new();
+        let _es: Vec<Self> = Vec::new();
+        let _us: Vec<Self> = Vec::new();
         let mut u = self.clone();
         let mut l = Self::identity_matrix();
         let mut l_1 = Self::identity_matrix();
         for i in 1..M {
             for j in 0..i {
                 let mut e = Self::identity_matrix();
-                let mut divisor = u.index(j, j);
+                let divisor = u.index(j, j);
                 let mut dividend = 0.;
 
                 for k in 0..M {

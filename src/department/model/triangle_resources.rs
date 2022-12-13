@@ -63,7 +63,7 @@ impl<'a> Iterator for TriangleIter<'a> {
         //     }
         // }
 
-        let mut tri = Triangle::from_mesh_vec(points, normals, tex_coords);
+        let tri = Triangle::from_mesh_vec(points, normals, tex_coords);
         // tri.set_color_row(colors);
         Some(tri)
     }

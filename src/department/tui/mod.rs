@@ -2,12 +2,12 @@ use std::error::Error;
 use std::io::{Stdout, stdout, Write};
 use std::time::Duration;
 use crossterm;
-use crossterm::{event, execute, queue, terminal};
-use crossterm::event::{Event, KeyCode, KeyEvent};
+use crossterm::{event, execute, terminal};
+use crossterm::event::{Event, KeyCode};
 use crossterm::terminal::{ClearType, disable_raw_mode, enable_raw_mode, EnterAlternateScreen, size};
-use tui::backend::CrosstermBackend;
-use tui::Terminal;
-use crate::department::model::object_loader::ObjectLoader;
+
+
+
 use crate::department::model::triangle_resources::TriangleResources;
 use crate::department::pipeline::rasterizer::RasterRunner;
 use crate::department::preview::homo_transformation::HomoTransform;
@@ -36,7 +36,7 @@ impl TuiApp {
         execute!(self.stdout, crossterm::cursor::Hide);
         execute!(self.stdout, EnterAlternateScreen, event::EnableMouseCapture);
         execute!(self.stdout, crossterm::terminal::Clear(ClearType::All));
-        let mut dimension = size()?;
+        let dimension = size()?;
         loop {
             self.theta += 0.1;
             self.draw((dimension.0 as u32, dimension.1 as u32), &res);

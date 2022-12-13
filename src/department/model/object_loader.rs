@@ -1,17 +1,17 @@
 use std::path::Path;
-use image::GenericImageView;
+
 use tobj;
 use crate::department::model::render_object::RenderObject;
 use crate::department::model::triangle_resources::TriangleResources;
 use crate::department::preview::position::Pos3;
-use crate::department::preview::vector::Vec2;
+
 
 
 pub struct ObjectLoader {}
 
 impl ObjectLoader {
     pub fn load_render_obj(path: &str) -> Vec<RenderObject> {
-        let model_path = Path::new(path);
+        let _model_path = Path::new(path);
         let (models, materials) =
             tobj::load_obj(
                 path,

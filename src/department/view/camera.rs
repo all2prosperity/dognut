@@ -6,8 +6,8 @@ use winit::event::VirtualKeyCode;
 use crate::department::model::object_buffer::ObjectBuffer;
 use crate::department::model::triangle::Triangle;
 use crate::department::model::triangle_resources::TriangleResources;
-use crate::department::preview::homo_transformation::{HomoTransform, Transform};
-use crate::department::preview::matrix::{HMat, Matrix};
+use crate::department::preview::homo_transformation::{HomoTransform};
+use crate::department::preview::matrix::{HMat};
 use crate::department::preview::output_buffer::OutputBuffer;
 use crate::department::preview::position::Pos3;
 use crate::department::preview::vector::Vector3;
@@ -54,7 +54,7 @@ impl Camera {
                 self.eye += &self.forward;
             },
             VirtualKeyCode::S => {
-                let vec = self.forward.cross(&self.up);
+                let _vec = self.forward.cross(&self.up);
                 self.eye -= &self.forward;
             },
             VirtualKeyCode::A => {
@@ -159,7 +159,7 @@ impl Camera {
             // let ret = surface_tri_zero.in_triangle(&pos);
             // println!("ret is {:?}", ret);
             //
-            let middle = Vector3::from_xyz(0.33,0.33,0.33);
+            let _middle = Vector3::from_xyz(0.33,0.33,0.33);
             for j in sy..ey {
                 if let Some((_sx, _ex)) = surface_tri_zero.get_horizon_edge(j as f32 + 0.5, sx, ex) {
                     // println!("_sx:{:?}, {:?}", _sx, _ex);
@@ -228,7 +228,7 @@ impl Camera {
             let (sx, ex, sy, ey) = surface_tri_zero.get_edge();
             let depth_matrix = surface_tri_tilt.get_depth_matrix();
 
-            let middle = Vector3::from_xyz(0.33,0.33,0.33);
+            let _middle = Vector3::from_xyz(0.33,0.33,0.33);
 
             let rotate_origin_matrix = _tri.get_rotate_negative_z_matrix();
             let fix_matrix = match &mvp_1 {

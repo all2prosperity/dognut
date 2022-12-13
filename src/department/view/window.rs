@@ -9,15 +9,15 @@ use winit::event::{Event, VirtualKeyCode};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
-use crate::department::preview::homo_transformation::{HomoTransform, Transform};
-use crate::department::view::camera::Camera;
-use crate::department::model::object_buffer::ObjectBuffer;
-use crate::department::preview::matrix::{HMat, Matrix};
-use crate::department::preview::vector::Vector3;
-use crate::department::preview::position::Pos3;
-use crate::department::model::render_object::RenderObject;
-use crate::department::model::object_loader::ObjectLoader;
-use crate::department::model::triangle_resources::TriangleResources;
+
+
+
+
+
+
+
+
+
 use crate::department::types::msg::TransferMsg;
 
 use crossbeam_channel::Receiver;

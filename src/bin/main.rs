@@ -1,11 +1,11 @@
 use dognut::department::net::router;
 use dognut::department::view::window;
 use dognut::department::view::render;
-use dognut::department::types::msg::TransferMsg;
-use std::{thread, env};
-use tokio::net::{TcpListener};
-use log::info;
-use crossbeam_channel::{unbounded, Receiver};
+
+use std::{thread};
+
+
+use crossbeam_channel::{unbounded};
 
 
 fn main () {

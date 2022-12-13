@@ -1,7 +1,7 @@
-use crate::department::preview::matrix::Matrix;
+
 use crossbeam_channel::Sender;
 use image::GenericImageView;
-use log::info;
+
 use crate::department::model::triangle::Triangle;
 use crate::department::model::triangle_resources::TriangleResources;
 use crate::department::pipeline::shader::Shader;

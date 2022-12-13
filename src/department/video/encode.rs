@@ -1,17 +1,17 @@
 use std::ffi::c_int;
 use std::thread::JoinHandle;
-use crossbeam_channel::{RecvError, select};
+use crossbeam_channel::{select};
 use ffmpeg_next as ffmpeg;
 
 use ffmpeg::encoder::video;
 use ffmpeg::codec;
 use ffmpeg::ffi;
 use ffmpeg::software::scaling;
-use ffmpeg_next::{Codec, Error};
+use ffmpeg_next::{Codec};
 use ffmpeg_next::codec::Context;
 
 use ffmpeg_next::codec::Id::H264;
-use ffmpeg_next::ffi::{AVFrame};
+
 use ffmpeg_next::format::Pixel;
 use ffmpeg_next::frame::Video;
 use ffmpeg_next::software::scaling::Flags;
@@ -103,7 +103,7 @@ impl rgbaEncoder {
 
 
     unsafe fn unwrap_rgba_to_avframe(&self, rgba: &[u8]) -> Video {
-        let mut raw_frame =  ffi::av_frame_alloc();
+        let raw_frame =  ffi::av_frame_alloc();
         ffi::avpicture_fill(raw_frame as *mut ffi::AVPicture, rgba.clone().as_ptr(), ffi::AVPixelFormat::AV_PIX_FMT_RGBA,
         self.dimension.0 as c_int, self.dimension.1 as c_int);
 

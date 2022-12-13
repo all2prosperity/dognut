@@ -1,23 +1,23 @@
 use tokio::net::{
-    TcpListener, TcpStream,
+    TcpListener,
     tcp::OwnedWriteHalf,
     UdpSocket
 };
-use log::{debug, error, info};
+use log::{debug, error};
 use crate::department::common::constant;
 use crate::department::types::msg::TransferMsg;
 use std::convert::Infallible;
 //use crate::proto::debugger;
 use crossbeam_channel::Receiver;
 use crate::department::types::msg;
-use std::{thread, env};
+
 use tokio::time::{sleep};
 use std::time::Duration;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use lazy_static::lazy_static;
-use crate::pb::display;
-use prost::Message;
+
+
 
 
 lazy_static! {
@@ -76,7 +76,7 @@ async fn listen_from_udp() {
 }
 
 pub fn net_run(render_recv: Receiver<TransferMsg>) {
-    let mut rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+    let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
     // let mut rt = tokio::runtime::Runtime::new().unwrap();
 
     rt.block_on(async {
@@ -103,7 +103,7 @@ pub async fn ws_accept( l: &mut TcpListener, render_recv: Receiver<msg::Transfer
         match l.accept().await {
             Ok((stream, addr)) => {
                 //tokio::spawn(trans_websocket(stream, addr.to_string()));
-                let (client_recv, client_sender) = stream.into_split();
+                let (_client_recv, client_sender) = stream.into_split();
                 CLIENT_SENDERS.lock().await.push(client_sender);
                 debug!("accept stream from {}", addr);
             }

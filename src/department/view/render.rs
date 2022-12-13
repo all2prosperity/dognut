@@ -1,27 +1,27 @@
 #![deny(clippy::all)]
 #![forbid(unsafe_code)]
 
-use log::error;
-use pixels::{Error, Pixels, SurfaceTexture};
-use pixels::wgpu::Color;
-use winit::dpi::LogicalSize;
-use winit::event::{Event, VirtualKeyCode};
-use winit::event_loop::{ControlFlow, EventLoop};
-use winit::window::WindowBuilder;
-use winit_input_helper::WinitInputHelper;
+
+
+
+
+
+
+
+
 use crate::department::preview::homo_transformation::{HomoTransform, Transform};
 use crate::department::view::camera::Camera;
-use crate::department::model::object_buffer::ObjectBuffer;
-use crate::department::preview::matrix::{HMat, Matrix};
+
+use crate::department::preview::matrix::{HMat};
 use crate::department::preview::vector::Vector3;
 use crate::department::preview::position::Pos3;
-use crate::department::model::render_object::RenderObject;
+
 use crate::department::model::object_loader::ObjectLoader;
 use crate::department::model::triangle_resources::TriangleResources;
 use crate::department::types::msg::TransferMsg;
 
 use crossbeam_channel::Sender;
-use std::time;
+
 
 const WIDTH: u32 = 320;
 const HEIGHT: u32 = 240;
@@ -68,7 +68,7 @@ impl Render {
     /// Assumes the default texture format: `wgpu::TextureFormat::Rgba8UnormSrgb`
     fn draw(&mut self) -> Vec<u8> {
         // link_adult is too big
-        let mut scale = HomoTransform::scale((0.05, 0.05, 0.05));
+        let scale = HomoTransform::scale((0.05, 0.05, 0.05));
         // let mut scale = HomoTransform::identity_matrix();
 
 

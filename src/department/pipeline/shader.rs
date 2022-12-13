@@ -1,5 +1,5 @@
-use std::cmp::max;
-use crate::department::model::triangle::Triangle;
+
+
 use crate::department::preview::homo_transformation::HomoTransform;
 use crate::department::preview::matrix::Matrix;
 use crate::department::preview::vector::Vector3;
@@ -57,7 +57,7 @@ impl Shader for LambertianShader {
         let mut nl = bar * &Matrix::<3,3>::from_rows(n);
         nl.norm();
         let cos = nl.dot(&self.light_source);
-        let mut intensity:f32 = if cos.le(&0.) {
+        let intensity:f32 = if cos.le(&0.) {
             0.
         }else if cos.ge(&1.) {
             1.
