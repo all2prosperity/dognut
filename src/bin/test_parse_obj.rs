@@ -64,7 +64,7 @@ fn main() {
         );
         assert!(mesh.positions.len() % 3 == 0);
 
-        for vtx in 0..mesh.positions.len() / 3 {
+        for _vtx in 0..mesh.positions.len() / 3 {
             // println!(
             //     "              position[{}] = ({}, {}, {})",
             //     vtx,
