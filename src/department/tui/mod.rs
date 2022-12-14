@@ -109,7 +109,7 @@ impl TuiApp {
         let data = out_buf.display.clone();
         drop(out_buf);
         self.stdout.flush().unwrap();
-        self.raster.tx.send(data).unwrap();
+        self.raster.encoder_tx.send(data).unwrap();
     }
 
 

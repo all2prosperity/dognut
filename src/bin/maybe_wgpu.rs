@@ -1,5 +1,3 @@
-use std::rc::Rc;
-use std::sync::Arc;
 use clap::Parser;
 use log::error;
 use pixels::{Error, Pixels, SurfaceTexture};
@@ -9,11 +7,11 @@ use winit::event::{Event, VirtualKeyCode};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
+
 use dognut::department::model::object_loader::ObjectLoader;
 use dognut::department::model::triangle_resources::TriangleResources;
 use dognut::department::pipeline::rasterizer::RasterRunner;
 use dognut::department::pipeline::shader::LambertianShader;
-use dognut::department::preview::homo_transformation::HomoTransform;
 use dognut::department::preview::output_buffer::OutputBuffer;
 use dognut::department::preview::vector::Vector3;
 use dognut::department::tui::TuiApp;
@@ -54,6 +52,7 @@ fn main() -> Result<(), Error>{
         if let Err(e) = result {
             error!("tui return an error, {}", e.to_string());
         }
+
         return Ok(());
     }
 
