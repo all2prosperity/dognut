@@ -25,7 +25,7 @@ name = "test_term"
 prost = "*"
 tui = "0.*"
 crossterm = "0.*"
-tobj = "3.*"
+tobj = {version = "3.*", features = ["async"]}
 cfg-if = "1"
 anyhow = "1.0"
 bytemuck = { version = "1.4", features = [ "derive" ] }
@@ -49,6 +49,9 @@ ffmpeg-next = "5.*"
 log4rs = "1.2.0"
 lazy_static = "*"
 json = "0.12.4"
+cgmath = "0.18"
+
+futures-intrusive = "0.4"
 
 [dependencies.image]
 version = "0.24"

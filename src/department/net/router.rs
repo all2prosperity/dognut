@@ -11,7 +11,7 @@ use std::convert::Infallible;
 use crossbeam_channel::Receiver;
 use crate::department::types::msg;
 
-use tokio::time::{sleep};
+use tokio::time::sleep;
 use std::time::Duration;
 use std::sync::Arc;
 use tokio::sync::Mutex;
