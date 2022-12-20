@@ -9,21 +9,13 @@ use winit::event::{Event, VirtualKeyCode};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
-
-
-
-
-
-
-
+use crate::department::common::constant::{WIDTH, HEIGHT};
 
 
 use crate::department::types::msg::TransferMsg;
 
 use crossbeam_channel::Receiver;
 
-const WIDTH: u32 = 320;
-const HEIGHT: u32 = 240;
 
 /// Representation of the application state. In this example, a box will bounce around the screen.
 

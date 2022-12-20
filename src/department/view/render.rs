@@ -1,14 +1,6 @@
 #![deny(clippy::all)]
 #![forbid(unsafe_code)]
 
-
-
-
-
-
-
-
-
 use crate::department::preview::homo_transformation::{HomoTransform, Transform};
 use crate::department::view::camera::Camera;
 
@@ -19,12 +11,10 @@ use crate::department::preview::position::Pos3;
 use crate::department::model::object_loader::ObjectLoader;
 use crate::department::model::triangle_resources::TriangleResources;
 use crate::department::types::msg::TransferMsg;
+use crate::department::common::constant::{WIDTH, HEIGHT};
 
 use crossbeam_channel::Sender;
 
-
-const WIDTH: u32 = 320;
-const HEIGHT: u32 = 240;
 
 /// Representation of the application state. In this example, a box will bounce around the screen.
 struct Render {

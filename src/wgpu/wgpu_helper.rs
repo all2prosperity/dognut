@@ -12,6 +12,10 @@ use winit::{
 
 use tokio::time::sleep;
 use std::time::Duration;
+use crate::department::types::msg::TransferMsg;
+use crate::department::common::constant::{WIDTH, HEIGHT};
+use crossbeam_channel::Sender;
+
 
 
 use super::model;
@@ -29,8 +33,6 @@ pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
 );
 
 const NUM_INSTANCES_PER_ROW: u32 = 10;
-const WIDTH:u32 = 512;
-const HEIGHT:u32 = 512;
 
 struct Camera {
     eye: cgmath::Point3<f32>,
@@ -461,11 +463,11 @@ impl State {
         );
     }
 
-    fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
+    fn render(&mut self) -> Vec<u8> {
         let texture_desc = wgpu::TextureDescriptor {
             size: wgpu::Extent3d {
-                width: 512,
-                height: 512,
+                width: WIDTH,
+                height: HEIGHT,
                 depth_or_array_layers: 1,
             },
             mip_level_count: 1,
@@ -551,7 +553,7 @@ impl State {
         );
 
         self.queue.submit(iter::once(encoder.finish()));
-
+        let mut ret_buf = Vec::new();
         {
             let buffer_slice = output_buffer.slice(..);
 
@@ -565,27 +567,28 @@ impl State {
             pollster::block_on(rx.receive());
 
             let data = buffer_slice.get_mapped_range();
-
-            use image::{ImageBuffer, Rgba};
-            let buffer =
-                ImageBuffer::<Rgba<u8>, _>::from_raw(WIDTH, HEIGHT, data).unwrap();
-            buffer.save("image.png").unwrap();
-
+            // println!("data :{:?}", data.len());
+            // use image::{ImageBuffer, Rgba};
+            // let buffer =
+            //     ImageBuffer::<Rgba<u8>, _>::from_raw(WIDTH, HEIGHT, data).unwrap();
+            // buffer.save("image.png").unwrap();
+            ret_buf = data.iter().map(|x| *x).collect();
         }
         output_buffer.unmap();
-
-        Ok(())
+        ret_buf
     }
 }
 
-pub fn run() {
+pub fn run(render_pc_s: Sender<TransferMsg>, render_cli_s: Sender<TransferMsg>) {
     let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
     rt.block_on(async {
         let mut state = State::new().await;
         loop {
-            state.render();
-            println!("render once");
-            sleep(Duration::from_millis(100)).await
+            let buf = state.render();
+            render_pc_s.send(TransferMsg::RenderPc(buf.clone()));
+            render_cli_s.send(TransferMsg::RenderPc(buf));
+            // println!("render once");
+            // sleep(Duration::from_millis(100)).await
         }
     });
 }

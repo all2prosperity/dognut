@@ -17,7 +17,7 @@ fn main () {
     let (render_cli_s, render_cli_r) = unbounded();
 
     thread::spawn(|| router::net_run(render_cli_r));
-    thread::spawn(|| render::run(render_pc_s, render_cli_s));
-    thread::spawn(|| wgpu_helper::run());
+    // thread::spawn(|| render::run(render_pc_s, render_cli_s));
+    thread::spawn(|| wgpu_helper::run(render_pc_s, render_cli_s));
     window::run(render_pc_r);
 }

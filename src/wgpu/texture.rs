@@ -2,6 +2,7 @@ use anyhow::*;
 use image::GenericImageView;
 use std::num::NonZeroU32;
 use pixels::wgpu;
+use crate::department::common::constant::{WIDTH, HEIGHT, IS_NEED_FLIPV};
 
 pub struct Texture {
     pub texture: wgpu::Texture,
@@ -9,8 +10,6 @@ pub struct Texture {
     pub sampler: wgpu::Sampler,
 }
 
-const WIDTH:u32 = 512;
-const HEIGHT:u32 = 512;
 
 impl Texture {
     pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
@@ -62,7 +61,13 @@ impl Texture {
         bytes: &[u8],
         label: &str,
     ) -> Result<Self> {
-        let img = image::load_from_memory(bytes)?;
+        let img = if IS_NEED_FLIPV {
+            let _img = image::load_from_memory(bytes).unwrap();
+            _img.flipv()
+        }
+        else {
+            image::load_from_memory(bytes).unwrap()
+        };
         Self::from_image(device, queue, &img, Some(label))
     }
 
