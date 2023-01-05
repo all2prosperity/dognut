@@ -154,8 +154,10 @@ impl World {
 
 
         //let _buf = self.camera.render(WIDTH, HEIGHT, &buffer, &_mat);
-
+        let now = std::time::Instant::now();
         let _buf = self.camera.render_triangle_obejct(WIDTH, HEIGHT, &self.resources, &_mat);
+
+        println!("current frame cost {} ms", now.elapsed().as_millis());
 
         frame.copy_from_slice(&_buf.display);
         profiling::finish_frame!();

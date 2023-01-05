@@ -53,6 +53,10 @@ cgmath = "0.18"
 
 futures-intrusive = "0.4"
 
+
+gilrs = "0.*"
+game-loop = {version = "0.*", features = ["winit"]}
+
 [dependencies.image]
 version = "0.24"
 default-features = false

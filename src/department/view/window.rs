@@ -1,6 +1,8 @@
 #![deny(clippy::all)]
 #![forbid(unsafe_code)]
 
+use std::os::macos::raw::stat;
+use std::time::Duration;
 use log::error;
 use pixels::{Error, Pixels, SurfaceTexture};
 use pixels::wgpu::Color;
@@ -15,12 +17,19 @@ use crate::department::common::constant::{WIDTH, HEIGHT};
 use crate::department::types::msg::TransferMsg;
 
 use crossbeam_channel::Receiver;
+use game_loop::game_loop;
+use crate::department::Game;
+use crate::wgpu::wgpu_helper::State;
 
 
 /// Representation of the application state. In this example, a box will bounce around the screen.
 
 
 pub fn run(render_recv: Receiver<TransferMsg>) -> Result<(), Error> {
+    // let mut state = State::new().await;
+
+
+
     let event_loop = EventLoop::new();
     let mut input = WinitInputHelper::new();
     let window = {
@@ -41,6 +50,28 @@ pub fn run(render_recv: Receiver<TransferMsg>) -> Result<(), Error> {
     pixels.set_clear_color(Color::WHITE);
 
     let mut frames: std::collections::VecDeque<Vec<u8>> = std::collections::VecDeque::new();
+
+    // let game = Game::new(pixels, state, false);
+    //
+    // game_loop(event_loop, window, game, 60u32, 0.1, move |g| {
+    //     if !g.game.paused {
+    //         g.game.state.update();
+    //     }},
+    // move |g| {
+    //     let out = g.game.state.render();
+    //     g.game.pixels.get_frame_mut().copy_from_slice(&out);
+    //
+    //     if let Err(err) = g.game.pixels.render() {
+    //         error!("pixels.render() failed: {err}");
+    //         g.exit();
+    //     }
+    //
+    //     std::thread::sleep(Duration::from_millis(20));
+    // },
+    //     |g, event| {
+    //
+    //     }
+    // );
 
     event_loop.run(move |event, _, control_flow| {
         if let Ok(ret) = render_recv.try_recv() {
