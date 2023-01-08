@@ -89,9 +89,11 @@ pub async fn run(render_recv: Receiver<TransferMsg>) -> Result<(), Error> {
                               } => { g.exit(); return ;},
                               WindowEvent::Resized(physical_size) => {
                                   g.game.state.resize(*physical_size);
+                                  g.game.pixels.resize_surface(physical_size.width, physical_size.height);
                               }
                               WindowEvent::ScaleFactorChanged {new_inner_size, ..} => {
                                   g.game.state.resize(**new_inner_size);
+                                  g.game.pixels.resize_surface(new_inner_size.width, new_inner_size.height);
                               }
                               _ => {}
                           }

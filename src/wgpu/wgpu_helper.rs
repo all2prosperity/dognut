@@ -282,10 +282,10 @@ impl State {
 
     pub fn resize(&mut self, new_size: PhysicalSize<u32>) {
         if new_size.width > 0 && new_size.height > 0 {
-            self.projection.resize(new_size.width, new_size.height);
-            self.size = new_size;
-            self.depth_texture =
-                texture::Texture::create_depth_texture(&self.device,(self.size.width, self.size.height), "depth_label");
+            // self.projection.resize(new_size.width, new_size.height);
+            // self.size = new_size;
+            // self.depth_texture =
+            //     texture::Texture::create_depth_texture(&self.device,(self.size.width, self.size.height), "depth_label");
         }
     }
 
@@ -405,7 +405,7 @@ impl State {
         }
         let u32_size = std::mem::size_of::<u32>() as u32;
 
-        let output_buffer_size = (u32_size * WIDTH * HEIGHT) as wgpu::BufferAddress;
+        let output_buffer_size = (u32_size * self.size.width * self.size.height) as wgpu::BufferAddress;
         let output_buffer_desc = wgpu::BufferDescriptor {
             size: output_buffer_size,
             usage: wgpu::BufferUsages::COPY_DST
@@ -427,8 +427,8 @@ impl State {
                 buffer: &output_buffer,
                 layout: wgpu::ImageDataLayout {
                     offset: 0,
-                    bytes_per_row: NonZeroU32::new(u32_size * WIDTH),
-                    rows_per_image: NonZeroU32::new(HEIGHT),
+                    bytes_per_row: NonZeroU32::new(u32_size * self.size.width),
+                    rows_per_image: NonZeroU32::new(self.size.height),
                 },
             },
             texture_desc.size,
