@@ -19,5 +19,8 @@ fn main () {
     thread::spawn(|| router::net_run(render_cli_r));
     // thread::spawn(|| render::run(render_pc_s, render_cli_s));
     thread::spawn(|| wgpu_helper::run(render_pc_s, render_cli_s));
-    window::run(render_pc_r);
+
+    let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+
+    rt.block_on(window::run(render_pc_r));
 }

@@ -16,11 +16,12 @@ impl Texture {
 
     pub fn create_depth_texture(
         device: &wgpu::Device,
+        size: (u32, u32),
         label: &str,
     ) -> Self {
         let size = wgpu::Extent3d {
-            width: WIDTH,
-            height: HEIGHT,
+            width: size.0,
+            height: size.1,
             depth_or_array_layers: 1,
         };
         let desc = wgpu::TextureDescriptor {
