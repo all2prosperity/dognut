@@ -3,6 +3,7 @@ use gilrs::{Button, GamepadId, Gilrs};
 use log::debug;
 use pixels::Pixels;
 use winit::event::VirtualKeyCode;
+use winit::window::WindowId;
 use winit_input_helper::WinitInputHelper;
 use crate::department::control::Controller;
 use crate::wgpu::wgpu_helper::State;
@@ -27,10 +28,11 @@ pub struct Game {
     gilrs: Gilrs,
     gamepad: Option<GamepadId>,
     paused: bool,
+    id: WindowId,
 }
 
 impl Game {
-    fn new(pixels: Pixels, state: State, debug: bool) -> Self {
+    fn new(pixels: Pixels, state: State, id:WindowId , debug: bool) -> Self {
         Self {
             pixels,
             state,
@@ -39,6 +41,7 @@ impl Game {
             gilrs: Gilrs::new().unwrap(), // XXX: Don't unwrap.
             gamepad: None,
             paused: false,
+            id,
         }
     }
 

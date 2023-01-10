@@ -129,9 +129,9 @@ impl State {
                 label: Some("texture_bind_group_layout"),
             });
 
-        let camera = camera::Camera::new((0.0, 2., 10.), cgmath::Deg(-90.0), cgmath::Deg(-0.0));
+        let camera = camera::Camera::new((0.0, 0., 10.), cgmath::Deg(-90.0), cgmath::Deg(-0.0));
         let projection = camera::Projection::new(size.width, size.height, cgmath::Deg(45.), 0.1, 100.0);
-        let camera_controller = CameraController::new(4.0, 0.4);
+        let camera_controller = CameraController::new(2.0, 0.2);
 
         let mut camera_uniform = CameraUniform::new();
         camera_uniform.update_view_proj(&camera, &projection);
@@ -144,9 +144,9 @@ impl State {
 
         const SPACE_BETWEEN: f32 = 3.0;
         
-        let position = cgmath::Vector3 { x:0.0, y: -1.0, z:0.0 };
+        let position = cgmath::Vector3 { x:0.0, y: -0.5, z:-1.0 };
 
-        let rotation = cgmath::Quaternion::from_axis_angle(position.normalize(), cgmath::Deg(180.0));
+        let rotation = cgmath::Quaternion::from_axis_angle(position.normalize(), cgmath::Deg(0.0));
         let instances = vec![Instance{position, rotation}];
 
         let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
@@ -338,8 +338,7 @@ impl State {
     }
 
     pub fn render(&mut self) -> Vec<u8> {
-        let now = Instant::now();
-
+        //let now = Instant::now();
         let texture_desc = wgpu::TextureDescriptor {
             size: wgpu::Extent3d {
                 width: self.size.width,
@@ -401,7 +400,6 @@ impl State {
                 &self.camera_bind_group,
                 &self.light_bind_group
             );
-            println!("current frame cost {}", now.elapsed().as_micros());
         }
         let u32_size = std::mem::size_of::<u32>() as u32;
 

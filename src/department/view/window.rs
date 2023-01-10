@@ -1,7 +1,6 @@
 #![deny(clippy::all)]
 #![forbid(unsafe_code)]
 
-use std::os::macos::raw::stat;
 use std::time::Duration;
 use log::error;
 use pixels::{Error, Pixels, SurfaceTexture};
@@ -43,6 +42,8 @@ pub async fn run(render_recv: Receiver<TransferMsg>) -> Result<(), Error> {
             .unwrap()
     };
 
+    let id = window.id();
+
     let mut pixels = {
         let window_size = window.inner_size();
         let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
@@ -52,7 +53,7 @@ pub async fn run(render_recv: Receiver<TransferMsg>) -> Result<(), Error> {
 
     let mut frames: std::collections::VecDeque<Vec<u8>> = std::collections::VecDeque::new();
 
-    let game = Game::new(pixels, state, false);
+    let game = Game::new(pixels, state, id, false);
 
     game_loop(event_loop, window, game, FPS as u32, 0.1,
                |g| {
@@ -95,23 +96,18 @@ pub async fn run(render_recv: Receiver<TransferMsg>) -> Result<(), Error> {
                                   g.game.state.resize(**new_inner_size);
                                   g.game.pixels.resize_surface(new_inner_size.width, new_inner_size.height);
                               }
+                              WindowEvent::KeyboardInput { input, .. } => {
+                                  g.game.state.camera_controller.process_keyboard(input.virtual_keycode.unwrap(), input.state);
+                              }
                               _ => {}
                           }
                       }
                       Event::DeviceEvent { ref event, .. } => {
                           g.game.state.input(event);
                       }
-                      Event::UserEvent(_) => {}
-                      Event::Suspended => {}
-                      Event::Resumed => {}
-                      Event::MainEventsCleared => {
-
-                      }
                       Event::RedrawRequested(_) => {
-
+                          //g.game.pixels.window_pos_to_pixel()
                       }
-                      Event::RedrawEventsCleared => {}
-                      Event::LoopDestroyed => {}
                       _ => {}
                   }
 
