@@ -13,8 +13,9 @@ use winit::{
 use tokio::time::sleep;
 use std::time::Duration;
 use crate::department::types::msg::TransferMsg;
+use crate::department::types::multi_sender::MultiSender;
 use crate::department::common::constant::{WIDTH, HEIGHT};
-use crossbeam_channel::Sender;
+use crossbeam_channel::Receiver;
 
 
 
@@ -579,14 +580,14 @@ impl State {
     }
 }
 
-pub fn run(render_pc_s: Sender<TransferMsg>, render_cli_s: Sender<TransferMsg>) {
+pub fn run(r: Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) {
     let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
     rt.block_on(async {
         let mut state = State::new().await;
         loop {
             let buf = state.render();
-            render_pc_s.send(TransferMsg::RenderPc(buf.clone()));
-            render_cli_s.send(TransferMsg::RenderPc(buf));
+            ms.net.send(TransferMsg::RenderPc(buf.clone()));
+            ms.win.send(TransferMsg::RenderPc(buf));
             // println!("render once");
             // sleep(Duration::from_millis(100)).await
         }

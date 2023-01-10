@@ -5,7 +5,7 @@ use log::error;
 use pixels::{Error, Pixels, SurfaceTexture};
 use pixels::wgpu::Color;
 use winit::dpi::LogicalSize;
-use winit::event::{Event, VirtualKeyCode};
+use winit::event::{Event, VirtualKeyCode, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
@@ -15,12 +15,13 @@ use crate::department::common::constant::{WIDTH, HEIGHT};
 use crate::department::types::msg::TransferMsg;
 
 use crossbeam_channel::Receiver;
+use crate::department::types::multi_sender::MultiSender;
 
 
 /// Representation of the application state. In this example, a box will bounce around the screen.
 
 
-pub fn run(render_recv: Receiver<TransferMsg>) -> Result<(), Error> {
+pub fn run(render_recv: Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) -> Result<(), Error> {
     let event_loop = EventLoop::new();
     let mut input = WinitInputHelper::new();
     let window = {
@@ -51,7 +52,7 @@ pub fn run(render_recv: Receiver<TransferMsg>) -> Result<(), Error> {
                 _ => (),
             }
         }
-
+       
         // Draw the current frame
         if let Event::RedrawRequested(_) = event {
             if frames.len() > 1 {
@@ -78,9 +79,10 @@ pub fn run(render_recv: Receiver<TransferMsg>) -> Result<(), Error> {
                 return;
             }
 
-            // if input.key_pressed(VirtualKeyCode::A) {
-            //     world.camera.move_view(VirtualKeyCode::A);
-            // }
+            if input.key_pressed(VirtualKeyCode::A) {
+                // world.camera.move_view(VirtualKeyCode::A);
+                println!("press a");
+            }
             // else if input.key_pressed(VirtualKeyCode::D) {
             //     world.camera.move_view(VirtualKeyCode::D);
             // }

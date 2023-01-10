@@ -16,6 +16,7 @@ use std::time::Duration;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use lazy_static::lazy_static;
+use crate::department::types::multi_sender::MultiSender;
 
 
 
@@ -75,7 +76,7 @@ async fn listen_from_udp() {
     }
 }
 
-pub fn net_run(render_recv: Receiver<TransferMsg>) {
+pub fn net_run(render_recv: Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) {
     let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
     // let mut rt = tokio::runtime::Runtime::new().unwrap();
 
