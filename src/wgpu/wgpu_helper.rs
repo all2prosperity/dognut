@@ -48,7 +48,11 @@ impl CameraUniform {
     }
 
     fn update_view_proj(&mut self, camera: &Camera, projection: &camera::Projection) {
+        let old = self.view_position.clone();
         self.view_position = camera.position.to_homogeneous().into();
+        if old != self.view_position {
+            println!("new pos is {:?}", &self.view_position);
+        }
         self.view_proj = (projection.calc_matrix() * camera.calc_matrix()).into();
     }
 }
@@ -184,7 +188,7 @@ impl State {
 
         log::warn!("Load model");
         let obj_model = resources::load_model(
-            "./res/Link/new_link.obj",
+            "./res/diablo/diablo3_pose.obj",
             &device,
             &queue,
             &texture_bind_group_layout,
@@ -304,7 +308,7 @@ impl State {
                 true
             }
             DeviceEvent::Button {
-                button: 1, // Left Mouse Button
+                button: 0, // Left Mouse Button
                 state,
             } => {
                 self.mouse_pressed = *state == ElementState::Pressed;
