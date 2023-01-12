@@ -24,6 +24,9 @@ fn main () {
 
     thread::spawn(move || router::net_run(net_r, ms_net));
     // thread::spawn(|| render::run(render_pc_s, render_cli_s));
-    thread::spawn(move || wgpu_helper::run(wgpu_r, ms_wgpu));
-    window::run(win_r, ms_win);
+    //thread::spawn(|| wgpu_helper::run(render_pc_s, render_cli_s));
+
+    let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+
+    rt.block_on(window::run(win_r, ms_win)).expect("fail on block");
 }

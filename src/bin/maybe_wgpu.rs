@@ -1,6 +1,5 @@
-use std::rc::Rc;
-use std::sync::Arc;
 use clap::Parser;
+use crossterm::terminal::size;
 use log::error;
 use pixels::{Error, Pixels, SurfaceTexture};
 use pixels::wgpu::Color;
@@ -9,17 +8,18 @@ use winit::event::{Event, VirtualKeyCode};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
+
 use dognut::department::model::object_loader::ObjectLoader;
 use dognut::department::model::triangle_resources::TriangleResources;
 use dognut::department::pipeline::rasterizer::RasterRunner;
 use dognut::department::pipeline::shader::LambertianShader;
-use dognut::department::preview::homo_transformation::HomoTransform;
 use dognut::department::preview::output_buffer::OutputBuffer;
 use dognut::department::preview::vector::Vector3;
 use dognut::department::tui::TuiApp;
 use dognut::department::video::encode::rgbaEncoder;
 use dognut::department::view::camera::Camera;
 use dognut::util::Args;
+use dognut::wgpu::wgpu_helper::State;
 
 const WIDTH: u32 = 640;
 const HEIGHT: u32 = 480;
@@ -35,7 +35,7 @@ fn main() -> Result<(), Error>{
                              Vector3::from_xyz(0., 0., -1.),
                              Vector3::from_xyz(0., -1., 0.));
 
-    let shader = LambertianShader::new(Vector3::from_xyz(0., 10., 0.),
+    let shader = LambertianShader::new(Vector3::from_xyz(0., 1., 0.),
                                        0.8, 1.,&camera, arg.term);
 
 
@@ -43,17 +43,24 @@ fn main() -> Result<(), Error>{
                       Box::new(shader), arg.term);
 
 
-    let handle = rgbaEncoder::run(rgb_rx, net_tx, (WIDTH, HEIGHT));
+    //let handle = rgbaEncoder::run(rgb_rx, net_tx, (WIDTH, HEIGHT));
 
     println!("obj resources path is {}", &arg.obj_path);
     let res = ObjectLoader::load_triangle_resources(&arg.obj_path);
 
 
     if arg.term {
-        let result = TuiApp::new(raster).run(res);
-        if let Err(e) = result {
-            error!("tui return an error, {}", e.to_string());
-        }
+
+        let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+
+        rt.block_on(async {
+            let dimension = (256,79);
+            let state = State::new(winit::dpi::PhysicalSize { width: dimension.0 as u32, height: dimension.1 as u32 }).await;
+            let result = TuiApp::new(raster).run(res, state);
+            if let Err(e) = result {
+                error!("tui return an error, {}", e.to_string());
+            };
+        });
         return Ok(());
     }
 
@@ -116,7 +123,7 @@ fn main() -> Result<(), Error>{
         }
     });
 
-    handle.join().unwrap();
+    //handle.join().unwrap();
 }
 
 fn draw(raster:&RasterRunner,res: &TriangleResources , frame: &mut [u8]) {

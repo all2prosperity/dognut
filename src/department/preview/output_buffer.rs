@@ -50,12 +50,6 @@ impl<'a> OutputBuffer<'a> {
     }
 
     pub fn put_pixel(&mut self, x: u32, y: u32, rgb: &[u8]) {
-        // if self.tui {
-        //     let mut stdout = self.stdout.unwrap();
-        //     queue!(stdout, cursor::MoveTo(x as u16, y as u16));
-        //     queue!(stdout, style::PrintStyledContent("•".with(Color::Rgb {r: rgb[0], g: rgb[1], b:rgb[2]})));
-        //     return ;
-        // }
         let start = (y * self.width + x) as usize * RGB_STEP;
         let buf = &mut self.display[start..(start + RGB_STEP)];
         for i in 0..RGB_STEP {
@@ -113,7 +107,7 @@ impl<'a> OutputBuffer<'a> {
             x = n % self.width as usize;
             y = n / self.width as usize;
             queue!(stdout, MoveTo(x as u16, y as u16));
-            queue!(stdout, style::PrintStyledContent((*c as char).with(Color::Rgb {r:*r ,g: *g, b:*b})));
+            queue!(stdout, style::PrintStyledContent(('•' as char).with(Color::Rgb {r:*r ,g: *g, b:*b})));
         }
     }
 }
