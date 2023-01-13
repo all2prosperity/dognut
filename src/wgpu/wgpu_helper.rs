@@ -16,6 +16,9 @@ use crate::department::types::msg::TransferMsg;
 use crate::department::types::multi_sender::MultiSender;
 use crate::department::common::constant::{WIDTH, HEIGHT};
 use crate::department::preview::matrix;
+use crate::department::view::camera::Camera;
+use crate::department::preview::position;
+use crate::department::preview::vector;
 use crossbeam_channel::Receiver;
 use winit::dpi::PhysicalSize;
 
@@ -25,7 +28,7 @@ use super::texture;
 use super::resources;
 
 use model::{DrawModel, Vertex};
-use crate::wgpu::camera::{Camera, CameraController, OPENGL_TO_WGPU_MATRIX};
+use crate::wgpu::camera::{CameraController, OPENGL_TO_WGPU_MATRIX};
 use crate::wgpu::{camera, create_render_pipeline};
 use crate::wgpu::instance::{Instance, InstanceRaw};
 use crate::wgpu::light::LightUniform;
@@ -48,9 +51,10 @@ impl CameraUniform {
         }
     }
 
-    fn update_view_proj(&mut self, camera: &Camera, projection: &camera::Projection) {
-        self.view_position = camera.position.to_homogeneous().into();
-        self.view_proj = (projection.calc_matrix() * camera.calc_matrix()).into();
+    fn update_view_proj(&mut self, camera: &Camera) {
+        self.view_position = camera.eye.to_homogeneous().t().to_slice()[0]; 
+        let view = camera.to_view_matrix();
+        self.view_proj = (&view * &camera.perspective_projection).into();
     }
 }
 
@@ -61,7 +65,6 @@ pub struct State {
     render_pipeline: wgpu::RenderPipeline,
     obj_model: model::Model,
     camera: Camera,
-    projection: camera::Projection,
     pub camera_controller: CameraController,
     camera_uniform: CameraUniform,
     camera_buffer: wgpu::Buffer,
@@ -131,12 +134,19 @@ impl State {
                 label: Some("texture_bind_group_layout"),
             });
 
-        let camera = camera::Camera::new((0.0, 0., 10.), cgmath::Deg(-90.0), cgmath::Deg(-0.0));
-        let projection = camera::Projection::new(size.width, size.height, cgmath::Deg(45.), 0.1, 100.0);
+        let camera = Camera::new(
+            size.height as f32,
+            size.width as f32 / size.height as f32,
+            5.,
+            1000.,
+            position::Pos3::from_xyz(0.0, 0., -10.),
+            vector::Vector3::from_xyz(0., 0., -1.),
+            vector::Vector3::from_xyz(0., -1., 0.)
+            );
         let camera_controller = CameraController::new(2.0, 0.2);
 
         let mut camera_uniform = CameraUniform::new();
-        camera_uniform.update_view_proj(&camera, &projection);
+        camera_uniform.update_view_proj(&camera);
 
         let camera_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Camera Buffer"),
@@ -265,7 +275,6 @@ impl State {
             render_pipeline,
             obj_model,
             camera,
-            projection,
             camera_controller,
             camera_buffer,
             camera_bind_group,
@@ -322,8 +331,8 @@ impl State {
     }
 
     pub fn update(&mut self, dt: std::time::Duration) {
-        self.camera_controller.update_camera(&mut self.camera, dt);
-        self.camera_uniform.update_view_proj(&self.camera, &self.projection);
+        // self.camera_controller.update_camera(&mut self.camera, dt);
+        self.camera_uniform.update_view_proj(&self.camera);
         self.queue.write_buffer(
             &self.camera_buffer,
             0,

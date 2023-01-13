@@ -17,7 +17,7 @@ pub struct Camera {
     ratio: f32,
     n: f32,
     z: f32,
-    eye: Pos3,
+    pub eye: Pos3,
     forward: Vector3,
     up: Vector3,
     pub model: HomoTransform,
