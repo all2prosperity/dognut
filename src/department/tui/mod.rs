@@ -37,7 +37,7 @@ impl TuiApp {
         execute!(self.stdout, crossterm::terminal::Clear(ClearType::All));
 
         let dimension = (256,79);
-        self.gpu = Some(state);
+        self.gpu = None;
 
         loop {
             self.theta += 0.1;
@@ -112,7 +112,7 @@ impl TuiApp {
             self.stdout.flush().unwrap();
             return ;
         }
-        
+
 
         let now = std::time::Instant::now();
         let mut out_buf = OutputBuffer::new(dim.0 as u32, dim.1 as u32, true);

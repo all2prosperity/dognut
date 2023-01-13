@@ -21,7 +21,7 @@ use crate::department::Game;
 use crate::wgpu::wgpu_helper::State;
 use crate::department::types::multi_sender::MultiSender;
 
-pub const FPS: usize = 60;
+pub const FPS: usize = 120;
 pub const TIME_STEP: Duration = Duration::from_nanos(1_000_000_000 / FPS as u64);
 
 

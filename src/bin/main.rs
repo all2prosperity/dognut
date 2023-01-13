@@ -10,9 +10,9 @@ use crossbeam_channel::unbounded;
 
 
 fn main () {
-    //env_logger::init();
+    env_logger::init();
     println!("hello");
-    dognut::department::common::logger::App::trivial_conf();
+    //dognut::department::common::logger::App::trivial_conf();
 
     let (net_s, net_r) = unbounded();
     let (wgpu_s, wgpu_r) = unbounded();

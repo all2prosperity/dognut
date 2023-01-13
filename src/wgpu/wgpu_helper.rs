@@ -195,7 +195,7 @@ impl State {
 
         log::warn!("Load model");
         let obj_model = resources::load_model(
-            "./res/Link/new_link.obj",
+            "./res/diablo/diablo3_pose.obj",
             &device,
             &queue,
             &texture_bind_group_layout,
@@ -314,7 +314,7 @@ impl State {
                 true
             }
             DeviceEvent::Button {
-                button: 1, // Left Mouse Button
+                button: 0, // Left Mouse Button
                 state,
             } => {
                 self.mouse_pressed = *state == ElementState::Pressed;
