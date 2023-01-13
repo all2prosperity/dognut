@@ -1,5 +1,6 @@
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Sub};
 use dognut_macros::TriangularInverse;
+use std::convert::Into;
 
 #[derive(Debug, Clone, TriangularInverse)]
 pub struct Matrix<const M: usize, const N: usize> {
@@ -166,10 +167,14 @@ impl<const M: usize, const N: usize> Sub for &Matrix<M, N> {
     }
 }
 
+impl<const M: usize, const N: usize> Into<[[f32; M]; N]> for Matrix<M, N> {
+    fn into(self) -> [[f32; M]; N] {
+        self.to_slice()
+    }
+}
+
 impl<const M: usize, const N: usize> Matrix<M, N> {
     pub fn new() -> Self {
-
-
         let mut _elements: Vec<f32> = Vec::with_capacity((M * N) as usize);
         _elements.resize((M * N) as usize, 0.0);
         Self {
@@ -304,6 +309,18 @@ impl<const M: usize, const N: usize> Matrix<M, N> {
             0., 0., 1., z,
             0., 0., 0., 1.,
         ])
+    }
+
+    pub fn to_slice(&self) -> [[f32; M]; N] {
+        let _iter = self.iter();
+        let mut ret = [[0.; M]; N];
+        for i in 0..N {
+            let start = i * M;
+            let end = i * M + M;
+            ret[i].copy_from_slice(&self.elements[start..end]);
+        }
+
+        ret
     }
 }
 

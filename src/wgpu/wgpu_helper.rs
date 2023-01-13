@@ -15,6 +15,7 @@ use std::time::{Duration, Instant};
 use crate::department::types::msg::TransferMsg;
 use crate::department::types::multi_sender::MultiSender;
 use crate::department::common::constant::{WIDTH, HEIGHT};
+use crate::department::preview::matrix;
 use crossbeam_channel::Receiver;
 use winit::dpi::PhysicalSize;
 
@@ -43,7 +44,7 @@ impl CameraUniform {
     fn new() -> Self {
         Self {
             view_position: [0.; 4],
-            view_proj: cgmath::Matrix4::identity().into(),
+            view_proj: matrix::HMat::identity_matrix().into(),
         }
     }
 
