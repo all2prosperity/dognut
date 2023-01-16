@@ -28,6 +28,8 @@ use super::texture;
 use super::resources;
 
 use model::{DrawModel, Vertex};
+use crate::department::preview::homo_transformation::HomoTransform;
+use crate::department::preview::vector::Vector3;
 use crate::wgpu::camera::{CameraController, OPENGL_TO_WGPU_MATRIX};
 use crate::wgpu::{camera, create_render_pipeline};
 use crate::wgpu::instance::{Instance, InstanceRaw};
@@ -52,7 +54,7 @@ impl CameraUniform {
     }
 
     fn update_view_proj(&mut self, camera: &Camera) {
-        self.view_position = camera.eye.to_homogeneous().t().to_slice()[0]; 
+        self.view_position = camera.eye.to_homogeneous().t().to_slice()[0];
         let view = camera.to_view_matrix();
         self.view_proj = (&view * &camera.perspective_projection).into();
     }
@@ -156,9 +158,9 @@ impl State {
 
         const SPACE_BETWEEN: f32 = 3.0;
         
-        let position = cgmath::Vector3 { x:0.0, y: -0.5, z:-1.0 };
+        let position = Vector3::from_xyz(0.,0.,0.);
 
-        let rotation = cgmath::Quaternion::from_axis_angle(position.normalize(), cgmath::Deg(0.0));
+        let rotation = HomoTransform::rotation_matrix(&position, 0.);
         let instances = vec![Instance{position, rotation}];
 
         let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
@@ -195,7 +197,7 @@ impl State {
 
         log::warn!("Load model");
         let obj_model = resources::load_model(
-            "./res/diablo/diablo3_pose.obj",
+            "./res/nice_cube/nice_cube.obj",
             &device,
             &queue,
             &texture_bind_group_layout,

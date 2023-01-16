@@ -59,7 +59,7 @@ fn vs_main(
     out.world_normal = normal_matrix * model.normal;
     var world_position: vec4<f32> = model_matrix * vec4<f32>(model.position, 1.0);
     out.world_position = world_position.xyz;
-    out.clip_position = camera.view_proj * world_position;
+    out.clip_position =  world_position * camera.view_proj;
     return out;
 }
 

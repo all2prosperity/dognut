@@ -1,17 +1,22 @@
 use pixels::wgpu;
+use crate::department::preview::homo_transformation::HomoTransform;
+use crate::department::preview::vector::Vector3;
 
 pub struct Instance {
-    pub position: cgmath::Vector3<f32>,
-    pub rotation: cgmath::Quaternion<f32>,
+    pub position: Vector3,
+    pub rotation: HomoTransform,
 }
 
 impl Instance {
     pub fn to_raw(&self) -> InstanceRaw {
+        let model = &HomoTransform::translation((self.position.x(), self.position.y(), self.position.z())) * &self.rotation;
+        let m_slice = model.to_slice();
+
+        let rot_slice = self.rotation.cut::<3,3>(0,0).to_slice();
+
         InstanceRaw {
-            model: (cgmath::Matrix4::from_translation(self.position)
-                * cgmath::Matrix4::from(self.rotation))
-                .into(),
-            normal: cgmath::Matrix3::from(self.rotation).into(),
+            model: m_slice,
+            normal: rot_slice,
         }
     }
 }

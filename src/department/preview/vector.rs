@@ -127,7 +127,6 @@ impl Vector3 {
     pub fn set_x(&mut self, v: f32) {
         self.elements[0] = v;
     }
-
     pub fn set_y(&mut self, v: f32) {
         self.elements[1] = v;
     }
