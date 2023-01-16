@@ -30,3 +30,8 @@ fn main () {
 
     rt.block_on(window::run(win_r, ms_win)).expect("fail on block");
 }
+
+
+//todo:1, wgpu helper load model with conf
+//todo:2, total controller, and tui fps camera controller.
+//todo:3, two camera render.

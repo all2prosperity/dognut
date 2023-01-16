@@ -1,4 +1,5 @@
 use std::f32::consts::PI;
+use cgmath::Deg;
 
 use image::GenericImageView;
 use winit::event::VirtualKeyCode;
@@ -18,10 +19,12 @@ pub struct Camera {
     n: f32,
     z: f32,
     pub eye: Pos3,
-    forward: Vector3,
+    pub forward: Vector3,
     up: Vector3,
     pub model: HomoTransform,
-    pub perspective_projection: HMat
+    pub perspective_projection: HMat,
+    pub yaw: cgmath::Rad<f32>,
+    pub pitch: cgmath::Rad<f32>,
 }
 
 impl Camera {
@@ -37,6 +40,8 @@ impl Camera {
             up,
             model: HomoTransform::identity_matrix(),
             perspective_projection: persp,
+            yaw: cgmath::Rad::from(Deg(0.)),
+            pitch: cgmath::Rad::from(Deg(0.)),
         }
     }
 

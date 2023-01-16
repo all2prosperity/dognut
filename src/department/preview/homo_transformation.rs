@@ -20,10 +20,10 @@ impl HomoTransform {
 
     pub fn rotation_matrix(n: &Vector3, theta: f32) -> Self{
         let mut vt = n.clone();
-        let v = vt.norm();
+        vt.norm();
         let (sin_t, cos_t) = theta.sin_cos();
 
-        let (x, y, z) = (v.x(), v.y(), v.z());
+        let (x, y, z) = (vt.x(), vt.y(), vt.z());
         let cminus1 = 1. - cos_t;
 
         HomoTransform::from_vec(vec![
@@ -48,10 +48,10 @@ impl HomoTransform {
 impl Transform {
     pub fn rotation_mat(n: &Vector3, theta: f32) -> Self{
         let mut vt = n.clone();
-        let v = vt.norm();
+        vt.norm();
         let (sin_t, cos_t) = theta.sin_cos();
 
-        let (x, y, z) = (v.x(), v.y(), v.z());
+        let (x, y, z) = (vt.x(), vt.y(), vt.z());
         let cminus1 = 1. - cos_t;
 
         Transform::from_vec(vec![

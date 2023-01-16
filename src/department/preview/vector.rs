@@ -100,12 +100,11 @@ impl Vector3 {
         f32::sqrt(f32::powi(self.x(), 2) + f32::powi(self.y(), 2) + f32::powi(self.z(), 2))
     }
 
-    pub fn norm(&mut self) -> &Self {
+    pub fn norm(&mut self) {
         let mag = self.magnitude();
         self.elements[0] = self.elements[0] / mag;
         self.elements[1] = self.elements[1] / mag;
         self.elements[2] = self.elements[2] / mag;
-        self
     }
 
     pub fn to_rotate_negative_z_matrix(&self, up: &Self) -> HMat{
@@ -124,6 +123,18 @@ impl Vector3 {
             0., 0., 0., 1.,
         ])
     }
+
+    pub fn set_x(&mut self, v: f32) {
+        self.elements[0] = v;
+    }
+
+    pub fn set_y(&mut self, v: f32) {
+        self.elements[1] = v;
+    }
+    pub fn set_z(&mut self, v: f32) {
+        self.elements[2] = v;
+    }
+
 }
 
 impl HVec4 {
