@@ -1,4 +1,2 @@
-pub mod shader;
 pub mod rasterizer;
-
-
+pub mod shader;

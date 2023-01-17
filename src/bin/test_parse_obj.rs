@@ -1,16 +1,11 @@
 use tobj;
 
-
 fn main() {
     // let obj_file = "G:\\shdownload\\FishSoup_Pot\\FishSoup_Pot.obj";
     let obj_file = "G:\\sh3dMod\\FishSoup_Pot.obj";
 
     let (models, materials) =
-        tobj::load_obj(
-            &obj_file,
-            &tobj::LoadOptions::default()
-        )
-        .expect("Failed to OBJ load file");
+        tobj::load_obj(&obj_file, &tobj::LoadOptions::default()).expect("Failed to OBJ load file");
 
     // Note: If you don't mind missing the materials, you can generate a default.
     let materials = materials.expect("Failed to load MTL file");

@@ -33,7 +33,7 @@ fn main() -> Result<(), Error>{
     let camera=  Camera::new(45., (WIDTH / HEIGHT) as f32,
                              -5., -50., Vector3::from_xyz(0., 0., 10.,),
                              Vector3::from_xyz(0., 0., -1.),
-                             Vector3::from_xyz(0., -1., 0.));
+                             Vector3::from_xyz(0., 1., 0.));
 
     let shader = LambertianShader::new(Vector3::from_xyz(0., 1., 0.),
                                        0.8, 1.,&camera, arg.term);

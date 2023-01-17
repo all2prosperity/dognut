@@ -1,26 +1,23 @@
-
-
-
 use std::sync::mpsc::Receiver;
 use std::time::Duration;
-use tui::{Frame};
-use tui::backend::Backend;
 use tokio;
 use tokio::runtime::Runtime;
+use tui::backend::Backend;
+use tui::Frame;
 
-pub struct TermRenderer
-{
+pub struct TermRenderer {
     keyboard_rx: Receiver<String>,
-    rt: Runtime
+    rt: Runtime,
 }
 
-
-impl TermRenderer where {
-    pub fn new_with(rx: Receiver<String>) ->Self {
-        let runtime = tokio::runtime::Builder::new_current_thread().build().unwrap();
+impl TermRenderer {
+    pub fn new_with(rx: Receiver<String>) -> Self {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap();
         TermRenderer {
             keyboard_rx: rx,
-            rt: runtime
+            rt: runtime,
         }
     }
 
@@ -32,13 +29,9 @@ impl TermRenderer where {
 
     async fn update(&self) {
         loop {
-            if let Ok(_s) = self.keyboard_rx.recv_timeout(Duration::from_secs(1)) {
-                
-            }
+            if let Ok(_s) = self.keyboard_rx.recv_timeout(Duration::from_secs(1)) {}
         }
     }
 }
 
-fn ui<B:Backend>(_f: &mut Frame<B>, _render: &TermRenderer) {
-
-}
+fn ui<B: Backend>(_f: &mut Frame<B>, _render: &TermRenderer) {}

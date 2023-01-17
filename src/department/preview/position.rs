@@ -1,7 +1,5 @@
-use crate::department::preview::vector::HVec4;
 use super::matrix::Matrix;
-
-
+use crate::department::preview::vector::HVec4;
 
 // #[derive(Debug, Clone)]
 // pub struct Pos3 {
@@ -9,7 +7,6 @@ use super::matrix::Matrix;
 //     pub y: f32,
 //     pub z: f32,
 // }
-
 
 pub type Pos3 = Matrix<1, 3>;
 
@@ -22,7 +19,6 @@ pub type Pos3 = Matrix<1, 3>;
 //         Vector3::from_matrix(_matrix)
 //     }
 // }
-
 
 impl Default for Pos3 {
     fn default() -> Self {

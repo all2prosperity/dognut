@@ -1,13 +1,12 @@
 //use cgmath::*;
-use winit::event::*;
-use winit::dpi::PhysicalPosition;
-use std::time::Duration;
-use std::f32::consts::FRAC_PI_2;
-use cgmath::Rad;
 use crate::department::preview::matrix;
 use crate::department::preview::vector::Vector3;
 use crate::department::view;
-
+use cgmath::Rad;
+use std::f32::consts::FRAC_PI_2;
+use std::time::Duration;
+use winit::dpi::PhysicalPosition;
+use winit::event::*;
 
 #[rustfmt::skip]
 pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
@@ -18,7 +17,6 @@ pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
 );
 
 const SAFE_FRAC_PI_2: f32 = FRAC_PI_2 - 0.0001;
-
 
 // #[derive(Debug)]
 // pub struct Camera {
@@ -121,8 +119,12 @@ impl CameraController {
         }
     }
 
-    pub fn process_keyboard(&mut self, key: VirtualKeyCode, state: ElementState) -> bool{
-        let amount = if state == ElementState::Pressed { 1.0 } else { 0.0 };
+    pub fn process_keyboard(&mut self, key: VirtualKeyCode, state: ElementState) -> bool {
+        let amount = if state == ElementState::Pressed {
+            1.0
+        } else {
+            0.0
+        };
         match key {
             VirtualKeyCode::W | VirtualKeyCode::Up => {
                 self.amount_forward = amount;
@@ -161,10 +163,7 @@ impl CameraController {
         self.scroll = -match delta {
             // I'm assuming a line is about 100 pixels
             MouseScrollDelta::LineDelta(_, scroll) => scroll * 100.0,
-            MouseScrollDelta::PixelDelta(PhysicalPosition {
-                                             y: scroll,
-                                             ..
-                                         }) => *scroll as f32,
+            MouseScrollDelta::PixelDelta(PhysicalPosition { y: scroll, .. }) => *scroll as f32,
         };
     }
 
@@ -187,12 +186,14 @@ impl CameraController {
         let (pitch_sin, pitch_cos) = camera.pitch.0.sin_cos();
         let mut scrollward = Vector3::from_xyz(pitch_cos * yaw_cos, pitch_sin, pitch_cos * yaw_sin);
         scrollward.norm();
-        camera.eye +=  scrollward * (self.scroll * self.speed * self.sensitivity * dt);
+        camera.eye += scrollward * (self.scroll * self.speed * self.sensitivity * dt);
         self.scroll = 0.0;
 
         // Move up/down. Since we don't use roll, we can just
         // modify the y coordinate directly.
-        camera.eye.set_y( camera.eye.y() + ((self.amount_up - self.amount_down) * self.speed * dt));
+        camera
+            .eye
+            .set_y(camera.eye.y() + ((self.amount_up - self.amount_down) * self.speed * dt));
 
         // Rotate
         camera.yaw += Rad(self.rotate_horizontal) * self.sensitivity * dt;
@@ -211,6 +212,7 @@ impl CameraController {
             camera.pitch = Rad(SAFE_FRAC_PI_2);
         }
 
-        camera.forward = Vector3::from_xyz(camera.yaw.0.cos(), camera.pitch.0.sin(), camera.yaw.0.sin());
+        camera.forward =
+            Vector3::from_xyz(camera.yaw.0.cos(), camera.pitch.0.sin(), camera.yaw.0.sin());
     }
 }

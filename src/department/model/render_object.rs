@@ -1,5 +1,5 @@
-use crate::department::preview::position::Pos3;
 use crate::department::preview::matrix::Matrix;
+use crate::department::preview::position::Pos3;
 use crate::department::preview::vector::Vec2;
 
 #[derive(Debug, Clone)]
@@ -24,9 +24,9 @@ impl RenderObject {
         }
     }
 
-    pub fn mul_matrix(&mut self, mat: &Matrix<3,3>) {
+    pub fn mul_matrix(&mut self, mat: &Matrix<3, 3>) {
         for i in self.vertexes.iter_mut() {
-            let r3:& Pos3 = i;
+            let r3: &Pos3 = i;
             *i = r3 * mat;
         }
     }

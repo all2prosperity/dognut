@@ -1,3 +1,5 @@
+use crate::department::control::Controller;
+use crate::wgpu::wgpu_helper::State;
 use ::tui::layout::Direction;
 use gilrs::{Button, GamepadId, Gilrs};
 use log::debug;
@@ -5,20 +7,17 @@ use pixels::Pixels;
 use winit::event::VirtualKeyCode;
 use winit::window::WindowId;
 use winit_input_helper::WinitInputHelper;
-use crate::department::control::Controller;
-use crate::wgpu::wgpu_helper::State;
 
-pub mod preview;
-pub mod view;
-pub mod net;
-mod control;
-pub mod tui;
-pub mod pipeline;
-pub mod model;
 pub mod common;
+mod control;
+pub mod model;
+pub mod net;
+pub mod pipeline;
+pub mod preview;
+pub mod tui;
 pub mod types;
 pub mod video;
-
+pub mod view;
 
 pub struct Game {
     pixels: Pixels,
@@ -32,7 +31,7 @@ pub struct Game {
 }
 
 impl Game {
-    fn new(pixels: Pixels, state: State, id:WindowId , debug: bool) -> Self {
+    fn new(pixels: Pixels, state: State, id: WindowId, debug: bool) -> Self {
         Self {
             pixels,
             state,

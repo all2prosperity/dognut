@@ -1,8 +1,7 @@
-use image::{DynamicImage, GenericImageView};
-use tobj::{Material, Model};
 use crate::department::model::triangle::Triangle;
 use crate::department::preview::vector::{Vec2, Vector3};
-
+use image::{DynamicImage, GenericImageView};
+use tobj::{Material, Model};
 
 pub struct TriangleIter<'a> {
     pub resources: &'a TriangleResources,
@@ -10,17 +9,15 @@ pub struct TriangleIter<'a> {
     max_idx: usize,
 }
 
-
 impl<'a> Iterator for TriangleIter<'a> {
     type Item = Triangle;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.triangle_idx >= self.max_idx  {
+        if self.triangle_idx >= self.max_idx {
             return None;
         }
 
-
-        let (width ,height) = self.resources.image.as_ref().unwrap().dimensions();
+        let (width, height) = self.resources.image.as_ref().unwrap().dimensions();
         let (width, height) = (width - 1, height - 1);
 
         let m = &self.resources.model.mesh;
@@ -29,29 +26,27 @@ impl<'a> Iterator for TriangleIter<'a> {
         let mut tex_coords = Vec::<Vec2>::new();
 
         for i in self.triangle_idx..self.triangle_idx + 3 {
-            let pi= m.indices[i] as usize;
+            let pi = m.indices[i] as usize;
             let ni = m.normal_indices[i] as usize;
             let ti = m.texcoord_indices[i] as usize;
 
             points.push(Vector3::from_xyz(
-                m.positions[pi*3],
-                m.positions[pi*3 + 1],
-                m.positions[pi*3 + 2],
+                m.positions[pi * 3],
+                m.positions[pi * 3 + 1],
+                m.positions[pi * 3 + 2],
             ));
             normals.push(Vector3::from_xyz(
-                m.normals[ni*3],
-                m.normals[ni*3 + 1],
-                m.normals[ni*3 + 2],
+                m.normals[ni * 3],
+                m.normals[ni * 3 + 1],
+                m.normals[ni * 3 + 2],
             ));
 
             tex_coords.push(Vec2::from_xy(
-                m.texcoords[ti*2] * width as f32,
-                height as f32 - m.texcoords[ti*2 + 1] * height as f32,
+                m.texcoords[ti * 2] * width as f32,
+                height as f32 - m.texcoords[ti * 2 + 1] * height as f32,
             ))
         }
         self.triangle_idx += 3;
-
-
 
         // let mut colors = Vec::<Vector3>::new();
         // if let Some(img) = &self.resources.image {
@@ -75,7 +70,6 @@ pub struct TriangleResources {
     pub image: Option<DynamicImage>,
 }
 
-
 impl TriangleResources {
     pub fn new(model: Model) -> Self {
         Self {
@@ -87,10 +81,10 @@ impl TriangleResources {
 
     pub fn iter(&self) -> TriangleIter {
         let max = self.model.mesh.indices.len();
-        TriangleIter{
+        TriangleIter {
             resources: self,
             triangle_idx: 0,
-            max_idx: max
+            max_idx: max,
         }
     }
 }

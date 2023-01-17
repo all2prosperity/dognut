@@ -1,15 +1,13 @@
 use dognut::department::net::router;
-use dognut::department::view::window;
-use dognut::department::view::render;
 use dognut::department::types::multi_sender;
+use dognut::department::view::render;
+use dognut::department::view::window;
 use dognut::wgpu::wgpu_helper;
 use std::thread;
 
-
 use crossbeam_channel::unbounded;
 
-
-fn main () {
+fn main() {
     env_logger::init();
     println!("hello");
     //dognut::department::common::logger::App::trivial_conf();
@@ -26,11 +24,14 @@ fn main () {
     // thread::spawn(|| render::run(render_pc_s, render_cli_s));
     //thread::spawn(|| wgpu_helper::run(render_pc_s, render_cli_s));
 
-    let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
 
-    rt.block_on(window::run(win_r, ms_win)).expect("fail on block");
+    rt.block_on(window::run(win_r, ms_win))
+        .expect("fail on block");
 }
-
 
 //todo:1, wgpu helper load model with conf
 //todo:2, total controller, and tui fps camera controller.

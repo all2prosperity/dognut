@@ -1,12 +1,12 @@
+mod camera;
+pub mod instance;
+mod light;
 mod model;
 mod resources;
 mod texture;
 pub mod wgpu_helper;
-pub mod instance;
-mod light;
-mod camera;
 
-pub struct Runner{}
+pub struct Runner {}
 
 use pixels::wgpu;
 

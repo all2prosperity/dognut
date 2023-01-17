@@ -1,20 +1,20 @@
 #![deny(clippy::all)]
 #![forbid(unsafe_code)]
 
+use dognut::department::model::object_buffer::ObjectBuffer;
+use dognut::department::preview::homo_transformation::{HomoTransform, Transform};
+use dognut::department::preview::matrix::HMat;
+use dognut::department::preview::position::Pos3;
+use dognut::department::preview::vector::Vector3;
+use dognut::department::view::camera::Camera;
 use log::error;
-use pixels::{Error, Pixels, SurfaceTexture};
 use pixels::wgpu::Color;
+use pixels::{Error, Pixels, SurfaceTexture};
 use winit::dpi::LogicalSize;
 use winit::event::{Event, VirtualKeyCode};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
-use dognut::department::preview::homo_transformation::{HomoTransform, Transform};
-use dognut::department::view::camera::Camera;
-use dognut::department::model::object_buffer::ObjectBuffer;
-use dognut::department::preview::matrix::{HMat};
-use dognut::department::preview::vector::Vector3;
-use dognut::department::preview::position::Pos3;
 
 use dognut::department::model::object_loader::ObjectLoader;
 use dognut::department::model::triangle_resources::TriangleResources;
@@ -75,20 +75,15 @@ fn main() -> Result<(), Error> {
 
             if input.key_pressed(VirtualKeyCode::A) {
                 world.camera.move_view(VirtualKeyCode::A);
-            }
-            else if input.key_pressed(VirtualKeyCode::D) {
+            } else if input.key_pressed(VirtualKeyCode::D) {
                 world.camera.move_view(VirtualKeyCode::D);
-            }
-            else if input.key_pressed(VirtualKeyCode::W) {
+            } else if input.key_pressed(VirtualKeyCode::W) {
                 world.camera.move_view(VirtualKeyCode::W);
-            }
-            else if input.key_pressed(VirtualKeyCode::S) {
+            } else if input.key_pressed(VirtualKeyCode::S) {
                 world.camera.move_view(VirtualKeyCode::S);
-            }
-            else if input.key_pressed(VirtualKeyCode::Q) {
+            } else if input.key_pressed(VirtualKeyCode::Q) {
                 world.camera.move_view(VirtualKeyCode::Q);
-            }
-            else if input.key_pressed(VirtualKeyCode::E) {
+            } else if input.key_pressed(VirtualKeyCode::E) {
                 world.camera.move_view(VirtualKeyCode::E);
             }
 
@@ -110,17 +105,22 @@ impl World {
         let res = ObjectLoader::load_triangle_resources("./res/Link/link_adult.obj");
 
         Self {
-            camera: Camera::new(45., (WIDTH / HEIGHT) as f32, -5., -50., Pos3::from_xyz(0., 0., 10.,),
-                                Vector3::from_xyz(0., 0., -1.),
-                                Vector3::from_xyz(0., -1., 0.)),
+            camera: Camera::new(
+                45.,
+                (WIDTH / HEIGHT) as f32,
+                -5.,
+                -50.,
+                Pos3::from_xyz(0., 0., 10.),
+                Vector3::from_xyz(0., 0., -1.),
+                Vector3::from_xyz(0., -1., 0.),
+            ),
             resources: res,
             theta: 0.,
         }
     }
 
     /// Update the `World` internal state; bounce the box around the screen.
-    fn update(&mut self) {
-    }
+    fn update(&mut self) {}
 
     /// Draw the `World` state to the frame buffer.
     ///
@@ -134,28 +134,25 @@ impl World {
         let scale = HomoTransform::scale((0.05, 0.05, 0.05));
         // let mut scale = HomoTransform::identity_matrix();
 
-
         let _move_origin = HomoTransform::translation((-0., -0., 0.));
-        let rotate = Transform::rotation_mat(&Vector3::from_xyz(0.,1.,0.), self.theta);
+        let rotate = Transform::rotation_mat(&Vector3::from_xyz(0., 1., 0.), self.theta);
         // let _move_back = HomoTransform::translation((0., 0., -0.0));
         // let _mat = _move_origin * rotate * _move_back;
         // let _mat = HomoTransform::identity_matrix();
         let _mat = scale * rotate;
 
         let _move = HMat::from_vec(vec![
-            1., 0., 0., 0.,
-            0., 1., 0., 0.,
-            0., 0., 1., 0.,
-            0., -3., -5.0, 1.,
+            1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1., 0., 0., -3., -5.0, 1.,
         ]);
 
         //let _mat = _mat * scale;
         let _mat = _mat * _move;
 
-
         //let _buf = self.camera.render(WIDTH, HEIGHT, &buffer, &_mat);
         let now = std::time::Instant::now();
-        let _buf = self.camera.render_triangle_obejct(WIDTH, HEIGHT, &self.resources, &_mat);
+        let _buf = self
+            .camera
+            .render_triangle_obejct(WIDTH, HEIGHT, &self.resources, &_mat);
 
         println!("current frame cost {} ms", now.elapsed().as_millis());
 

@@ -6,8 +6,8 @@ fn main() {
     let _vec = Vec::from([1., 2., 3., 4., 5., 6.]);
     let _vec2 = Vec::from([1., 1., 5., 7., 0., 3.]);
 
-    let _d1 = Matrix::<2,3>::from_vec( _vec);
-    let _d2 = Matrix::<2,3>::from_vec( _vec2);
+    let _d1 = Matrix::<2, 3>::from_vec(_vec);
+    let _d2 = Matrix::<2, 3>::from_vec(_vec2);
     _d1.debug();
     _d2.debug();
     let mut d1_t = _d1.t();
@@ -15,15 +15,10 @@ fn main() {
     let d = &d1_t * &_d2;
     d.debug();
 
-    d1_t  *= 3.;
+    d1_t *= 3.;
     d1_t.debug();
 
-
-    let origin = Matrix::<3, 3>::from_vec(vec![
-        1., 2., 3.,
-        4., 5., 6.,
-        7., 8., 10.,
-    ]);
+    let origin = Matrix::<3, 3>::from_vec(vec![1., 2., 3., 4., 5., 6., 7., 8., 10.]);
 
     if let Some((_l, _l_1, u)) = origin.l_u_split() {
         println!("u is :");
@@ -40,10 +35,7 @@ fn main() {
         ret.debug();
     }
 
-    let m_2 = Matrix::<2, 2>::from_vec(vec![
-        -3., -6.,
-        0., 1.
-    ]);
+    let m_2 = Matrix::<2, 2>::from_vec(vec![-3., -6., 0., 1.]);
     let ret = m_2.upper_triangular_matrix_inverse();
     ret.debug();
     (m_2 * ret).debug();

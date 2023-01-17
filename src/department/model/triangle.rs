@@ -1,11 +1,6 @@
-
-
-
-
-
 use crate::department::model::render_object::RenderObject;
 use crate::department::preview::homo_transformation::HomoTransform;
-use crate::department::preview::matrix::{Matrix, HMat};
+use crate::department::preview::matrix::{HMat, Matrix};
 use crate::department::preview::position::Pos3;
 use crate::department::preview::vector::{HVec4, Vec2, Vector3};
 
@@ -125,7 +120,12 @@ impl Triangle {
         let max_x = max(max(self.v[0].x(), self.v[1].x()), self.v[2].x());
         let min_y = min(min(self.v[0].y(), self.v[1].y()), self.v[2].y());
         let max_y = max(max(self.v[0].y(), self.v[1].y()), self.v[2].y());
-        (min_x.floor() as i32, max_x.ceil() as i32, min_y.floor() as i32, max_y.ceil() as i32)
+        (
+            min_x.floor() as i32,
+            max_x.ceil() as i32,
+            min_y.floor() as i32,
+            max_y.ceil() as i32,
+        )
     }
 
     pub fn bounding_box(v: &Vec<Vector3>) -> (u32, u32, u32, u32) {
@@ -133,9 +133,13 @@ impl Triangle {
         let max_x = max(max(v[0].x(), v[1].x()), v[2].x());
         let min_y = min(min(v[0].y(), v[1].y()), v[2].y());
         let max_y = max(max(v[0].y(), v[1].y()), v[2].y());
-        (min_x.floor() as u32, max_x.ceil() as u32, min_y.floor() as u32, max_y.ceil() as u32)
+        (
+            min_x.floor() as u32,
+            max_x.ceil() as u32,
+            min_y.floor() as u32,
+            max_y.ceil() as u32,
+        )
     }
-
 
     pub fn inside_triangle(pos: &Vector3, v: &Vec<Vector3>) -> bool {
         let mut last_cross_vec: Option<Vector3> = None;
@@ -160,9 +164,12 @@ impl Triangle {
     }
 
     pub fn get_surface_equation(&self) -> (f32, f32, f32, f32) {
-        let a = (self.v[1].y() - self.v[0].y()) * (self.v[2].z() - self.v[0].z()) - (self.v[1].z() - self.v[0].z()) * (self.v[2].y() - self.v[0].y());
-        let b = (self.v[2].x() - self.v[0].x()) * (self.v[1].z() - self.v[0].z()) - (self.v[1].x() - self.v[0].x()) * (self.v[2].z() - self.v[0].z());
-        let c = (self.v[1].x() - self.v[0].x()) * (self.v[2].y() - self.v[0].y()) - (self.v[2].x() - self.v[0].x()) * (self.v[1].y() - self.v[0].y());
+        let a = (self.v[1].y() - self.v[0].y()) * (self.v[2].z() - self.v[0].z())
+            - (self.v[1].z() - self.v[0].z()) * (self.v[2].y() - self.v[0].y());
+        let b = (self.v[2].x() - self.v[0].x()) * (self.v[1].z() - self.v[0].z())
+            - (self.v[1].x() - self.v[0].x()) * (self.v[2].z() - self.v[0].z());
+        let c = (self.v[1].x() - self.v[0].x()) * (self.v[2].y() - self.v[0].y())
+            - (self.v[2].x() - self.v[0].x()) * (self.v[1].y() - self.v[0].y());
         let d = -(a * self.v[0].x() + b * self.v[0].y() + c * self.v[0].z());
         (a, b, c, d)
     }
@@ -215,10 +222,13 @@ impl Triangle {
         let (mut alpha, mut beta, mut gamma) = (0f32, 0f32, 0f32);
         let (v1, v2, v3) = self.unpack_v();
 
-        let denominator = (v2.y() - v3.y()) * (v1.x() - v3.x()) + (v3.x() - v2.x()) * (v1.y() - v3.y());
+        let denominator =
+            (v2.y() - v3.y()) * (v1.x() - v3.x()) + (v3.x() - v2.x()) * (v1.y() - v3.y());
 
-        alpha = ((v2.y() - v3.y()) * (p.0 - v3.x()) + (v3.x() - v2.x()) * (p.1 - v3.y())) / denominator;
-        beta = ((v3.y() - v1.y()) * (p.0 - v3.x()) + (v1.x() - v3.x()) * (p.1 - v3.y())) / denominator;
+        alpha =
+            ((v2.y() - v3.y()) * (p.0 - v3.x()) + (v3.x() - v2.x()) * (p.1 - v3.y())) / denominator;
+        beta =
+            ((v3.y() - v1.y()) * (p.0 - v3.x()) + (v1.x() - v3.x()) * (p.1 - v3.y())) / denominator;
         gamma = 1. - alpha - beta;
         Vector3::from_xyz(alpha, beta, gamma)
     }
@@ -227,19 +237,25 @@ impl Triangle {
         let (mut alpha, mut beta, mut gamma) = (0f32, 0f32, 0f32);
         let (v1, v2, v3) = (&v[0], &v[1], &v[2]);
 
-        let denominator = (v2.y() - v3.y()) * (v1.x() - v3.x()) + (v3.x() - v2.x()) * (v1.y() - v3.y());
+        let denominator =
+            (v2.y() - v3.y()) * (v1.x() - v3.x()) + (v3.x() - v2.x()) * (v1.y() - v3.y());
 
-        alpha = ((v2.y() - v3.y()) * (p.0 - v3.x()) + (v3.x() - v2.x()) * (p.1 - v3.y())) / denominator;
-        beta = ((v3.y() - v1.y()) * (p.0 - v3.x()) + (v1.x() - v3.x()) * (p.1 - v3.y())) / denominator;
+        alpha =
+            ((v2.y() - v3.y()) * (p.0 - v3.x()) + (v3.x() - v2.x()) * (p.1 - v3.y())) / denominator;
+        beta =
+            ((v3.y() - v1.y()) * (p.0 - v3.x()) + (v1.x() - v3.x()) * (p.1 - v3.y())) / denominator;
         gamma = 1. - alpha - beta;
         Vector3::from_xyz(alpha, beta, gamma)
     }
 
-
     // after mvp and perspective divide
-    pub fn clip_return_screen_no_divide(&mut self, mvp: &HomoTransform, view_port: &HomoTransform) -> Vec<HVec4>{
-        let clip_v:Vec<HVec4> = self.v.iter().map(|v| &v.to_homogeneous() * &mvp).collect();
-        let screen_v:Vec<HVec4> = clip_v.iter().map(|c| c * view_port).collect();
+    pub fn clip_return_screen_no_divide(
+        &mut self,
+        mvp: &HomoTransform,
+        view_port: &HomoTransform,
+    ) -> Vec<HVec4> {
+        let clip_v: Vec<HVec4> = self.v.iter().map(|v| &v.to_homogeneous() * &mvp).collect();
+        let screen_v: Vec<HVec4> = clip_v.iter().map(|c| c * view_port).collect();
         self.clip_v = Some(clip_v);
 
         screen_v
@@ -253,15 +269,16 @@ impl Triangle {
             [res.x() as u8, res.y() as u8, res.z() as u8, 255]
         } else {
             let color_mat = Matrix::<3, 3>::from_rows({
-                vec![Vector3::from_xyz(255., 0., 0.),
-                     Vector3::from_xyz(0., 255., 0.),
-                     Vector3::from_xyz(0., 0., 255.)]
+                vec![
+                    Vector3::from_xyz(255., 0., 0.),
+                    Vector3::from_xyz(0., 255., 0.),
+                    Vector3::from_xyz(0., 0., 255.),
+                ]
             });
             let res = bary * &color_mat;
             [res.x() as u8, res.y() as u8, res.z() as u8, 255]
         };
     }
-
 
     pub fn get_uv(&self, bary: &Vector3) -> Vec2 {
         let m = Matrix::<3, 2>::from_rows(self.tex_coords.clone());
@@ -273,4 +290,3 @@ impl Triangle {
         return Vector3::from_xyz(0., 0., 0.);
     }
 }
-

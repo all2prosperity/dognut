@@ -1,25 +1,18 @@
-use tokio::net::{
-    TcpListener,
-    tcp::OwnedWriteHalf,
-    UdpSocket
-};
-use log::{debug, error};
 use crate::department::common::constant;
 use crate::department::types::msg::TransferMsg;
+use log::{debug, error};
 use std::convert::Infallible;
+use tokio::net::{tcp::OwnedWriteHalf, TcpListener, UdpSocket};
 //use crate::proto::debugger;
-use crossbeam_channel::Receiver;
 use crate::department::types::msg;
+use crossbeam_channel::Receiver;
 
-use tokio::time::sleep;
-use std::time::Duration;
-use std::sync::Arc;
-use tokio::sync::Mutex;
-use lazy_static::lazy_static;
 use crate::department::types::multi_sender::MultiSender;
-
-
-
+use lazy_static::lazy_static;
+use std::sync::Arc;
+use std::time::Duration;
+use tokio::sync::Mutex;
+use tokio::time::sleep;
 
 lazy_static! {
     static ref CLIENT_SENDERS: Arc<Mutex<Vec<OwnedWriteHalf>>> = Arc::new(Mutex::new(Vec::new()));
@@ -27,11 +20,9 @@ lazy_static! {
 
 static mut BIND_PORT: u32 = 0;
 
-
 async fn listen_from_render(render_recv: Receiver<msg::TransferMsg>) {
     loop {
         if let Ok(msg) = render_recv.try_recv() {
-
             match msg {
                 msg::TransferMsg::RenderPc(frame) => {
                     // let mut buf = Vec::<u8>::new();
@@ -41,10 +32,9 @@ async fn listen_from_render(render_recv: Receiver<msg::TransferMsg>) {
                     for sender in CLIENT_SENDERS.lock().await.iter_mut() {
                         sender.try_write(&frame);
                     }
-                },
-                _ => ()
+                }
+                _ => (),
             }
-
 
             // for sender in client_senders {
             // }
@@ -67,8 +57,7 @@ async fn listen_from_udp() {
                         data["port"] = BIND_PORT.into();
                     }
                     sock.send_to(&data.dump().as_bytes(), addr).await;
-                }
-                else {
+                } else {
                     println!("recv buf failed:");
                 }
             }
@@ -77,7 +66,10 @@ async fn listen_from_udp() {
 }
 
 pub fn net_run(render_recv: Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) {
-    let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
     // let mut rt = tokio::runtime::Runtime::new().unwrap();
 
     rt.block_on(async {
@@ -93,10 +85,12 @@ pub fn net_run(render_recv: Receiver<TransferMsg>, ms: MultiSender<TransferMsg>)
             }
         }
     });
-
 }
 
-pub async fn ws_accept( l: &mut TcpListener, render_recv: Receiver<msg::TransferMsg>) -> Result<(), Infallible>{
+pub async fn ws_accept(
+    l: &mut TcpListener,
+    render_recv: Receiver<msg::TransferMsg>,
+) -> Result<(), Infallible> {
     tokio::spawn(listen_from_render(render_recv));
     tokio::spawn(listen_from_udp());
 
@@ -114,6 +108,3 @@ pub async fn ws_accept( l: &mut TcpListener, render_recv: Receiver<msg::Transfer
         }
     }
 }
-
-
-

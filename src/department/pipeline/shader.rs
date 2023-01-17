@@ -1,11 +1,10 @@
-
-
 use crate::department::preview::homo_transformation::HomoTransform;
 use crate::department::preview::matrix::Matrix;
 use crate::department::preview::vector::Vector3;
 use crate::department::view::camera::Camera;
 
-pub static LUMINANCE_CHARS: [char; 12] = ['.', ',', '-', '~', ':', ';', '=', '!', '*', '#', '$', '@'];
+pub static LUMINANCE_CHARS: [char; 12] =
+    ['.', ',', '-', '~', ':', ';', '=', '!', '*', '#', '$', '@'];
 
 //#[derive(Debug)]
 pub struct LambertianShader {
@@ -19,11 +18,17 @@ pub struct LambertianShader {
 }
 
 pub trait Shader {
-    fn shade(&self, normal: &Vec<Vector3>, diffuse: &[u8; 4], bar: &Vector3) -> [u8;4];
+    fn shade(&self, normal: &Vec<Vector3>, diffuse: &[u8; 4], bar: &Vector3) -> [u8; 4];
 }
 
-impl LambertianShader{
-    pub fn new(light_source: Vector3, ka: f32, light_intensity: f32, cam: &Camera, tui: bool) -> Self {
+impl LambertianShader {
+    pub fn new(
+        light_source: Vector3,
+        ka: f32,
+        light_intensity: f32,
+        cam: &Camera,
+        tui: bool,
+    ) -> Self {
         let mv = &cam.model * &cam.to_view_matrix();
         let mut mv_it = HomoTransform::identity_matrix();
         if let Some(inverse) = mv.inverse_matrix() {
@@ -47,35 +52,36 @@ impl LambertianShader{
 }
 
 impl Shader for LambertianShader {
-    fn shade(&self, normal: &Vec<Vector3>, diffuse: &[u8;4], bar: &Vector3) -> [u8;4] {
+    fn shade(&self, normal: &Vec<Vector3>, diffuse: &[u8; 4], bar: &Vector3) -> [u8; 4] {
         let mut n = Vec::new();
         for i in 0..normal.len() {
             let mut nn = Vector3::from_matrix(&(&normal[i].to_homogeneous() * &self.model_view_IT));
             nn.norm();
             n.push(nn);
         }
-        let mut nl = bar * &Matrix::<3,3>::from_rows(n);
+        let mut nl = bar * &Matrix::<3, 3>::from_rows(n);
         nl.norm();
         let cos = nl.dot(&self.light_source);
-        let intensity:f32 = if cos.le(&0.) {
+        let intensity: f32 = if cos.le(&0.) {
             0.
-        }else if cos.ge(&1.) {
+        } else if cos.ge(&1.) {
             1.
-        }else {
+        } else {
             cos
         };
         let index = ((LUMINANCE_CHARS.len() - 1) as f32 * intensity).ceil() as usize;
         let final_char = LUMINANCE_CHARS[index];
 
-        let (r, g, b) = (intensity * diffuse[0] as f32, intensity * diffuse[1] as f32, intensity* diffuse[2] as f32);
-
+        let (r, g, b) = (
+            intensity * diffuse[0] as f32,
+            intensity * diffuse[1] as f32,
+            intensity * diffuse[2] as f32,
+        );
 
         if self.tui {
-            [r as u8 , g as u8, b as u8, final_char as u8]
-        }else {
-            [r as u8 , g as u8, b as u8, diffuse[3]]
+            [r as u8, g as u8, b as u8, final_char as u8]
+        } else {
+            [r as u8, g as u8, b as u8, diffuse[3]]
         }
-
-
     }
 }

@@ -11,12 +11,10 @@ pub struct LightUniform {
     _padding2: u32,
 }
 
-
-
 impl Default for LightUniform {
     fn default() -> Self {
         LightUniform {
-            position: [2.0, 2.0, 2.0],
+            position: [0.0, 0.0, 1.0],
             _padding: 0,
             color: [1.0, 1.0, 1.0],
             _padding2: 0,
@@ -28,7 +26,7 @@ impl LightUniform {
     pub fn bind_group_layout(device: &wgpu::Device) -> wgpu::BindGroupLayout {
         device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: None,
-            entries: &[wgpu::BindGroupLayoutEntry{
+            entries: &[wgpu::BindGroupLayoutEntry {
                 binding: 0,
                 visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
                 ty: wgpu::BindingType::Buffer {

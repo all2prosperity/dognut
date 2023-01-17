@@ -1,42 +1,51 @@
 use std::iter;
 
-use std::num::NonZeroU32;
 use cgmath::prelude::*;
-use pixels::wgpu::util::DeviceExt;
 use pixels::wgpu;
+use pixels::wgpu::util::DeviceExt;
+use std::num::NonZeroU32;
 use winit::{
     event::*,
     event_loop::{ControlFlow, EventLoop},
     window::Window,
 };
 
-use tokio::time::sleep;
-use std::time::{Duration, Instant};
-use crate::department::types::msg::TransferMsg;
-use crate::department::types::multi_sender::MultiSender;
-use crate::department::common::constant::{WIDTH, HEIGHT};
+use crate::department::common::constant::{HEIGHT, WIDTH};
 use crate::department::preview::matrix;
-use crate::department::view::camera::Camera;
 use crate::department::preview::position;
 use crate::department::preview::vector;
+use crate::department::types::msg::TransferMsg;
+use crate::department::types::multi_sender::MultiSender;
+use crate::department::view::camera::Camera;
 use crossbeam_channel::Receiver;
+use lazy_static::lazy_static;
+use pixels::wgpu::include_wgsl;
+use std::time::{Duration, Instant};
+use tokio::time::sleep;
 use winit::dpi::PhysicalSize;
 
-
 use super::model;
-use super::texture;
 use super::resources;
+use super::texture;
 
-use model::{DrawModel, Vertex};
 use crate::department::preview::homo_transformation::HomoTransform;
 use crate::department::preview::vector::Vector3;
-use crate::wgpu::camera::{CameraController, OPENGL_TO_WGPU_MATRIX};
-use crate::wgpu::{camera, create_render_pipeline};
+use crate::wgpu::camera::CameraController;
 use crate::wgpu::instance::{Instance, InstanceRaw};
 use crate::wgpu::light::LightUniform;
 use crate::wgpu::model::DrawLight;
+use crate::wgpu::{camera, create_render_pipeline};
+use model::{DrawModel, Vertex};
 
 const NUM_INSTANCES_PER_ROW: u32 = 10;
+
+// lazy_static! {
+//     static ref OPENGL_TO_WGPU_MATRIX: HomoTransform = HomoTransform::from_vec(vec![
+//         1.0, 0.0, 0.0, 0.0,
+//         0.0, 1.0, 0.0, 0.0,
+//         0.0, 0.0, 0.5, 0.5,
+//         0.0, 0.0, 0.0, 1.0,]);
+// }
 
 #[repr(C)]
 #[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
@@ -54,12 +63,16 @@ impl CameraUniform {
     }
 
     fn update_view_proj(&mut self, camera: &Camera) {
+        let OPENGL_TO_WGPU_MATRIX: HomoTransform = HomoTransform::from_vec(vec![
+            1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 1.0,
+        ]);
+
         self.view_position = camera.eye.to_homogeneous().t().to_slice()[0];
         let view = camera.to_view_matrix();
-        self.view_proj = (&view * &camera.perspective_projection).into();
+        self.view_proj =
+            (&view * &(&camera.perspective_projection * &OPENGL_TO_WGPU_MATRIX)).into();
     }
 }
-
 
 pub struct State {
     device: wgpu::Device,
@@ -112,7 +125,7 @@ impl State {
             )
             .await
             .unwrap();
-        
+
         let texture_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                 entries: &[
@@ -137,14 +150,14 @@ impl State {
             });
 
         let camera = Camera::new(
-            size.height as f32,
-            size.width as f32 / size.height as f32,
-            5.,
-            1000.,
-            position::Pos3::from_xyz(0.0, 0., -10.),
+            45.,
+            (size.width / size.height) as f32,
+            -5.,
+            -50.,
+            position::Pos3::from_xyz(0.0, 0., 0.),
             vector::Vector3::from_xyz(0., 0., -1.),
-            vector::Vector3::from_xyz(0., -1., 0.)
-            );
+            vector::Vector3::from_xyz(0., -1., 0.),
+        );
         let camera_controller = CameraController::new(2.0, 0.2);
 
         let mut camera_uniform = CameraUniform::new();
@@ -157,11 +170,11 @@ impl State {
         });
 
         const SPACE_BETWEEN: f32 = 3.0;
-        
-        let position = Vector3::from_xyz(0.,0.,0.);
+
+        let position = Vector3::from_xyz(0., 0., 0.);
 
         let rotation = HomoTransform::rotation_matrix(&position, 0.);
-        let instances = vec![Instance{position, rotation}];
+        let instances = vec![Instance { position, rotation }];
 
         let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
         println!("instance {:?}", instance_data.len());
@@ -197,35 +210,36 @@ impl State {
 
         log::warn!("Load model");
         let obj_model = resources::load_model(
-            "./res/nice_cube/nice_cube.obj",
+            "./res/plane/plane.obj",
             &device,
             &queue,
             &texture_bind_group_layout,
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
 
-        let depth_texture =
-            texture::Texture::create_depth_texture(&device, (size.width, size.height), "depth_texture");
+        let depth_texture = texture::Texture::create_depth_texture(
+            &device,
+            (size.width, size.height),
+            "depth_texture",
+        );
 
         let light_uniform = LightUniform::default();
 
-        let light_buffer = device.create_buffer_init(
-            &wgpu::util::BufferInitDescriptor {
-                label: Some("light"),
-                contents: bytemuck::cast_slice(&[light_uniform]),
-                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            }
-        );
+        let light_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("light"),
+            contents: bytemuck::cast_slice(&[light_uniform]),
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+        });
         let light_bind_group_layout = LightUniform::bind_group_layout(&device);
 
-        let light_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor{
+        let light_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: None,
             layout: &light_bind_group_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding:0,
-                    resource: light_buffer.as_entire_binding(),
-                }
-            ],
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: light_buffer.as_entire_binding(),
+            }],
         });
 
         let light_render_pipeline = {
@@ -236,7 +250,9 @@ impl State {
             });
             let shader = wgpu::ShaderModuleDescriptor {
                 label: Some("Light Shader"),
-                source: wgpu::ShaderSource::Wgsl(include_str!("../../res/shaders/light.wgsl").into()),
+                source: wgpu::ShaderSource::Wgsl(
+                    include_str!("../../res/shaders/light.wgsl").into(),
+                ),
             };
             create_render_pipeline(
                 &device,
@@ -245,29 +261,36 @@ impl State {
                 Some(texture::Texture::DEPTH_FORMAT),
                 &[model::ModelVertex::desc()],
                 shader,
-                "light_pipeline"
+                "light_pipeline",
             )
         };
 
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[&texture_bind_group_layout, &camera_bind_group_layout, &light_bind_group_layout],
+                bind_group_layouts: &[
+                    &texture_bind_group_layout,
+                    &camera_bind_group_layout,
+                    &light_bind_group_layout,
+                ],
                 push_constant_ranges: &[],
             });
 
         let render_pipeline = {
             let shader = wgpu::ShaderModuleDescriptor {
                 label: Some("Normal shader"),
-                source: wgpu::ShaderSource::Wgsl(include_str!("../../res/shaders/shader.wgsl").into()),
+                source: wgpu::ShaderSource::Wgsl(
+                    include_str!("../../res/shaders/shader.wgsl").into(),
+                ),
             };
             create_render_pipeline(
-                &device, &render_pipeline_layout,
+                &device,
+                &render_pipeline_layout,
                 wgpu::TextureFormat::Rgba8UnormSrgb,
                 Some(texture::Texture::DEPTH_FORMAT),
                 &[model::ModelVertex::desc(), InstanceRaw::desc()],
                 shader,
-                "render_pipeline"
+                "render_pipeline",
             )
         };
 
@@ -304,13 +327,11 @@ impl State {
 
     pub fn input(&mut self, event: &DeviceEvent) -> bool {
         match event {
-            DeviceEvent::Key(
-                KeyboardInput {
-                    virtual_keycode: Some(key),
-                    state,
-                    ..
-                }
-            ) => self.camera_controller.process_keyboard(*key, *state),
+            DeviceEvent::Key(KeyboardInput {
+                virtual_keycode: Some(key),
+                state,
+                ..
+            }) => self.camera_controller.process_keyboard(*key, *state),
             DeviceEvent::MouseWheel { delta, .. } => {
                 self.camera_controller.process_scroll(delta);
                 true
@@ -346,8 +367,11 @@ impl State {
             (cgmath::Quaternion::from_axis_angle((0.0, 1.0, 0.0).into(), cgmath::Deg(1.0))
                 * old_position)
                 .into();
-        self.queue.write_buffer(&self.light_buffer, 0, bytemuck::cast_slice(&[self.light_uniform]));
-
+        self.queue.write_buffer(
+            &self.light_buffer,
+            0,
+            bytemuck::cast_slice(&[self.light_uniform]),
+        );
     }
 
     pub fn render(&mut self) -> Vec<u8> {
@@ -366,8 +390,7 @@ impl State {
             label: None,
         };
         let texture = self.device.create_texture(&texture_desc);
-        let view = texture 
-            .create_view(&wgpu::TextureViewDescriptor::default());
+        let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
 
         let mut encoder = self
             .device
@@ -404,19 +427,24 @@ impl State {
             render_pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
             use crate::wgpu::model::DrawLight;
             render_pass.set_pipeline(&self.light_render_pipeline);
-            render_pass.draw_light_model(&self.obj_model, &self.camera_bind_group, &self.light_bind_group);
+            render_pass.draw_light_model(
+                &self.obj_model,
+                &self.camera_bind_group,
+                &self.light_bind_group,
+            );
 
             render_pass.set_pipeline(&self.render_pipeline);
             render_pass.draw_model_instanced(
                 &self.obj_model,
                 0..self.instances.len() as u32,
                 &self.camera_bind_group,
-                &self.light_bind_group
+                &self.light_bind_group,
             );
         }
         let u32_size = std::mem::size_of::<u32>() as u32;
 
-        let output_buffer_size = (u32_size * self.size.width * self.size.height) as wgpu::BufferAddress;
+        let output_buffer_size =
+            (u32_size * self.size.width * self.size.height) as wgpu::BufferAddress;
         let output_buffer_desc = wgpu::BufferDescriptor {
             size: output_buffer_size,
             usage: wgpu::BufferUsages::COPY_DST
@@ -473,9 +501,16 @@ impl State {
 }
 
 pub fn run(r: Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) {
-    let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
     rt.block_on(async {
-        let mut state = State::new(PhysicalSize{height: HEIGHT, width:WIDTH}).await;
+        let mut state = State::new(PhysicalSize {
+            height: HEIGHT,
+            width: WIDTH,
+        })
+        .await;
         loop {
             let buf = state.render();
             ms.net.send(TransferMsg::RenderPc(buf.clone()));
@@ -485,4 +520,3 @@ pub fn run(r: Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) {
         }
     });
 }
-

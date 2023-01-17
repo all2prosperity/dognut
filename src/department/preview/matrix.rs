@@ -1,19 +1,19 @@
-use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Sub};
 use dognut_macros::TriangularInverse;
 use std::convert::Into;
+use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Sub};
 
 #[derive(Debug, Clone, TriangularInverse)]
 pub struct Matrix<const M: usize, const N: usize> {
     // 0 1 2  m = 2, n = 3
-// 0 1 2
-//
-//
+    // 0 1 2
+    //
+    //
     pub m: usize,
     pub n: usize,
     pub elements: Vec<f32>,
 }
 
-pub type HMat = Matrix<4,4>;
+pub type HMat = Matrix<4, 4>;
 
 pub struct MatrixIter<'a, const M: usize, const N: usize> {
     iter: &'a Matrix<M, N>,
@@ -23,11 +23,7 @@ pub struct MatrixIter<'a, const M: usize, const N: usize> {
 
 impl<'a, const M: usize, const N: usize> MatrixIter<'a, M, N> {
     fn new(iter: &'a Matrix<M, N>, x: usize, y: usize) -> Self {
-        Self {
-            iter,
-            x,
-            y,
-        }
+        Self { iter, x, y }
     }
 }
 
@@ -53,7 +49,6 @@ impl<const M: usize, const N: usize, const K: usize> Mul<Matrix<N, K>> for Matri
     }
 }
 
-
 impl<const M: usize, const N: usize, const K: usize> Mul<&Matrix<N, K>> for &Matrix<M, N> {
     type Output = Matrix<M, K>;
 
@@ -77,18 +72,18 @@ impl<const M: usize, const N: usize, const K: usize> Mul<&Matrix<N, K>> for &Mat
 }
 
 impl<const M: usize, const N: usize> Mul<f32> for Matrix<M, N> {
-    type Output = Matrix<M,N>;
+    type Output = Matrix<M, N>;
 
     fn mul(self, rhs: f32) -> Self::Output {
-        Self::Output::from_vec(self.elements.iter().map(|f| f*rhs).collect())
+        Self::Output::from_vec(self.elements.iter().map(|f| f * rhs).collect())
     }
 }
 
 impl<const M: usize, const N: usize> Div<f32> for &Matrix<M, N> {
-    type Output = Matrix<M,N>;
+    type Output = Matrix<M, N>;
 
     fn div(self, rhs: f32) -> Self::Output {
-        Self::Output::from_vec(self.elements.iter().map(|f| f/rhs).collect())
+        Self::Output::from_vec(self.elements.iter().map(|f| f / rhs).collect())
     }
 }
 
@@ -97,7 +92,6 @@ impl<const M: usize, const N: usize> MulAssign<f32> for Matrix<M, N> {
         self.elements.iter_mut().for_each(|f| *f *= rhs);
     }
 }
-
 
 impl<const M: usize, const N: usize> AddAssign<f32> for Matrix<M, N> {
     fn add_assign(&mut self, rhs: f32) {
@@ -184,10 +178,10 @@ impl<const M: usize, const N: usize> Matrix<M, N> {
         }
     }
 
-    pub fn from_rows(mut rows:Vec<Matrix<1, N>>) -> Matrix<M, N> {
-        let mut elem = Vec::<f32>::with_capacity(M*N);
+    pub fn from_rows(mut rows: Vec<Matrix<1, N>>) -> Matrix<M, N> {
+        let mut elem = Vec::<f32>::with_capacity(M * N);
         for i in 0..rows.len() {
-           elem.append( & mut rows[i].elements)
+            elem.append(&mut rows[i].elements)
         }
         Self {
             m: M,
@@ -198,13 +192,17 @@ impl<const M: usize, const N: usize> Matrix<M, N> {
 
     pub fn from_vec(elements: Vec<f32>) -> Self {
         Self {
-            m:M,
-            n:N,
+            m: M,
+            n: N,
             elements,
         }
     }
 
-    pub fn cut<const SUBM: usize, const SUBN: usize>(&self, x: usize, y: usize) -> Matrix<SUBM, SUBN> {
+    pub fn cut<const SUBM: usize, const SUBN: usize>(
+        &self,
+        x: usize,
+        y: usize,
+    ) -> Matrix<SUBM, SUBN> {
         let mut ret = Matrix::<SUBM, SUBN>::new();
         for i in 0..SUBM {
             for j in 0..SUBN {
@@ -215,7 +213,12 @@ impl<const M: usize, const N: usize> Matrix<M, N> {
         ret
     }
 
-    pub fn paste<const SUBM: usize, const SUBN: usize>(&mut self, other: &Matrix<SUBM, SUBN>, x: usize, y: usize) {
+    pub fn paste<const SUBM: usize, const SUBN: usize>(
+        &mut self,
+        other: &Matrix<SUBM, SUBN>,
+        x: usize,
+        y: usize,
+    ) {
         for i in 0..SUBM {
             for j in 0..SUBN {
                 self.set(x + i, y + j, other.index(i, j));
@@ -255,7 +258,6 @@ impl<const M: usize, const N: usize> Matrix<M, N> {
                 transposed_elems[i * _n + j] = self.elements[j * self.n + i];
             }
         }
-
 
         Matrix::<N, M> {
             m: _m,
@@ -304,10 +306,7 @@ impl<const M: usize, const N: usize> Matrix<M, N> {
 
     pub fn translate_matrix(x: f32, y: f32, z: f32) -> Self {
         Self::from_vec(vec![
-            1., 0., 0., x,
-            0., 1., 0., y,
-            0., 0., 1., z,
-            0., 0., 0., 1.,
+            1., 0., 0., x, 0., 1., 0., y, 0., 0., 1., z, 0., 0., 0., 1.,
         ])
     }
 
@@ -335,8 +334,7 @@ impl<const M: usize> Matrix<M, M> {
         ret
     }
 
-    pub fn l_u_split(&self) -> Option<(Self, Self, Self)>
-    {
+    pub fn l_u_split(&self) -> Option<(Self, Self, Self)> {
         let _es: Vec<Self> = Vec::new();
         let _us: Vec<Self> = Vec::new();
         let mut u = self.clone();
@@ -351,14 +349,14 @@ impl<const M: usize> Matrix<M, M> {
                 for k in 0..M {
                     if k != j {
                         dividend += e.index(i, k) * u.index(k, j);
-                    } 
+                    }
                 }
 
                 let val = -dividend / divisor;
                 e.set(i, j, val);
 
                 u = &e * &u;
-                
+
                 let mut can_inverse = false;
                 for k in 0..M {
                     if u.index(i, k) != 0. {
@@ -409,5 +407,3 @@ impl<'a, const M: usize, const N: usize> Iterator for MatrixIter<'a, M, N> {
         }
     }
 }
-
-

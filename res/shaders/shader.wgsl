@@ -55,11 +55,12 @@ fn vs_main(
     );
 
     var out: VertexOutput;
-    out.tex_coords = model.tex_coords;
     out.world_normal = normal_matrix * model.normal;
-    var world_position: vec4<f32> = model_matrix * vec4<f32>(model.position, 1.0);
+    var world_position: vec4<f32> = vec4<f32>(model.position, 1.0) * model_matrix;
     out.world_position = world_position.xyz;
-    out.clip_position =  world_position * camera.view_proj;
+    out.clip_position = vec4<f32>(model.position, 1.0) * camera.view_proj;
+    out.tex_coords = model.tex_coords;
+//    out.clip_position = vec4<f32>(model.position, 1.0);
     return out;
 }
 

@@ -3,9 +3,9 @@
 #![feature(iter_array_chunks)]
 
 pub mod department;
+pub mod pb;
 pub mod util;
 pub mod wgpu;
-pub mod pb;
 
 // pub mod proto {
 //     pub mod debugger {
@@ -15,4 +15,3 @@ pub mod pb;
 //         include!(concat!(env!("OUT_DIR"), "/proto.display.rs"));
 //     }
 // }
-

@@ -1,8 +1,8 @@
+use crate::department::common::constant::{HEIGHT, IS_NEED_FLIPV, WIDTH};
 use anyhow::*;
 use image::GenericImageView;
-use std::num::NonZeroU32;
 use pixels::wgpu;
-use crate::department::common::constant::{WIDTH, HEIGHT, IS_NEED_FLIPV};
+use std::num::NonZeroU32;
 
 pub struct Texture {
     pub texture: wgpu::Texture,
@@ -10,15 +10,10 @@ pub struct Texture {
     pub sampler: wgpu::Sampler,
 }
 
-
 impl Texture {
     pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
 
-    pub fn create_depth_texture(
-        device: &wgpu::Device,
-        size: (u32, u32),
-        label: &str,
-    ) -> Self {
+    pub fn create_depth_texture(device: &wgpu::Device, size: (u32, u32), label: &str) -> Self {
         let size = wgpu::Extent3d {
             width: size.0,
             height: size.1,
@@ -65,8 +60,7 @@ impl Texture {
         let img = if IS_NEED_FLIPV {
             let _img = image::load_from_memory(bytes).unwrap();
             _img.flipv()
-        }
-        else {
+        } else {
             image::load_from_memory(bytes).unwrap()
         };
         Self::from_image(device, queue, &img, Some(label))

@@ -1,6 +1,5 @@
 use crossbeam_channel::Sender;
 
-
 #[derive(Clone)]
 pub struct MultiSender<T: Clone> {
     pub net: Sender<T>,
@@ -10,8 +9,6 @@ pub struct MultiSender<T: Clone> {
 
 impl<T: Clone> MultiSender<T> {
     pub fn new(net: Sender<T>, wgpu: Sender<T>, win: Sender<T>) -> Self {
-        Self {
-            net, wgpu, win
-        }
+        Self { net, wgpu, win }
     }
 }

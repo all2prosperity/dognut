@@ -1,35 +1,39 @@
 #![deny(clippy::all)]
 #![forbid(unsafe_code)]
 
-use std::time::Duration;
+use crate::department::common::constant::{HEIGHT, WIDTH};
 use log::error;
-use pixels::{Error, Pixels, SurfaceTexture};
 use pixels::wgpu::Color;
+use pixels::{Error, Pixels, SurfaceTexture};
+use std::time::Duration;
 use winit::dpi::{LogicalSize, PhysicalSize};
 use winit::event::{DeviceEvent, ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
-use crate::department::common::constant::{WIDTH, HEIGHT};
-
 
 use crate::department::types::msg::TransferMsg;
 
-use crossbeam_channel::Receiver;
-use game_loop::{game_loop, Time, TimeTrait};
+use crate::department::types::multi_sender::MultiSender;
 use crate::department::Game;
 use crate::wgpu::wgpu_helper::State;
-use crate::department::types::multi_sender::MultiSender;
+use crossbeam_channel::Receiver;
+use game_loop::{game_loop, Time, TimeTrait};
 
 pub const FPS: usize = 120;
 pub const TIME_STEP: Duration = Duration::from_nanos(1_000_000_000 / FPS as u64);
 
-
 /// Representation of the application state. In this example, a box will bounce around the screen.
 
-
-pub async fn run(render_recv: Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) -> Result<(), Error> {
-    let mut state = State::new(PhysicalSize { width: WIDTH, height: HEIGHT }).await;
+pub async fn run(
+    render_recv: Receiver<TransferMsg>,
+    ms: MultiSender<TransferMsg>,
+) -> Result<(), Error> {
+    let mut state = State::new(PhysicalSize {
+        width: WIDTH,
+        height: HEIGHT,
+    })
+    .await;
 
     let event_loop = EventLoop::new();
     let mut input = WinitInputHelper::new();
@@ -55,64 +59,80 @@ pub async fn run(render_recv: Receiver<TransferMsg>, ms: MultiSender<TransferMsg
     let mut frames: std::collections::VecDeque<Vec<u8>> = std::collections::VecDeque::new();
 
     let game = Game::new(pixels, state, id, false);
-       
-    game_loop(event_loop, window, game, FPS as u32, 0.1,
-               |g| {
-                  if !g.game.paused {
-                      g.game.state.update(std::time::Duration::from_secs_f64(g.last_frame_time()));
-                  }
-              },
-               |g| {
-                  let out = g.game.state.render();
-                  g.game.pixels.get_frame_mut().copy_from_slice(&out);
 
-                  if let Err(err) = g.game.pixels.render() {
-                      error!("pixels.render() failed: {err}");
-                      g.exit();
-                  }
+    game_loop(
+        event_loop,
+        window,
+        game,
+        FPS as u32,
+        0.1,
+        |g| {
+            if !g.game.paused {
+                g.game
+                    .state
+                    .update(std::time::Duration::from_secs_f64(g.last_frame_time()));
+            }
+        },
+        |g| {
+            let out = g.game.state.render();
+            g.game.pixels.get_frame_mut().copy_from_slice(&out);
 
-                  let st = TIME_STEP.as_secs_f64() - Time::now().sub(&g.current_instant());
-                  if st > 0. {
-                      std::thread::sleep(Duration::from_secs_f64(st));
-                  }
-              },
-              move |g, event| {
-                  match event {
-                      Event::NewEvents(_) => {}
-                      Event::WindowEvent { ref event, ..} => {
-                          match event {
-                              WindowEvent::CloseRequested | WindowEvent::KeyboardInput {
-                                  input:
-                                  KeyboardInput {
-                                      state: ElementState::Pressed,
-                                      virtual_keycode: Some(VirtualKeyCode::Escape),
-                                      ..
-                                  }, ..
-                              } => { g.exit(); return ;},
-                              WindowEvent::Resized(physical_size) => {
-                                  g.game.state.resize(*physical_size);
-                                  g.game.pixels.resize_surface(physical_size.width, physical_size.height);
-                              }
-                              WindowEvent::ScaleFactorChanged {new_inner_size, ..} => {
-                                  g.game.state.resize(**new_inner_size);
-                                  g.game.pixels.resize_surface(new_inner_size.width, new_inner_size.height);
-                              }
-                              WindowEvent::KeyboardInput { input, .. } => {
-                                  g.game.state.camera_controller.process_keyboard(input.virtual_keycode.unwrap(), input.state);
-                              }
-                              _ => {}
-                          }
-                      }
-                      Event::DeviceEvent { ref event, .. } => {
-                          g.game.state.input(event);
-                      }
-                      Event::RedrawRequested(_) => {
-                          //g.game.pixels.window_pos_to_pixel()
-                      }
-                      _ => {}
-                  }
+            if let Err(err) = g.game.pixels.render() {
+                error!("pixels.render() failed: {err}");
+                g.exit();
+            }
 
-              },
+            let st = TIME_STEP.as_secs_f64() - Time::now().sub(&g.current_instant());
+            if st > 0. {
+                std::thread::sleep(Duration::from_secs_f64(st));
+            }
+        },
+        move |g, event| {
+            match event {
+                Event::NewEvents(_) => {}
+                Event::WindowEvent { ref event, .. } => match event {
+                    WindowEvent::CloseRequested
+                    | WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                state: ElementState::Pressed,
+                                virtual_keycode: Some(VirtualKeyCode::Escape),
+                                ..
+                            },
+                        ..
+                    } => {
+                        g.exit();
+                        return;
+                    }
+                    WindowEvent::Resized(physical_size) => {
+                        g.game.state.resize(*physical_size);
+                        g.game
+                            .pixels
+                            .resize_surface(physical_size.width, physical_size.height);
+                    }
+                    WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
+                        g.game.state.resize(**new_inner_size);
+                        g.game
+                            .pixels
+                            .resize_surface(new_inner_size.width, new_inner_size.height);
+                    }
+                    WindowEvent::KeyboardInput { input, .. } => {
+                        g.game
+                            .state
+                            .camera_controller
+                            .process_keyboard(input.virtual_keycode.unwrap(), input.state);
+                    }
+                    _ => {}
+                },
+                Event::DeviceEvent { ref event, .. } => {
+                    g.game.state.input(event);
+                }
+                Event::RedrawRequested(_) => {
+                    //g.game.pixels.window_pos_to_pixel()
+                }
+                _ => {}
+            }
+        },
     );
 
     // event_loop.run(move |event, _, control_flow| {
@@ -180,4 +200,3 @@ pub async fn run(render_recv: Receiver<TransferMsg>, ms: MultiSender<TransferMsg
     //     }
     // });
 }
-

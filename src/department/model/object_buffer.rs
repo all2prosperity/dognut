@@ -4,16 +4,14 @@ use crate::department::preview::position::Pos3;
 
 #[derive(Debug)]
 pub struct ObjectBuffer {
-    pub object_list: Vec<RenderObject>
+    pub object_list: Vec<RenderObject>,
 }
-
 
 pub struct ObjectBufferIter<'a> {
     iter: &'a ObjectBuffer,
     obj_idx: usize,
     idx_idx: usize,
 }
-
 
 impl<'a> ObjectBufferIter<'a> {
     fn new(iter: &'a ObjectBuffer) -> Self {
@@ -31,11 +29,9 @@ impl<'a> Iterator for ObjectBufferIter<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         if self.obj_idx >= self.iter.object_list.len() {
             None
-        }
-        else if self.idx_idx >= self.iter.object_list[self.obj_idx].indexes.len() {
+        } else if self.idx_idx >= self.iter.object_list[self.obj_idx].indexes.len() {
             None
-        }
-        else {
+        } else {
             let render_obj = &self.iter.object_list[self.obj_idx];
             let mut pos_vec: Vec<Pos3> = Vec::new();
             for _ in 0..3 {
@@ -53,7 +49,6 @@ impl<'a> Iterator for ObjectBufferIter<'a> {
         }
     }
 }
-
 
 impl ObjectBuffer {
     pub fn new() -> Self {

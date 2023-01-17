@@ -1,3 +1,4 @@
+use log::LevelFilter;
 use log4rs::{
     append::{
         console::{ConsoleAppender, Target},
@@ -7,10 +8,8 @@ use log4rs::{
     encode::pattern::PatternEncoder,
     filter::threshold::ThresholdFilter,
 };
-use log::LevelFilter;
 
-pub struct App {
-}
+pub struct App {}
 
 impl App {
     pub fn trivial_conf() {
@@ -18,22 +17,26 @@ impl App {
 
         let stderr = ConsoleAppender::builder().target(Target::Stderr).build();
         let logfile = FileAppender::builder()
-            .encoder(Box::new(PatternEncoder::new("{d(%Y-%m-%d %H:%M:%S)} [{l}] {m}\n")))
+            .encoder(Box::new(PatternEncoder::new(
+                "{d(%Y-%m-%d %H:%M:%S)} [{l}] {m}\n",
+            )))
             .build("./log/dognut.log")
             .unwrap();
 
         let config = Config::builder()
             .appender(Appender::builder().build("logfile", Box::new(logfile)))
-            .appender(Appender::builder()
-                          .filter(Box::new(ThresholdFilter::new(level)))
-                          .build("stderr", Box::new(stderr)),
+            .appender(
+                Appender::builder()
+                    .filter(Box::new(ThresholdFilter::new(level)))
+                    .build("stderr", Box::new(stderr)),
             )
             .build(
                 Root::builder()
                     .appender("logfile")
                     // .appender("stderr")
                     .build(LevelFilter::Trace),
-            ).unwrap();
+            )
+            .unwrap();
 
         log4rs::init_config(config).unwrap();
     }
@@ -44,15 +47,13 @@ impl App {
         let stderr = ConsoleAppender::builder().target(Target::Stderr).build();
 
         let config = Config::builder()
-            .appender(Appender::builder()
-                          .filter(Box::new(ThresholdFilter::new(level)))
-                          .build("stderr", Box::new(stderr)),
+            .appender(
+                Appender::builder()
+                    .filter(Box::new(ThresholdFilter::new(level)))
+                    .build("stderr", Box::new(stderr)),
             )
-            .build(
-                Root::builder()
-                    .appender("stderr")
-                    .build(LevelFilter::Debug),
-            ).unwrap();
+            .build(Root::builder().appender("stderr").build(LevelFilter::Debug))
+            .unwrap();
 
         log4rs::init_config(config).unwrap();
     }

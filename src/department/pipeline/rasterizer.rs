@@ -1,4 +1,3 @@
-
 use crossbeam_channel::Sender;
 use image::GenericImageView;
 
@@ -10,7 +9,6 @@ use crate::department::preview::output_buffer::OutputBuffer;
 use crate::department::preview::vector::Vector3;
 use crate::department::view::camera::Camera;
 
-
 pub struct RasterRunner {
     pub encoder_tx: Sender<Vec<u8>>,
     model_mat: HomoTransform,
@@ -18,9 +16,8 @@ pub struct RasterRunner {
     proj_mat: HomoTransform,
     camera: Camera,
     shader: Box<dyn Shader>,
-    tui: bool
+    tui: bool,
 }
-
 
 impl RasterRunner {
     pub fn new(tx: Sender<Vec<u8>>, camera: Camera, shader: Box<dyn Shader>, tui: bool) -> Self {
@@ -34,13 +31,12 @@ impl RasterRunner {
             tui,
         }
     }
-    
+
     pub fn set_model(&mut self, m: HomoTransform) {
         self.model_mat = m;
     }
 
-
-    pub fn render_frame(&self, triangle_res: &TriangleResources, out:&mut OutputBuffer) {
+    pub fn render_frame(&self, triangle_res: &TriangleResources, out: &mut OutputBuffer) {
         let mv = &self.model_mat * &self.view_mat;
         let mvp = &mv * &self.proj_mat;
         let view_port = out.to_view_port_matrix();
@@ -48,13 +44,15 @@ impl RasterRunner {
 
         for mut triangle in triangle_res.iter() {
             let screen = triangle.clip_return_screen_no_divide(&mvp, &view_port);
-            let screen_divide: Vec<Vector3> = screen.iter().map(|v| {
-                let d = v / v.index(0, 3);
-                Vector3::from_xyz(d.index(0, 0), d.index(0, 1), d.index(0, 2))
-            }).collect();
+            let screen_divide: Vec<Vector3> = screen
+                .iter()
+                .map(|v| {
+                    let d = v / v.index(0, 3);
+                    Vector3::from_xyz(d.index(0, 0), d.index(0, 1), d.index(0, 2))
+                })
+                .collect();
 
             let (sx, ex, sy, ey) = Triangle::bounding_box(&screen_divide);
-
 
             for i in sx..ex {
                 for j in sy..ey {
@@ -66,17 +64,21 @@ impl RasterRunner {
                         continue;
                     }
 
-                    let reci = 1. / (bar.x() / screen[0].w() + bar.y() / screen[1].w() + bar.z() / screen[2].w());
+                    let reci = 1.
+                        / (bar.x() / screen[0].w()
+                            + bar.y() / screen[1].w()
+                            + bar.z() / screen[2].w());
                     let bar_correct = Vector3::from_xyz(
                         (bar.x() / screen[0].w()) * reci,
                         (bar.y() / screen[1].w()) * reci,
                         (bar.z() / screen[2].w()) * reci,
                     );
 
-
-                    let z_current = bar_correct.dot(&Vector3::from_xyz(screen_divide[0].z(),
-                                                                       screen_divide[1].z(),
-                                                                       screen_divide[2].z()));
+                    let z_current = bar_correct.dot(&Vector3::from_xyz(
+                        screen_divide[0].z(),
+                        screen_divide[1].z(),
+                        screen_divide[2].z(),
+                    ));
 
                     if z_current > out.get_depth(p.x() as usize, p.y() as usize) {
                         out.set_depth(p.x() as usize, p.y() as usize, z_current);

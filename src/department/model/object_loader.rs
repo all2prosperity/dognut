@@ -1,11 +1,9 @@
 use std::path::Path;
 
-use tobj;
 use crate::department::model::render_object::RenderObject;
 use crate::department::model::triangle_resources::TriangleResources;
 use crate::department::preview::position::Pos3;
-
-
+use tobj;
 
 pub struct ObjectLoader {}
 
@@ -13,11 +11,7 @@ impl ObjectLoader {
     pub fn load_render_obj(path: &str) -> Vec<RenderObject> {
         let _model_path = Path::new(path);
         let (models, materials) =
-            tobj::load_obj(
-                path,
-                &tobj::LoadOptions::default(),
-            )
-                .expect("Failed to OBJ load file");
+            tobj::load_obj(path, &tobj::LoadOptions::default()).expect("Failed to OBJ load file");
 
         // Note: If you don't mind missing the materials, you can generate a default.
 
@@ -100,7 +94,6 @@ impl ObjectLoader {
 
             let render_o = RenderObject::from_vec(vertexes, indexes);
 
-
             render_objects.push(render_o);
         }
 
@@ -139,11 +132,7 @@ impl ObjectLoader {
     pub fn load_triangle_resources(path: &str) -> TriangleResources {
         let model_path = Path::new(path);
         let (mut models, materials) =
-            tobj::load_obj(
-                path,
-                &tobj::LoadOptions::default(),
-            )
-                .expect("Failed to OBJ load file");
+            tobj::load_obj(path, &tobj::LoadOptions::default()).expect("Failed to OBJ load file");
         assert!(models.len() > 0);
 
         let mut mat = materials.unwrap_or_default();
@@ -152,11 +141,17 @@ impl ObjectLoader {
 
         let model = &triangle_resources.model;
 
-        println!("we've got {} triangles in total.", model.mesh.indices.len() / 3);
+        println!(
+            "we've got {} triangles in total.",
+            model.mesh.indices.len() / 3
+        );
 
         if let Some(i) = model.mesh.material_id {
             if model_path.is_relative() {
-                let texture_path = model_path.parent().unwrap().join(Path::new(&mat[i].diffuse_texture));
+                let texture_path = model_path
+                    .parent()
+                    .unwrap()
+                    .join(Path::new(&mat[i].diffuse_texture));
                 let texture = image::open(texture_path).unwrap();
                 triangle_resources.image = Some(texture);
                 triangle_resources.material = mat.pop();

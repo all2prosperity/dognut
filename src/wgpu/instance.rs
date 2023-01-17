@@ -1,6 +1,6 @@
-use pixels::wgpu;
 use crate::department::preview::homo_transformation::HomoTransform;
 use crate::department::preview::vector::Vector3;
+use pixels::wgpu;
 
 pub struct Instance {
     pub position: Vector3,
@@ -9,10 +9,12 @@ pub struct Instance {
 
 impl Instance {
     pub fn to_raw(&self) -> InstanceRaw {
-        let model = &HomoTransform::translation((self.position.x(), self.position.y(), self.position.z())) * &self.rotation;
+        let model =
+            &HomoTransform::translation((self.position.x(), self.position.y(), self.position.z()))
+                * &self.rotation;
         let m_slice = model.to_slice();
 
-        let rot_slice = self.rotation.cut::<3,3>(0,0).to_slice();
+        let rot_slice = self.rotation.cut::<3, 3>(0, 0).to_slice();
 
         InstanceRaw {
             model: m_slice,
@@ -27,8 +29,6 @@ pub struct InstanceRaw {
     pub model: [[f32; 4]; 4],
     pub normal: [[f32; 3]; 3],
 }
-
-
 
 impl InstanceRaw {
     pub fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
