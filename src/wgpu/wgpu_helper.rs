@@ -64,13 +64,16 @@ impl CameraUniform {
 
     fn update_view_proj(&mut self, camera: &Camera) {
         let OPENGL_TO_WGPU_MATRIX: HomoTransform = HomoTransform::from_vec(vec![
-            1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 1.0,
+            1.0, 0.0, 0.0, 0.0,
+            0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0,
         ]);
 
         self.view_position = camera.eye.to_homogeneous().t().to_slice()[0];
         let view = camera.to_view_matrix();
         self.view_proj =
-            (&view * &(&camera.perspective_projection * &OPENGL_TO_WGPU_MATRIX)).into();
+            (&(&view * &camera.perspective_projection) * &OPENGL_TO_WGPU_MATRIX).into();
     }
 }
 
@@ -154,9 +157,9 @@ impl State {
             (size.width / size.height) as f32,
             -5.,
             -50.,
-            position::Pos3::from_xyz(0.0, 0., 0.),
+            position::Pos3::from_xyz(0.0, 0., 10.),
             vector::Vector3::from_xyz(0., 0., -1.),
-            vector::Vector3::from_xyz(0., -1., 0.),
+            vector::Vector3::from_xyz(0., 1., 0.),
         );
         let camera_controller = CameraController::new(2.0, 0.2);
 
