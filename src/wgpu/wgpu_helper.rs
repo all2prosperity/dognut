@@ -72,8 +72,9 @@ impl CameraUniform {
 
         self.view_position = camera.eye.to_homogeneous().t().to_slice()[0];
         let view = camera.to_view_matrix();
-        self.view_proj =
-            (&(&view * &camera.perspective_projection) * &OPENGL_TO_WGPU_MATRIX).into();
+        // self.view_proj =
+        //     (&(&view * &camera.perspective_projection) * &OPENGL_TO_WGPU_MATRIX).into();
+        self.view_proj = (&camera.perspective_projection * &view).into();
     }
 }
 
@@ -154,9 +155,9 @@ impl State {
 
         let camera = Camera::new(
             45.,
-            (size.width / size.height) as f32,
-            -5.,
+            size.width as f32 / size.height as f32,
             -50.,
+            -1000.,
             position::Pos3::from_xyz(0.0, 0., 10.),
             vector::Vector3::from_xyz(0., 0., -1.),
             vector::Vector3::from_xyz(0., 1., 0.),
@@ -213,7 +214,8 @@ impl State {
 
         log::warn!("Load model");
         let obj_model = resources::load_model(
-            "./res/plane/plane.obj",
+            "./res/Link/new_link.obj",
+            // "./res/plane/plane.obj",
             &device,
             &queue,
             &texture_bind_group_layout,

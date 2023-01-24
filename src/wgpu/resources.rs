@@ -8,6 +8,7 @@ use super::{model, texture};
 
 pub async fn load_string(file_name: &str) -> anyhow::Result<String> {
     let path = std::path::Path::new(file_name);
+    println!("file name :{:?}", file_name);
     Ok(std::fs::read_to_string(path)?)
 }
 
