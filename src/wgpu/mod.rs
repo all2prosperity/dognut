@@ -5,6 +5,7 @@ mod model;
 mod resources;
 mod texture;
 pub mod wgpu_helper;
+mod old_camera;
 
 pub struct Runner {}
 

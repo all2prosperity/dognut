@@ -23,10 +23,12 @@ use pixels::wgpu::include_wgsl;
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
 use winit::dpi::PhysicalSize;
+use cgmath;
 
 use super::model;
 use super::resources;
 use super::texture;
+use super::old_camera;
 
 use crate::department::preview::homo_transformation::HomoTransform;
 use crate::department::preview::vector::Vector3;
@@ -62,19 +64,20 @@ impl CameraUniform {
         }
     }
 
-    fn update_view_proj(&mut self, camera: &Camera) {
-        let OPENGL_TO_WGPU_MATRIX: HomoTransform = HomoTransform::from_vec(vec![
-            1.0, 0.0, 0.0, 0.0,
-            0.0, 1.0, 0.0, 0.0,
-            0.0, 0.0, 1.0, 0.0,
-            0.0, 0.0, 0.0, 1.0,
-        ]);
-
-        self.view_position = camera.eye.to_homogeneous().t().to_slice()[0];
-        let view = camera.to_view_matrix();
-        // self.view_proj =
-        //     (&(&view * &camera.perspective_projection) * &OPENGL_TO_WGPU_MATRIX).into();
-        self.view_proj = (&camera.perspective_projection * &view).into();
+    fn update_view_proj(&mut self, camera: &old_camera::Camera) {
+        self.view_proj = (old_camera::OPENGL_TO_WGPU_MATRIX * camera.build_view_projection_matrix()).into();
+        // let OPENGL_TO_WGPU_MATRIX: HomoTransform = HomoTransform::from_vec(vec![
+        //     1.0, 0.0, 0.0, 0.0,
+        //     0.0, 1.0, 0.0, 0.0,
+        //     0.0, 0.0, 1.0, 0.0,
+        //     0.0, 0.0, 0.0, 1.0,
+        // ]);
+        //
+        // self.view_position = camera.eye.to_homogeneous().t().to_slice()[0];
+        // let view = camera.to_view_matrix();
+        // // self.view_proj =
+        // //     (&(&view * &camera.perspective_projection) * &OPENGL_TO_WGPU_MATRIX).into();
+        // self.view_proj = (&camera.perspective_projection * &view).into();
     }
 }
 
@@ -83,7 +86,7 @@ pub struct State {
     queue: wgpu::Queue,
     render_pipeline: wgpu::RenderPipeline,
     obj_model: model::Model,
-    camera: Camera,
+    camera: old_camera::Camera,
     pub camera_controller: CameraController,
     camera_uniform: CameraUniform,
     camera_buffer: wgpu::Buffer,
@@ -153,15 +156,24 @@ impl State {
                 label: Some("texture_bind_group_layout"),
             });
 
-        let camera = Camera::new(
-            45.,
-            size.width as f32 / size.height as f32,
-            -50.,
-            -1000.,
-            position::Pos3::from_xyz(0.0, 0., 10.),
-            vector::Vector3::from_xyz(0., 0., -1.),
-            vector::Vector3::from_xyz(0., 1., 0.),
-        );
+        // let camera = Camera::new(
+        //     45.,
+        //     size.width as f32 / size.height as f32,
+        //     -50.,
+        //     -1000.,
+        //     position::Pos3::from_xyz(0.0, 0., 10.),
+        //     vector::Vector3::from_xyz(0., 0., -1.),
+        //     vector::Vector3::from_xyz(0., 1., 0.),
+        // );
+        let camera = old_camera::Camera {
+            eye: (0.0, 5.0, 10.0).into(),
+            target: (0.0, 0.0, 0.0).into(),
+            up: cgmath::Vector3::unit_y(),
+            aspect: size.width as f32 / size.height as f32,
+            fovy: 45.0,
+            znear: 0.1,
+            zfar: 1000.0,
+        };
         let camera_controller = CameraController::new(2.0, 0.2);
 
         let mut camera_uniform = CameraUniform::new();
@@ -359,7 +371,7 @@ impl State {
     }
 
     pub fn update(&mut self, dt: std::time::Duration) {
-        self.camera_controller.update_camera(&mut self.camera, dt);
+        // self.camera_controller.update_camera(&mut self.camera, dt);
         self.camera_uniform.update_view_proj(&self.camera);
         self.queue.write_buffer(
             &self.camera_buffer,
