@@ -100,6 +100,9 @@ pub async fn run(render_recv: Receiver<TransferMsg>, ms: MultiSender<TransferMsg
                               WindowEvent::KeyboardInput { input, .. } => {
                                   g.game.state.camera_controller.process_keyboard(input.virtual_keycode.unwrap(), input.state);
                               }
+                              WindowEvent::ModifiersChanged(ms)=> {
+                                  g.game.state.camera_controller.ctrl_pressed = ms.ctrl();
+                              }
                               _ => {}
                           }
                       }
