@@ -4,7 +4,7 @@ mod texture;
 pub mod wgpu_helper;
 pub mod instance;
 mod light;
-mod camera;
+pub mod camera;
 
 pub struct Runner{}
 

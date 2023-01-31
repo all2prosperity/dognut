@@ -149,7 +149,7 @@ impl State {
 
         const SPACE_BETWEEN: f32 = 3.0;
         
-        let position = cgmath::Vector3 { x:0.0, y: -0.5, z:-1.0 };
+        let position = cgmath::Vector3 { x:0.0, y: 0., z: 1. };
 
         let rotation = cgmath::Quaternion::from_axis_angle(position.normalize(), cgmath::Deg(0.0));
         let instances = vec![Instance{position, rotation}];
@@ -159,7 +159,7 @@ impl State {
         let instance_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Instance Buffer"),
             contents: bytemuck::cast_slice(&instance_data),
-            usage: wgpu::BufferUsages::VERTEX,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
         });
 
         let camera_bind_group_layout =
@@ -324,13 +324,20 @@ impl State {
         }
     }
 
-    pub fn update(&mut self, dt: std::time::Duration) {
+    pub fn update(&mut self, dt: Duration) {
         self.camera_controller.update_camera(&mut self.camera, dt);
         self.camera_uniform.update_view_proj(&self.camera, &self.projection);
         self.queue.write_buffer(
             &self.camera_buffer,
             0,
             bytemuck::cast_slice(&[self.camera_uniform]),
+        );
+
+        let data = self.camera_controller.model_ctrl.update_model(dt);
+        self.queue.write_buffer(
+            &self.instance_buffer,
+            0,
+            bytemuck::cast_slice(&data)
         );
 
         let old_position: cgmath::Vector3<_> = self.light_uniform.position.into();
