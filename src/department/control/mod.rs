@@ -1,27 +1,11 @@
+pub mod camera_controller;
+
 use cgmath::{InnerSpace, Rotation3};
 use crossterm::cursor::position;
+use crossterm::event::{KeyCode, KeyEvent, KeyEventKind};
 use winit::event::{ElementState, VirtualKeyCode};
 use crate::wgpu::camera::Camera;
 use crate::wgpu::instance::Instance;
-
-pub struct Controller {
-    tui: bool,
-
-}
-
-
-impl Controller {
-    pub fn new() -> Self {
-        Controller{
-            tui: false,
-        }
-    }
-
-    pub fn run(&self) {
-
-    }
-}
-
 
 #[derive(Debug)]
 pub struct ModelController {
@@ -46,6 +30,30 @@ impl ModelController {
         Self {position: p,
             rotation: q,
             amount_left: 0., amount_right: 0., amount_forward: 0., amount_backward: 0., amount_up: 0., amount_down: 0., rotate_horizontal: 0., rotate_vertical: 0., scroll: 0., speed }
+    }
+
+    pub fn process_keyboard_tui(&mut self, key: &KeyEvent) -> bool {
+        let amount = if key.kind == KeyEventKind::Press {1.0} else {0.0};
+        match key.code {
+            KeyCode::Backspace => {}
+            KeyCode::Left | KeyCode::Char('a') => {
+                self.amount_left += amount;
+            }
+            KeyCode::Right | KeyCode::Char('d') => {
+                self.amount_right += amount;
+            }
+            KeyCode::Up | KeyCode::Char('w') => {
+                self.amount_forward += amount;
+            }
+            KeyCode::Down | KeyCode::Char('s') => {
+                self.amount_backward += amount;
+            }
+            KeyCode::Modifier(_) => {}
+            _ => {}
+        }
+
+        return true;
+
     }
 
     pub fn process_keyboard(&mut self, key: VirtualKeyCode, state:ElementState) -> bool {

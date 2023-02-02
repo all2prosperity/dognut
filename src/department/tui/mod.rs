@@ -6,6 +6,9 @@ use crossterm;
 use crossterm::{event, execute, terminal};
 use crossterm::event::{Event, KeyCode};
 use crossterm::terminal::{ClearType, disable_raw_mode, enable_raw_mode, EnterAlternateScreen, SetSize, size};
+use game_loop::{GameLoop, Time, TimeTrait};
+use crate::department::control::camera_controller::CameraController;
+
 
 
 use crate::department::model::triangle_resources::TriangleResources;
@@ -22,83 +25,112 @@ pub struct TuiApp {
     pub raster: RasterRunner,
     stdout: Stdout,
     theta: f32,
+    camera_controller: CameraController,
     gpu: Option<self_type::StateImp>,
 }
 
+static FPS:u32 = 30;
+
+static TIME_STEP: Duration = Duration::from_nanos(1_000_000_000 / FPS as u64);
+
+fn game_loop<G, U, R>(game: G, updates_per_second: u32, max_frame_time: f64, mut update: U, mut render: R) -> GameLoop<G, game_loop::Time, ()>
+    where U: FnMut(&mut game_loop::GameLoop<G, game_loop::Time, ()>),
+          R: FnMut(&mut game_loop::GameLoop<G, game_loop::Time, ()>),
+{
+    let mut game_loop = game_loop::GameLoop::new(game, updates_per_second, max_frame_time, ());
+
+    while game_loop.next_frame(&mut update, &mut render) {}
+
+    game_loop
+}
 
 impl TuiApp {
     pub fn new(raster: RasterRunner) -> Self {
-        Self { raster, stdout: stdout(), theta: 0., gpu: None }
+        Self { raster, stdout: stdout(), theta: 0., gpu: None, camera_controller: CameraController::new(2.0, 0.2)}
     }
 
-    pub fn run(mut self, res: TriangleResources, state: self_type::StateImp) -> Result<(), Box<dyn Error>> {
+    pub fn run(mut self, res: TriangleResources, state: Option<self_type::StateImp>) -> Result<(), Box<dyn Error>> {
         enable_raw_mode()?;
         execute!(self.stdout, crossterm::cursor::Hide);
         execute!(self.stdout, EnterAlternateScreen, event::EnableMouseCapture);
         execute!(self.stdout, crossterm::terminal::Clear(ClearType::All));
 
         let dimension = (256,79);
-        self.gpu = None;
+        self.gpu = state;
 
-        loop {
-            self.theta += 0.1;
-            self.draw((dimension.0 as u32, dimension.1 as u32), &res);
-            if let Ok(ready) = event::poll(Duration::from_millis(1000 / 25)) {
-                if ready {
-                    match event::read()? {
-                        Event::FocusGained => {}
-                        Event::FocusLost => {}
-                        Event::Key(k) => {
-                            match k.code {
-                                KeyCode::Backspace => {}
-                                KeyCode::Enter => {}
-                                KeyCode::Left => {}
-                                KeyCode::Right => {}
-                                KeyCode::Up => {}
-                                KeyCode::Down => {}
-                                KeyCode::Home => {}
-                                KeyCode::End => {}
-                                KeyCode::PageUp => {}
-                                KeyCode::PageDown => {}
-                                KeyCode::Tab => {}
-                                KeyCode::BackTab => {}
-                                KeyCode::Delete => {}
-                                KeyCode::Insert => {}
-                                KeyCode::F(_) => {}
-                                KeyCode::Char(c) => {
-                                    if c == 'q' {
-                                        break;
-                                    }
+        let lop = game_loop(self, FPS, 0.1, |g| {
+            // update
+            g.game.update(g.last_frame_time());
+        }, |g| {
+            let mut should_exit = false;
+            loop {
+                if let Ok(ready) = event::poll(Duration::from_secs(0)) {
+                    if ready {
+                        match event::read().unwrap() {
+                            Event::FocusGained => {}
+                            Event::FocusLost => {}
+                            Event::Key(k) => {
+                                if !g.game.camera_controller.process_tui_keyboard(&k) {
+                                    should_exit = true;
                                 }
-                                KeyCode::Null => {}
-                                KeyCode::Esc => {
-                                    break;
-                                }
-                                KeyCode::CapsLock => {}
-                                KeyCode::ScrollLock => {}
-                                KeyCode::NumLock => {}
-                                KeyCode::PrintScreen => {}
-                                KeyCode::Pause => {}
-                                KeyCode::Menu => {}
-                                KeyCode::KeypadBegin => {}
-                                KeyCode::Media(_) => {}
-                                KeyCode::Modifier(_) => {}
-                                _ => {}
+                            }
+                            Event::Mouse(_) => {}
+                            Event::Paste(_) => {}
+                            Event::Resize(w, h) => {
+                                println!("terminal window update to new size {} {}", w, h);
+                                //self.draw((w as u32, h as u32), &res);
                             }
                         }
-                        Event::Mouse(_) => {}
-                        Event::Paste(_) => {}
-                        Event::Resize(w, h) => {
-                            self.draw((w as u32, h as u32), &res);
-                        }
+                    } else {
+                        break;
                     }
+                } else {
+                    break;
                 }
             }
-            execute!(self.stdout, terminal::Clear(ClearType::All));
-        }
+
+            if should_exit {
+                g.exit();
+            }
+           // execute!(g.game.stdout, terminal::Clear(ClearType::All));
+            g.game.draw((dimension.0 as u32, dimension.1 as u32), &res);
+
+            let st = TIME_STEP.as_secs_f64() - Time::now().sub(&g.current_instant());
+            if st > 0. {
+                std::thread::sleep(Duration::from_secs_f64(st));
+            }
+        });
+
+        // loop {
+        //     self.theta += 0.1;
+        //     self.draw((dimension.0 as u32, dimension.1 as u32), &res);
+        //     if let Ok(ready) = event::poll(Duration::from_secs(0)) {
+        //         if ready {
+        //             match event::read()? {
+        //                 Event::FocusGained => {}
+        //                 Event::FocusLost => {}
+        //                 Event::Key(k) => {
+        //
+        //                 }
+        //                 Event::Mouse(_) => {}
+        //                 Event::Paste(_) => {}
+        //                 Event::Resize(w, h) => {
+        //                     self.draw((w as u32, h as u32), &res);
+        //                 }
+        //             }
+        //         }
+        //     }
+        //     execute!(self.stdout, terminal::Clear(ClearType::All));
+        // }
 
 
         Ok(())
+    }
+
+    pub fn update(&mut self, last_frame_time: f64)  {
+        if let Some(ref mut gpu) = self.gpu {
+            gpu.update_outside(&mut self.camera_controller,Duration::from_secs_f64(last_frame_time));
+        }
     }
 
 

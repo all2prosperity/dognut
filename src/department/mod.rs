@@ -5,7 +5,7 @@ use pixels::Pixels;
 use winit::event::VirtualKeyCode;
 use winit::window::WindowId;
 use winit_input_helper::WinitInputHelper;
-use crate::department::control::Controller;
+use crate::department::control::camera_controller::CameraController;
 use crate::wgpu::wgpu_helper::State;
 use crate::department::common::self_type;
 
@@ -24,7 +24,7 @@ pub mod video;
 pub struct Game {
     pixels: Pixels,
     state: self_type::StateImp,
-    controls: Controller,
+    controls: CameraController,
     input: WinitInputHelper,
     gilrs: Gilrs,
     gamepad: Option<GamepadId>,
@@ -37,7 +37,7 @@ impl Game {
         Self {
             pixels,
             state,
-            controls: Controller::new(),
+            controls: CameraController::new(2.0, 0.2),
             input: WinitInputHelper::new(),
             gilrs: Gilrs::new().unwrap(), // XXX: Don't unwrap.
             gamepad: None,

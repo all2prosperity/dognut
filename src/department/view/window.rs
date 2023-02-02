@@ -122,6 +122,8 @@ pub async fn run(render_recv: Receiver<TransferMsg>, ms: MultiSender<TransferMsg
               },
     );
 
+    Ok(())
+
     // event_loop.run(move |event, _, control_flow| {
     //     if let Ok(ret) = render_recv.try_recv() {
     //         match ret {

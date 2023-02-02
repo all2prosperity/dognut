@@ -2,6 +2,9 @@ use clap::Parser;
 
 pub mod cmd_arg;
 
+use lazy_static::lazy_static;
+
+
 /// render a object to window or terminal
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
@@ -21,4 +24,9 @@ pub struct Args {
     /// only render a jpeg picture
     #[arg(short, default_value_t=false)]
     pub render_a_picture: bool,
+}
+
+
+lazy_static!{
+    pub static ref ARG: Args = Args::parse();
 }

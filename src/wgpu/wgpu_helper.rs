@@ -26,11 +26,14 @@ use super::texture;
 use super::resources;
 
 use model::{DrawModel, Vertex};
-use crate::wgpu::camera::{Camera, CameraController, OPENGL_TO_WGPU_MATRIX};
+use crate::wgpu::camera::{Camera, OPENGL_TO_WGPU_MATRIX};
 use crate::wgpu::{camera, create_render_pipeline};
 use crate::wgpu::instance::{Instance, InstanceRaw};
 use crate::wgpu::light::LightUniform;
 use crate::wgpu::model::DrawLight;
+
+use crate::util::{ARG};
+use crate::department::control::camera_controller::CameraController;
 
 const NUM_INSTANCES_PER_ROW: u32 = 10;
 
@@ -49,13 +52,13 @@ impl CameraUniform {
         }
     }
 
-    fn update_view_proj<T: camera_trait::CameraTrait>(&mut self, camera: &T) {
+    fn update_view_proj(&mut self, camera: &Camera, projection: &camera::Projection) {
         let old = self.view_position.clone();
-        self.view_position = camera.to_view_position();
+        self.view_position = camera.position.to_homogeneous().into();
         if old != self.view_position {
             println!("new pos is {:?}", &self.view_position);
         }
-        self.view_proj = camera.to_view_proj();
+        self.view_proj = (projection.calc_matrix() * camera.calc_matrix()).into();
     }
 }
 
@@ -66,6 +69,7 @@ pub struct State<T> where T: camera_trait::CameraTrait {
     render_pipeline: wgpu::RenderPipeline,
     obj_model: model::Model,
     camera: T,
+    projection: camera::Projection,
     pub camera_controller: CameraController,
     camera_uniform: CameraUniform,
     camera_buffer: wgpu::Buffer,
@@ -74,7 +78,7 @@ pub struct State<T> where T: camera_trait::CameraTrait {
     #[allow(dead_code)]
     instance_buffer: wgpu::Buffer,
     depth_texture: texture::Texture,
-    size: winit::dpi::PhysicalSize<u32>,
+    size: PhysicalSize<u32>,
     light_uniform: LightUniform,
     light_buffer: wgpu::Buffer,
     light_bind_group: wgpu::BindGroup,
@@ -134,13 +138,12 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
                 ],
                 label: Some("texture_bind_group_layout"),
             });
-
-        // let camera = camera::Camera::new((0.0, 0., 10.), cgmath::Deg(-90.0), cgmath::Deg(-0.0));
+        let camera = camera::Camera::new((0.0, 0., 10.), cgmath::Deg(-90.0), cgmath::Deg(-0.0));
+        let projection = camera::Projection::new(size.width, size.height, cgmath::Deg(45.), 0.1, 100.0);
         let camera_controller = CameraController::new(2.0, 0.2);
 
-
         let mut camera_uniform = CameraUniform::new();
-        camera_uniform.update_view_proj(&camera);
+        camera_uniform.update_view_proj(&camera, &projection);
 
         let camera_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Camera Buffer"),
@@ -189,7 +192,7 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
 
         log::warn!("Load model");
         let obj_model = resources::load_model(
-            "./res/diablo/diablo3_pose.obj",
+            &ARG.obj_path,
             &device,
             &queue,
             &texture_bind_group_layout,
@@ -349,6 +352,31 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
 
     }
 
+    pub fn update_outside(&mut self, controller:&mut CameraController,dt: Duration) {
+        controller.update_camera(&mut self.camera, dt);
+        self.camera_uniform.update_view_proj(&self.camera, &self.projection);
+        self.queue.write_buffer(
+            &self.camera_buffer,
+            0,
+            bytemuck::cast_slice(&[self.camera_uniform]),
+        );
+
+        let data = controller.model_ctrl.update_model(dt);
+        self.queue.write_buffer(
+            &self.instance_buffer,
+            0,
+            bytemuck::cast_slice(&data)
+        );
+
+        let old_position: cgmath::Vector3<_> = self.light_uniform.position.into();
+        self.light_uniform.position =
+            (cgmath::Quaternion::from_axis_angle((0.0, 1.0, 0.0).into(), cgmath::Deg(1.0))
+                * old_position)
+                .into();
+        self.queue.write_buffer(&self.light_buffer, 0, bytemuck::cast_slice(&[self.light_uniform]));
+
+    }
+
     pub fn render(&mut self) -> Vec<u8> {
         //let now = Instant::now();
         let texture_desc = wgpu::TextureDescriptor {
@@ -382,9 +410,9 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
                     resolve_target: None,
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(wgpu::Color {
-                            r: 0.1,
-                            g: 0.2,
-                            b: 0.3,
+                            r: 0.0,
+                            g: 0.0,
+                            b: 0.0,
                             a: 1.0,
                         }),
                         store: true,
