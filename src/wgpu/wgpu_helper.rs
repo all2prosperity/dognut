@@ -34,6 +34,7 @@ use crate::wgpu::model::DrawLight;
 
 use crate::util::{ARG};
 use crate::department::control::camera_controller::CameraController;
+use crate::department::view::camera_trait::CameraTrait;
 
 const NUM_INSTANCES_PER_ROW: u32 = 10;
 
@@ -52,13 +53,13 @@ impl CameraUniform {
         }
     }
 
-    fn update_view_proj(&mut self, camera: &Camera, projection: &camera::Projection) {
+    fn update_view_proj<T: camera_trait::CameraTrait>(&mut self, camera: &T) {
         let old = self.view_position.clone();
-        self.view_position = camera.position.to_homogeneous().into();
+        self.view_position = camera.to_view_position();
         if old != self.view_position {
             println!("new pos is {:?}", &self.view_position);
         }
-        self.view_proj = (projection.calc_matrix() * camera.calc_matrix()).into();
+        self.view_proj = camera.to_view_proj();
     }
 }
 
@@ -69,7 +70,6 @@ pub struct State<T> where T: camera_trait::CameraTrait {
     render_pipeline: wgpu::RenderPipeline,
     obj_model: model::Model,
     camera: T,
-    projection: camera::Projection,
     pub camera_controller: CameraController,
     camera_uniform: CameraUniform,
     camera_buffer: wgpu::Buffer,
@@ -138,12 +138,12 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
                 ],
                 label: Some("texture_bind_group_layout"),
             });
-        let camera = camera::Camera::new((0.0, 0., 10.), cgmath::Deg(-90.0), cgmath::Deg(-0.0));
-        let projection = camera::Projection::new(size.width, size.height, cgmath::Deg(45.), 0.1, 100.0);
+        //let camera = camera::Camera::new((0.0, 0., 10.), cgmath::Deg(-90.0), cgmath::Deg(-0.0));
+        //let projection = camera::Projection::new(size.width, size.height, cgmath::Deg(45.), 0.1, 100.0);
         let camera_controller = CameraController::new(2.0, 0.2);
 
         let mut camera_uniform = CameraUniform::new();
-        camera_uniform.update_view_proj(&camera, &projection);
+        camera_uniform.update_view_proj(&camera);
 
         let camera_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Camera Buffer"),
@@ -354,7 +354,7 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
 
     pub fn update_outside(&mut self, controller:&mut CameraController,dt: Duration) {
         controller.update_camera(&mut self.camera, dt);
-        self.camera_uniform.update_view_proj(&self.camera, &self.projection);
+        self.camera_uniform.update_view_proj(&self.camera);
         self.queue.write_buffer(
             &self.camera_buffer,
             0,
