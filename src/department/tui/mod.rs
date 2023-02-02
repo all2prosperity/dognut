@@ -1,6 +1,7 @@
 use std::error::Error;
 use std::io::{Stdout, stdout, Write};
 use std::time::Duration;
+use crate::department::common::self_type;
 use crossterm;
 use crossterm::{event, execute, terminal};
 use crossterm::event::{Event, KeyCode};
@@ -21,7 +22,7 @@ pub struct TuiApp {
     pub raster: RasterRunner,
     stdout: Stdout,
     theta: f32,
-    gpu: Option<State>,
+    gpu: Option<self_type::StateImp>,
 }
 
 
@@ -30,7 +31,7 @@ impl TuiApp {
         Self { raster, stdout: stdout(), theta: 0., gpu: None }
     }
 
-    pub fn run(mut self, res: TriangleResources, state: State) -> Result<(), Box<dyn Error>> {
+    pub fn run(mut self, res: TriangleResources, state: self_type::StateImp) -> Result<(), Box<dyn Error>> {
         enable_raw_mode()?;
         execute!(self.stdout, crossterm::cursor::Hide);
         execute!(self.stdout, EnterAlternateScreen, event::EnableMouseCapture);

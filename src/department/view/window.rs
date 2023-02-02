@@ -11,6 +11,7 @@ use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
 use crate::department::common::constant::{WIDTH, HEIGHT};
+use crate::department::common::self_type;
 
 
 use crate::department::types::msg::TransferMsg;
@@ -20,6 +21,7 @@ use game_loop::{game_loop, Time, TimeTrait};
 use crate::department::Game;
 use crate::wgpu::wgpu_helper::State;
 use crate::department::types::multi_sender::MultiSender;
+use crate::wgpu::camera::{Camera, Projection};
 
 pub const FPS: usize = 120;
 pub const TIME_STEP: Duration = Duration::from_nanos(1_000_000_000 / FPS as u64);
@@ -29,7 +31,9 @@ pub const TIME_STEP: Duration = Duration::from_nanos(1_000_000_000 / FPS as u64)
 
 
 pub async fn run(render_recv: Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) -> Result<(), Error> {
-    let mut state = State::new(PhysicalSize { width: WIDTH, height: HEIGHT }).await;
+    let projection = Projection::new(WIDTH, HEIGHT, cgmath::Deg(45.), 0.1, 100.0);
+    let camera = Camera::new((0.0, 0., 10.), cgmath::Deg(-90.0), cgmath::Deg(-0.0), projection);
+    let mut state = self_type::StateImp::new(PhysicalSize { width: WIDTH, height: HEIGHT }, camera).await;
 
     let event_loop = EventLoop::new();
     let mut input = WinitInputHelper::new();

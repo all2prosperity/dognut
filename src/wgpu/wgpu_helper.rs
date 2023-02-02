@@ -17,6 +17,8 @@ use crate::department::types::multi_sender::MultiSender;
 use crate::department::common::constant::{WIDTH, HEIGHT};
 use crossbeam_channel::Receiver;
 use winit::dpi::PhysicalSize;
+use crate::department::view::camera_trait;
+use crate::department::common::self_type;
 
 
 use super::model;
@@ -47,24 +49,23 @@ impl CameraUniform {
         }
     }
 
-    fn update_view_proj(&mut self, camera: &Camera, projection: &camera::Projection) {
+    fn update_view_proj<T: camera_trait::CameraTrait>(&mut self, camera: &T) {
         let old = self.view_position.clone();
-        self.view_position = camera.position.to_homogeneous().into();
+        self.view_position = camera.to_view_position();
         if old != self.view_position {
             println!("new pos is {:?}", &self.view_position);
         }
-        self.view_proj = (projection.calc_matrix() * camera.calc_matrix()).into();
+        self.view_proj = camera.to_view_proj();
     }
 }
 
 
-pub struct State {
+pub struct State<T> where T: camera_trait::CameraTrait {
     device: wgpu::Device,
     queue: wgpu::Queue,
     render_pipeline: wgpu::RenderPipeline,
     obj_model: model::Model,
-    camera: Camera,
-    projection: camera::Projection,
+    camera: T,
     pub camera_controller: CameraController,
     camera_uniform: CameraUniform,
     camera_buffer: wgpu::Buffer,
@@ -81,8 +82,8 @@ pub struct State {
     pub mouse_pressed: bool,
 }
 
-impl State {
-    pub async fn new(size: PhysicalSize<u32>) -> Self {
+impl<T> State<T> where T: camera_trait::CameraTrait {
+    pub async fn new(size: PhysicalSize<u32>, camera: T) -> Self {
         // The instance is a handle to our GPU
         // BackendBit::PRIMARY => Vulkan + Metal + DX12 + Browser WebGPU
         log::warn!("WGPU setup");
@@ -134,12 +135,12 @@ impl State {
                 label: Some("texture_bind_group_layout"),
             });
 
-        let camera = camera::Camera::new((0.0, 0., 10.), cgmath::Deg(-90.0), cgmath::Deg(-0.0));
-        let projection = camera::Projection::new(size.width, size.height, cgmath::Deg(45.), 0.1, 100.0);
+        // let camera = camera::Camera::new((0.0, 0., 10.), cgmath::Deg(-90.0), cgmath::Deg(-0.0));
         let camera_controller = CameraController::new(2.0, 0.2);
 
+
         let mut camera_uniform = CameraUniform::new();
-        camera_uniform.update_view_proj(&camera, &projection);
+        camera_uniform.update_view_proj(&camera);
 
         let camera_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Camera Buffer"),
@@ -268,7 +269,6 @@ impl State {
             render_pipeline,
             obj_model,
             camera,
-            projection,
             camera_controller,
             camera_buffer,
             camera_bind_group,
@@ -326,7 +326,7 @@ impl State {
 
     pub fn update(&mut self, dt: Duration) {
         self.camera_controller.update_camera(&mut self.camera, dt);
-        self.camera_uniform.update_view_proj(&self.camera, &self.projection);
+        self.camera_uniform.update_view_proj(&self.camera);
         self.queue.write_buffer(
             &self.camera_buffer,
             0,
@@ -474,7 +474,9 @@ impl State {
 pub fn run(r: Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) {
     let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
     rt.block_on(async {
-        let mut state = State::new(PhysicalSize{height: HEIGHT, width:WIDTH}).await;
+        let projection = camera::Projection::new(WIDTH, HEIGHT, cgmath::Deg(45.), 0.1, 100.0);
+        let camera = camera::Camera::new((0.0, 0., 10.), cgmath::Deg(-90.0), cgmath::Deg(-0.0), projection);
+        let mut state = self_type::StateImp::new(PhysicalSize{height: HEIGHT, width:WIDTH}, camera).await;
         loop {
             let buf = state.render();
             ms.net.send(TransferMsg::RenderPc(buf.clone()));

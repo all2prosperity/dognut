@@ -20,6 +20,7 @@ use dognut::department::video::encode::rgbaEncoder;
 use dognut::department::view::camera::Camera;
 use dognut::util::Args;
 use dognut::wgpu::wgpu_helper::State;
+use dognut::department::common::self_type;
 
 const WIDTH: u32 = 640;
 const HEIGHT: u32 = 480;
@@ -55,11 +56,11 @@ fn main() -> Result<(), Error>{
 
         rt.block_on(async {
             let dimension = (256,79);
-            let state = State::new(winit::dpi::PhysicalSize { width: dimension.0 as u32, height: dimension.1 as u32 }).await;
-            let result = TuiApp::new(raster).run(res, state);
-            if let Err(e) = result {
-                error!("tui return an error, {}", e.to_string());
-            };
+            // let state = State::new(winit::dpi::PhysicalSize { width: dimension.0 as u32, height: dimension.1 as u32 }).await;
+            // let result = TuiApp::new(raster).run(res, state);
+            // if let Err(e) = result {
+            //     error!("tui return an error, {}", e.to_string());
+            // };
         });
         return Ok(());
     }

@@ -7,6 +7,7 @@ use winit::window::WindowId;
 use winit_input_helper::WinitInputHelper;
 use crate::department::control::Controller;
 use crate::wgpu::wgpu_helper::State;
+use crate::department::common::self_type;
 
 pub mod preview;
 pub mod view;
@@ -22,7 +23,7 @@ pub mod video;
 
 pub struct Game {
     pixels: Pixels,
-    state: State,
+    state: self_type::StateImp,
     controls: Controller,
     input: WinitInputHelper,
     gilrs: Gilrs,
@@ -32,7 +33,7 @@ pub struct Game {
 }
 
 impl Game {
-    fn new(pixels: Pixels, state: State, id:WindowId , debug: bool) -> Self {
+    fn new(pixels: Pixels, state: self_type::StateImp, id:WindowId , debug: bool) -> Self {
         Self {
             pixels,
             state,
