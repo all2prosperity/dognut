@@ -7,3 +7,4 @@ pub const WIDTH: u32 = 640;
 pub const HEIGHT: u32 = 480;
 
 pub const IS_NEED_FLIPV: bool = true;
+pub const IS_LEFT_HAND: bool = true;

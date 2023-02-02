@@ -11,6 +11,7 @@ use crate::department::preview::matrix::{HMat};
 use crate::department::preview::output_buffer::OutputBuffer;
 use crate::department::preview::position::Pos3;
 use crate::department::preview::vector::Vector3;
+use crate::department::common::constant;
 
 pub struct Camera {
     fov_y: f32,
@@ -26,7 +27,12 @@ pub struct Camera {
 
 impl Camera {
     pub fn new(fov_y: f32, ratio: f32, n: f32, z: f32, pos: Pos3, forward: Vector3, up: Vector3) -> Self{
-        let persp =  Camera::perspective_projection_mat(fov_y, ratio, n, z);
+        let persp = if constant::IS_LEFT_HAND { 
+            Camera::perspective_projection_mat_left_hand(fov_y, ratio, n, z)
+        }
+        else {
+            Camera::perspective_projection_mat_right_hand(fov_y, ratio, n, z)
+        };
         Self {
             fov_y,
             ratio,
@@ -80,11 +86,50 @@ impl Camera {
         (-x/2., x/2., y/2., -y/2., n, f)
     }
 
-    pub fn perspective_projection_mat(fov_y: f32, ratio: f32, n: f32, z: f32) -> HMat {
+    pub fn perspective_projection_mat_left_hand(fov_y: f32, ratio: f32, n: f32, z: f32) -> HMat {
         // let tan_camera =  ((fov_y / 180.) * PI).tan();
         // let y = (n * tan_camera) * 2.;
         // let fov_x = fov_y * ratio;
-        let (l, r, t, b, n, f) = Camera::calc_lrtbnf(fov_y / 2., ratio, n , z);
+        let (l, r, t, b, n, f) = Camera::calc_lrtbnf(fov_y / 2., ratio, n, z);
+
+        let persp = HMat::from_vec(
+                         vec![
+                            n, 0., 0., 0.,
+                            0., n, 0., 0.,
+                            0., 0., n + f, 1.,
+                            0., 0., -n * f, 0.,
+                         ]);
+
+        let ort_scale = HMat::from_vec(vec![
+                            2. / (r - l), 0., 0., 0.,
+                            0., 2. / (t - b), 0., 0.,
+                            0., 0., 2. / (f - n), 0.,
+                            0., 0., 0., 1.,
+                        ]);
+
+        let ort_translate = HMat::from_vec(vec![
+                            1., 0., 0.,0.,
+                            0., 1., 0., 0.,
+                            0., 0., 1., 0.,
+                            -(r + l) / 2., -(t + b) / 2., -(n + f) / 2., 1.,
+                        ]);
+
+        let negative_z_matrix = HMat::from_vec(vec![
+                            1., 0., 0.,0.,
+                            0., 1., 0., 0.,
+                            0., 0., -1., 0.,
+                            0., 0., 0., 1.,
+                        ]);
+
+        negative_z_matrix * persp * ort_translate * ort_scale
+        // ort_scale.t() * ort_translate.t() * persp.t()
+    }
+
+    pub fn perspective_projection_mat_right_hand(fov_y: f32, ratio: f32, n: f32, z: f32) -> HMat {
+        // let tan_camera =  ((fov_y / 180.) * PI).tan();
+        // let y = (n * tan_camera) * 2.;
+        // let fov_x = fov_y * ratio;
+        let (l, r, t, b, n, f) = Camera::calc_lrtbnf(fov_y / 2., ratio, n, z);
 
         let persp = HMat::from_vec(
                          vec![
@@ -109,6 +154,7 @@ impl Camera {
                         ]);
 
         persp * ort_translate * ort_scale
+        // ort_scale.t() * ort_translate.t() * persp.t()
     }
 
     pub fn to_view_matrix(&self) -> HMat{

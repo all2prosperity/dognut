@@ -21,6 +21,9 @@ name = "maybe_wgpu"
 [[bin]]
 name = "test_term"
 
+[[bin]]
+name = "test_camera_diff"
+
 [dependencies]
 prost = "*"
 tui = "0.*"
