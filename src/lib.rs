@@ -1,6 +1,7 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
 #![feature(iter_array_chunks)]
+#![feature(is_some_and)]
 
 pub mod department;
 pub mod util;

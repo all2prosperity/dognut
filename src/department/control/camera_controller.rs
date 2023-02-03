@@ -25,10 +25,11 @@ pub struct CameraController {
     sensitivity: f32,
     pub ctrl_pressed: bool,
     pub model_ctrl: ModelController,
+    tui:bool,
 }
 
 impl CameraController {
-    pub fn new(speed: f32, sensitivity: f32) -> Self {
+    pub fn new(speed: f32, sensitivity: f32, tui: bool) -> Self {
         Self {
             amount_left: 0.0,
             amount_right: 0.0,
@@ -42,7 +43,8 @@ impl CameraController {
             speed,
             sensitivity,
             ctrl_pressed: false,
-            model_ctrl: ModelController::new(speed),
+            model_ctrl: ModelController::new(speed, tui),
+            tui
         }
     }
 
@@ -142,6 +144,17 @@ impl CameraController {
         self.rotate_horizontal = 0.0;
         self.rotate_vertical = 0.0;
 
+
+        if self.tui {
+            self.amount_backward = 0.;
+            self.amount_down = 0.;
+            self.amount_forward = 0.;
+            self.amount_left =0.;
+            self.amount_right =0.;
+            self.amount_up = 0.;
+        }
+
+
         // Move in/out (aka. "zoom")
         // Note: this isn't an actual zoom. The camera's position
         // changes when zooming. I've added this to make it easier
@@ -166,34 +179,6 @@ impl CameraController {
         // camera.position += forward * (self.amount_forward - self.amount_backward) * self.speed * dt;
         // camera.position += right * (self.amount_right - self.amount_left) * self.speed * dt;
         //
-        // // Move in/out (aka. "zoom")
-        // // Note: this isn't an actual zoom. The camera's position
-        // // changes when zooming. I've added this to make it easier
-        // // to get closer to an object you want to focus on.
-        // let (pitch_sin, pitch_cos) = camera.pitch.0.sin_cos();
-        // let scrollward = Vector3::new(pitch_cos * yaw_cos, pitch_sin, pitch_cos * yaw_sin).normalize();
-        // camera.position += scrollward * self.scroll * self.speed * self.sensitivity * dt;
-        // self.scroll = 0.0;
-        //
-        // // Move up/down. Since we don't use roll, we can just
-        // // modify the y coordinate directly.
-        // camera.position.y += (self.amount_up - self.amount_down) * self.speed * dt;
-        //
-        // // Rotate
-        // camera.yaw += Rad(self.rotate_horizontal) * self.sensitivity * dt;
-        // camera.pitch += Rad(-self.rotate_vertical) * self.sensitivity * dt;
-        //
-        // // If process_mouse isn't called every frame, these values
-        // // will not get set to zero, and the camera will rotate
-        // // when moving in a non cardinal direction.
-        // self.rotate_horizontal = 0.0;
-        // self.rotate_vertical = 0.0;
-        //
-        // // Keep the camera's angle from going too high/low.
-        // if camera.pitch < -Rad(SAFE_FRAC_PI_2) {
-        //     camera.pitch = -Rad(SAFE_FRAC_PI_2);
-        // } else if camera.pitch > Rad(SAFE_FRAC_PI_2) {
-        //     camera.pitch = Rad(SAFE_FRAC_PI_2);
-        // }
+
     }
 }

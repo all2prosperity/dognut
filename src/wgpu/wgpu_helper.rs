@@ -57,7 +57,7 @@ impl CameraUniform {
         let old = self.view_position.clone();
         self.view_position = camera.to_view_position();
         if old != self.view_position {
-            println!("new pos is {:?}", &self.view_position);
+            //println!("new pos is {:?}", &self.view_position);
         }
         self.view_proj = camera.to_view_proj();
     }
@@ -140,7 +140,7 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
             });
         //let camera = camera::Camera::new((0.0, 0., 10.), cgmath::Deg(-90.0), cgmath::Deg(-0.0));
         //let projection = camera::Projection::new(size.width, size.height, cgmath::Deg(45.), 0.1, 100.0);
-        let camera_controller = CameraController::new(2.0, 0.2);
+        let camera_controller = CameraController::new(2.0, 0.2, false);
 
         let mut camera_uniform = CameraUniform::new();
         camera_uniform.update_view_proj(&camera);

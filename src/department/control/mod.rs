@@ -21,15 +21,16 @@ pub struct ModelController {
     rotate_vertical: f32,
     scroll: f32,
     speed: f32,
+    tui: bool
 }
 
 impl ModelController {
-    pub fn new(speed: f32) -> Self {
+    pub fn new(speed: f32, tui: bool) -> Self {
         let p = cgmath::Vector3{x: 0.0, y: 0., z:1.};
         let q = cgmath::Quaternion::from_axis_angle(p.normalize(), cgmath::Deg(0.0));
         Self {position: p,
             rotation: q,
-            amount_left: 0., amount_right: 0., amount_forward: 0., amount_backward: 0., amount_up: 0., amount_down: 0., rotate_horizontal: 0., rotate_vertical: 0., scroll: 0., speed }
+            amount_left: 0., amount_right: 0., amount_forward: 0., amount_backward: 0., amount_up: 0., amount_down: 0., rotate_horizontal: 0., rotate_vertical: 0., scroll: 0., speed , tui}
     }
 
     pub fn process_keyboard_tui(&mut self, key: &KeyEvent) -> bool {
@@ -93,6 +94,16 @@ impl ModelController {
         self.position.z +=  (self.amount_forward - self.amount_backward) * self.speed * dt;
         self.position.x +=  (self.amount_right - self.amount_left) * self.speed * dt;
         self.position.y += (self.amount_up - self.amount_down) * self.speed * dt;
+
+
+        if self.tui {
+            self.amount_down = 0.0;
+            self.amount_up = 0.0;
+            self.amount_left = 0.0;
+            self.amount_right =  0.0;
+            self.amount_forward = 0.0;
+            self.amount_backward = 0.0;
+        }
 
         let instances = vec![Instance{position: self.position.clone(), rotation:self.rotation.clone()}];
 

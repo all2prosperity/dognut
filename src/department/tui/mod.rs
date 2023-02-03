@@ -46,7 +46,7 @@ fn game_loop<G, U, R>(game: G, updates_per_second: u32, max_frame_time: f64, mut
 
 impl TuiApp {
     pub fn new(raster: RasterRunner) -> Self {
-        Self { raster, stdout: stdout(), theta: 0., gpu: None, camera_controller: CameraController::new(2.0, 0.2)}
+        Self { raster, stdout: stdout(), theta: 0., gpu: None, camera_controller: CameraController::new(2.0, 0.2, true)}
     }
 
     pub fn run(mut self, res: TriangleResources, state: Option<self_type::StateImp>) -> Result<(), Box<dyn Error>> {
@@ -66,20 +66,25 @@ impl TuiApp {
             loop {
                 if let Ok(ready) = event::poll(Duration::from_secs(0)) {
                     if ready {
-                        match event::read().unwrap() {
-                            Event::FocusGained => {}
-                            Event::FocusLost => {}
-                            Event::Key(k) => {
-                                if !g.game.camera_controller.process_tui_keyboard(&k) {
-                                    should_exit = true;
+                        let event_res = event::read();
+                        if event_res.is_ok() {
+                            match event_res.unwrap() {
+                                Event::FocusGained => {}
+                                Event::FocusLost => {}
+                                Event::Key(k) => {
+                                    if !g.game.camera_controller.process_tui_keyboard(&k) {
+                                        should_exit = true;
+                                    }
+                                }
+                                Event::Mouse(_) => {}
+                                Event::Paste(_) => {}
+                                Event::Resize(w, h) => {
+                                    println!("terminal window update to new size {} {}", w, h);
+                                    //self.draw((w as u32, h as u32), &res);
                                 }
                             }
-                            Event::Mouse(_) => {}
-                            Event::Paste(_) => {}
-                            Event::Resize(w, h) => {
-                                println!("terminal window update to new size {} {}", w, h);
-                                //self.draw((w as u32, h as u32), &res);
-                            }
+                        }else {
+                            break;
                         }
                     } else {
                         break;
@@ -100,30 +105,6 @@ impl TuiApp {
                 std::thread::sleep(Duration::from_secs_f64(st));
             }
         });
-
-        // loop {
-        //     self.theta += 0.1;
-        //     self.draw((dimension.0 as u32, dimension.1 as u32), &res);
-        //     if let Ok(ready) = event::poll(Duration::from_secs(0)) {
-        //         if ready {
-        //             match event::read()? {
-        //                 Event::FocusGained => {}
-        //                 Event::FocusLost => {}
-        //                 Event::Key(k) => {
-        //
-        //                 }
-        //                 Event::Mouse(_) => {}
-        //                 Event::Paste(_) => {}
-        //                 Event::Resize(w, h) => {
-        //                     self.draw((w as u32, h as u32), &res);
-        //                 }
-        //             }
-        //         }
-        //     }
-        //     execute!(self.stdout, terminal::Clear(ClearType::All));
-        // }
-
-
         Ok(())
     }
 

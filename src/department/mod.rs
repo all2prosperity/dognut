@@ -1,13 +1,13 @@
-use ::tui::layout::Direction;
 use gilrs::{Button, GamepadId, Gilrs};
 use log::debug;
 use pixels::Pixels;
 use winit::event::VirtualKeyCode;
 use winit::window::WindowId;
 use winit_input_helper::WinitInputHelper;
+
+use crate::department::common::self_type;
 use crate::department::control::camera_controller::CameraController;
 use crate::wgpu::wgpu_helper::State;
-use crate::department::common::self_type;
 
 pub mod preview;
 pub mod view;
@@ -37,7 +37,7 @@ impl Game {
         Self {
             pixels,
             state,
-            controls: CameraController::new(2.0, 0.2),
+            controls: CameraController::new(2.0, 0.2, false),
             input: WinitInputHelper::new(),
             gilrs: Gilrs::new().unwrap(), // XXX: Don't unwrap.
             gamepad: None,

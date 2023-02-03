@@ -97,7 +97,7 @@ impl<'a> OutputBuffer<'a> {
         }
 
         let mut stdout = self.stdout.unwrap();
-        execute!(stdout, crossterm::terminal::Clear(ClearType::All));
+        //execute!(stdout, crossterm::terminal::Clear(ClearType::All));
         let (mut x, mut y) = (0, 0);
         for (n, [r,g,b,c]) in self.display.iter().array_chunks().enumerate() {
             if *c as u8 == 0 {
