@@ -18,6 +18,7 @@ use dognut::department::preview::vector::Vector3;
 use dognut::department::tui::TuiApp;
 use dognut::department::video::encode::rgbaEncoder;
 use dognut::department::view::camera::Camera;
+use dognut::wgpu::camera as cg_camera;
 use dognut::util::{ARG, Args};
 use dognut::wgpu::wgpu_helper::State;
 use dognut::department::common::self_type;
@@ -56,7 +57,10 @@ fn main() -> Result<(), Error>{
 
         rt.block_on(async {
             let dimension = (256,79);
-            let state = State::new(winit::dpi::PhysicalSize { width: dimension.0 as u32, height: dimension.1 as u32 }).await;
+
+            let projection = cg_camera::Projection::new(WIDTH, HEIGHT, cgmath::Deg(45.), 0.1, 100.0);
+            let camera = cg_camera::Camera::new((0.0, 0., 10.), cgmath::Deg(-90.0), cgmath::Deg(-0.0), projection);
+            let state = State::new(winit::dpi::PhysicalSize { width: dimension.0 as u32, height: dimension.1 as u32 }, camera).await;
             let result = TuiApp::new(raster).run(res, Some(state));
             if let Err(e) = result {
                 error!("tui return an error, {}", e.to_string());
