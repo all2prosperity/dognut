@@ -4,7 +4,7 @@ use std::time::Duration;
 use winit::event::*;
 use winit::dpi::PhysicalPosition;
 use cgmath::{InnerSpace, Rad, Vector3};
-use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
+use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers, ModifierKeyCode};
 use crate::department::view::camera_trait;
 use super::ModelController;
 
@@ -73,7 +73,12 @@ impl CameraController {
             KeyCode::Char('q') | KeyCode::Esc => {
                 return false;
             }
-            KeyCode::Modifier(_) => {}
+            KeyCode::Char('x') => {
+                self.amount_up += amount;
+            }
+            KeyCode::Char('z') => {
+                self.amount_down += amount;
+            }
             _ => {}
         }
 

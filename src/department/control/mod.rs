@@ -49,6 +49,12 @@ impl ModelController {
             KeyCode::Down | KeyCode::Char('s') => {
                 self.amount_backward += amount;
             }
+            KeyCode::Char('x') => {
+                self.amount_up += amount;
+            }
+            KeyCode::Char('z') => {
+                self.amount_down += amount;
+            }
             KeyCode::Modifier(_) => {}
             _ => {}
         }
