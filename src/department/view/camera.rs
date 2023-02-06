@@ -12,6 +12,7 @@ use crate::department::preview::output_buffer::OutputBuffer;
 use crate::department::preview::position::Pos3;
 use crate::department::preview::vector::Vector3;
 use crate::department::common::constant;
+use crate::department::view::camera_trait;
 
 pub struct Camera {
     fov_y: f32,
@@ -23,6 +24,20 @@ pub struct Camera {
     up: Vector3,
     pub model: HomoTransform,
     pub perspective_projection: HMat
+}
+
+impl camera_trait::CameraTrait for Camera {
+    fn update_camera(&mut self, forward_dt: f32, right_dt: f32, scroll_dt: f32, up_dt: f32, hori: f32, ver: f32, sensi: f32) {
+
+    }
+
+    fn to_view_position(&self) -> [f32; 4] {
+        self.eye.to_homogeneous().t().to_slice()[0]
+    }
+
+    fn to_view_proj(&self) -> [[f32; 4]; 4] {
+        (&self.perspective_projection * &self.to_view_matrix()).into()
+    }
 }
 
 impl Camera {

@@ -18,6 +18,8 @@ use crate::department::common::constant::{WIDTH, HEIGHT};
 use crossbeam_channel::Receiver;
 use winit::dpi::PhysicalSize;
 use crate::department::view::camera_trait;
+use crate::department::preview::{position, vector};
+use crate::department::view::camera as dn_camera;
 use crate::department::common::self_type;
 
 
@@ -26,8 +28,9 @@ use super::texture;
 use super::resources;
 
 use model::{DrawModel, Vertex};
-use crate::wgpu::camera::{Camera, OPENGL_TO_WGPU_MATRIX};
-use crate::wgpu::{camera, create_render_pipeline};
+use super::camera as cg_camera;
+use crate::wgpu::camera::OPENGL_TO_WGPU_MATRIX;
+use crate::wgpu::create_render_pipeline;
 use crate::wgpu::instance::{Instance, InstanceRaw};
 use crate::wgpu::light::LightUniform;
 use crate::wgpu::model::DrawLight;
@@ -502,9 +505,20 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
 pub fn run(r: Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) {
     let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
     rt.block_on(async {
-        let projection = camera::Projection::new(WIDTH, HEIGHT, cgmath::Deg(45.), 0.1, 100.0);
-        let camera = camera::Camera::new((0.0, 0., 10.), cgmath::Deg(-90.0), cgmath::Deg(-0.0), projection);
-        let mut state = self_type::StateImp::new(PhysicalSize{height: HEIGHT, width:WIDTH}, camera).await;
+
+        let camera = dn_camera::Camera::new(
+            45.,
+            WIDTH as f32 / HEIGHT as f32,
+            0.1,
+            100.,
+            position::Pos3::from_xyz(0.0, 0., 10.),
+            vector::Vector3::from_xyz(0., 0., 1.),
+            vector::Vector3::from_xyz(0., 1., 0.),
+        );
+        println!("use new camera");
+        // let projection = cg_camera::Projection::new(WIDTH, HEIGHT, cgmath::Deg(45.), 0.1, 100.0);
+        // let camera = cg_camera::Camera::new((0.0, 0., 10.), cgmath::Deg(-90.0), cgmath::Deg(-0.0), projection);
+        let mut state = State::new(PhysicalSize{height: HEIGHT, width:WIDTH}, camera).await;
         loop {
             let buf = state.render();
             ms.net.send(TransferMsg::RenderPc(buf.clone()));

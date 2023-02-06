@@ -18,13 +18,13 @@ use dognut::department::preview::vector::Vector3;
 use dognut::department::tui::TuiApp;
 use dognut::department::video::encode::rgbaEncoder;
 use dognut::department::view::camera::Camera;
+use dognut::department::common::constant;
+use dognut::department::common::constant::{WIDTH, HEIGHT};
 use dognut::wgpu::camera as cg_camera;
 use dognut::util::{ARG, Args};
 use dognut::wgpu::wgpu_helper::State;
 use dognut::department::common::self_type;
 
-const WIDTH: u32 = 640;
-const HEIGHT: u32 = 480;
 
 fn main() -> Result<(), Error>{
     env_logger::init();
@@ -32,7 +32,7 @@ fn main() -> Result<(), Error>{
     let (rgb_tx, rgb_rx) = crossbeam_channel::unbounded::<Vec<u8>>();
     let (net_tx, net_rx) = crossbeam_channel::unbounded::<Vec<u8>>();
 
-    let camera=  Camera::new(45., (WIDTH / HEIGHT) as f32,
+    let camera=  Camera::new(45., (constant::WIDTH / constant::HEIGHT) as f32,
                              -5., -50., Vector3::from_xyz(0., 0., 10.,),
                              Vector3::from_xyz(0., 0., -1.),
                              Vector3::from_xyz(0., -1., 0.));
@@ -57,9 +57,7 @@ fn main() -> Result<(), Error>{
 
         rt.block_on(async {
             let dimension = (256,79);
-
-            let projection = cg_camera::Projection::new(WIDTH, HEIGHT, cgmath::Deg(45.), 0.1, 100.0);
-            let camera = cg_camera::Camera::new((0.0, 0., 10.), cgmath::Deg(-90.0), cgmath::Deg(-0.0), projection);
+            let camera = self_type::camera_instance();
             let state = State::new(winit::dpi::PhysicalSize { width: dimension.0 as u32, height: dimension.1 as u32 }, camera).await;
             let result = TuiApp::new(raster).run(res, Some(state));
             if let Err(e) = result {
@@ -70,7 +68,7 @@ fn main() -> Result<(), Error>{
     }
 
     if arg.render_a_picture {
-        let mut out = OutputBuffer::new(WIDTH, HEIGHT, false);
+        let mut out = OutputBuffer::new(constant::WIDTH, constant::HEIGHT, false);
         raster.render_frame( &res, &mut out);
         out.save_to_image("./img.png");
         return Ok(());
@@ -91,7 +89,7 @@ fn main() -> Result<(), Error>{
     let mut pixels = {
         let window_size = window.inner_size();
         let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
-        Pixels::new(WIDTH, HEIGHT, surface_texture)?
+        Pixels::new(constant::WIDTH, constant::HEIGHT, surface_texture)?
     };
     pixels.set_clear_color(Color::WHITE);
 
@@ -132,7 +130,7 @@ fn main() -> Result<(), Error>{
 }
 
 fn draw(raster:&RasterRunner,res: &TriangleResources , frame: &mut [u8]) {
-    let mut out = OutputBuffer::new(WIDTH, HEIGHT, false);
+    let mut out = OutputBuffer::new(constant::WIDTH, constant::HEIGHT, false);
     raster.render_frame( res, &mut out);
     frame.copy_from_slice(&out.display);
 }

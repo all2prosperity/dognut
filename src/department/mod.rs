@@ -8,6 +8,7 @@ use winit_input_helper::WinitInputHelper;
 use crate::department::common::self_type;
 use crate::department::control::camera_controller::CameraController;
 use crate::wgpu::wgpu_helper::State;
+use crate::department::view::camera as dn_camera;
 
 pub mod preview;
 pub mod view;
