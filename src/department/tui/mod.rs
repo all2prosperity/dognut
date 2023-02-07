@@ -51,6 +51,7 @@ impl TuiApp {
 
     pub fn run(mut self, res: TriangleResources, state: Option<self_type::StateImp>) -> Result<(), Box<dyn Error>> {
         enable_raw_mode()?;
+
         execute!(self.stdout, crossterm::cursor::Hide);
         execute!(self.stdout, EnterAlternateScreen, event::EnableMouseCapture);
         execute!(self.stdout, crossterm::terminal::Clear(ClearType::All));

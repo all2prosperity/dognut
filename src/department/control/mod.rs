@@ -1,5 +1,6 @@
 pub mod camera_controller;
 
+use std::f32::consts::PI;
 use cgmath::{InnerSpace, Rotation3};
 use crossterm::cursor::position;
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind};
@@ -17,6 +18,8 @@ pub struct ModelController {
     amount_backward: f32,
     amount_up: f32,
     amount_down: f32,
+    presentation_mode: bool,
+    theta: f32,
     rotate_horizontal: f32,
     rotate_vertical: f32,
     scroll: f32,
@@ -29,8 +32,11 @@ impl ModelController {
         let p = cgmath::Vector3{x: 0.0, y: 0., z:1.};
         let q = cgmath::Quaternion::from_axis_angle(p.normalize(), cgmath::Deg(0.0));
         Self {position: p,
+            theta: 0.,
             rotation: q,
-            amount_left: 0., amount_right: 0., amount_forward: 0., amount_backward: 0., amount_up: 0., amount_down: 0., rotate_horizontal: 0., rotate_vertical: 0., scroll: 0., speed , tui}
+            presentation_mode: false,
+            amount_left: 0., amount_right: 0., amount_forward: 0., amount_backward: 0., amount_up: 0.,
+            amount_down: 0., rotate_horizontal: 0., rotate_vertical: 0., scroll: 0., speed , tui}
     }
 
     pub fn process_keyboard_tui(&mut self, key: &KeyEvent) -> bool {
@@ -54,6 +60,13 @@ impl ModelController {
             }
             KeyCode::Char('z') => {
                 self.amount_down += amount;
+            }
+            KeyCode::Char('p') => {
+                self.presentation_mode = !self.presentation_mode;
+            }
+            KeyCode::Char('r') => {
+                let p = cgmath::Vector3{x:0.0, y:0.0, z:1.0};
+                self.rotation = cgmath::Quaternion::from_axis_angle(p.normalize(), cgmath::Deg(0.0));
             }
             KeyCode::Modifier(_) => {}
             _ => {}
@@ -80,6 +93,15 @@ impl ModelController {
             }
             VirtualKeyCode::D | VirtualKeyCode::Right => {
                 self.amount_right = amount;
+                true
+            }
+            VirtualKeyCode::P => {
+                self.presentation_mode = !self.presentation_mode;
+                true
+            }
+            VirtualKeyCode::R => {
+                let p = cgmath::Vector3{x:0.0, y:0.0, z:1.0};
+                self.rotation = cgmath::Quaternion::from_axis_angle(p.normalize(), cgmath::Deg(0.0));
                 true
             }
             VirtualKeyCode::Space => {
@@ -109,6 +131,12 @@ impl ModelController {
             self.amount_right =  0.0;
             self.amount_forward = 0.0;
             self.amount_backward = 0.0;
+        }
+
+        if self.presentation_mode {
+            self.theta += PI * dt * 0.2;
+            let rad = cgmath::Rad(self.theta);
+            self.rotation = cgmath::Quaternion::from_angle_y(rad) * cgmath::Quaternion::from_angle_x(rad);
         }
 
         let instances = vec![Instance{position: self.position.clone(), rotation:self.rotation.clone()}];
