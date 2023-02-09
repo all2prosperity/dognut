@@ -1,0 +1,11 @@
+syntax = "proto3";
+package proto.net_packet;
+
+enum PacketKind{
+  VideoPacket = 0;
+}
+
+message NetPacket {
+  PacketKind kind = 1;
+  bytes data = 2;
+}
