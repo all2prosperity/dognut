@@ -57,7 +57,7 @@ async fn listen_from_udp() {
     let mut buf = [0; 1024];
     for i in 0..(constant::PORT_RANGE) {
         let host_str = format!("{}:{}", constant::HOST, constant::UDP_PORT + i);
-        if let Ok(sock) = UdpSocket::bind(ho0.st_str.clone()).await {
+        if let Ok(sock) = UdpSocket::bind(host_str.clone()).await {
             println!("listen from udp at:{:?}", host_str);
             loop {
                 if let Ok((len, addr)) = sock.recv_from(&mut buf).await {
