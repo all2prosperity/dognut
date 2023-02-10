@@ -44,9 +44,6 @@ fn main() -> Result<(), Error>{
     let raster = RasterRunner::new(rgb_tx, camera,
                       Box::new(shader), arg.term);
 
-
-    //let handle = rgbaEncoder::run(rgb_rx, net_tx, (WIDTH, HEIGHT));
-
     println!("obj resources path is {}", &arg.obj_path);
     let res = ObjectLoader::load_triangle_resources(&arg.obj_path);
 

@@ -131,7 +131,7 @@ impl rgbaEncoder {
                         }
                     }
                 },
-                default(Duration::from_millis(500)) => (),
+                default(Duration::from_millis(50)) => (),
             }
             while self.encoder.receive_packet(&mut packet).is_ok() {
                 let mut net_packet = pb::avpacket::VideoPacket::new();
