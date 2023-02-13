@@ -23,7 +23,7 @@ pub struct Camera {
     pub position: Point3<f32>,
     pub(crate) yaw: Rad<f32>,
     pub(crate) pitch: Rad<f32>,
-    proj: Projection,
+    pub proj: Projection,
 }
 
 impl camera_trait::CameraTrait for Camera {
