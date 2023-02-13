@@ -35,7 +35,7 @@ impl rgbaEncoder {
     pub fn run(rgb_rx: crossbeam_channel::Receiver<Vec<u8>>, network_tx: crossbeam_channel::Sender<Vec<u8>>, dimension:(u32, u32)) -> JoinHandle<()>{
         let handle = std::thread::spawn(move || {
             let encoder = unsafe {Self::new(network_tx, rgb_rx, dimension).expect("ffmpeg encoder init failed") };
-            encoder.run_decoding_pipeline();
+            encoder.run_encoding_pipeline();
             return ();
         });
 
@@ -90,7 +90,7 @@ impl rgbaEncoder {
         return Context::wrap(raw_context, None);
     }
 
-    pub fn send_packets(&mut self, rgba: &[u8]) -> Result<(), ffmpeg::Error> {
+    pub fn send_frame(&mut self, rgba: &[u8]) -> Result<(), ffmpeg::Error> {
         let rgb_frame =unsafe{self.unwrap_rgba_to_avframe(rgba)} ;
         let mut yuv = Video::empty();
         self.scale_ctx.run(&rgb_frame, &mut yuv)?;
@@ -116,14 +116,14 @@ impl rgbaEncoder {
         frame
     }
 
-    pub fn run_decoding_pipeline(mut self) {
+    pub fn run_encoding_pipeline(mut self) {
         let mut packet = ffmpeg::Packet::empty();
         loop {
             select! {
                 recv(self.rx) -> data =>  {
                     match data {
                         Ok(data) => {
-                            self.send_packets(&data).expect("must send ok");
+                            self.send_frame(&data).expect("must send ok");
                         }
                         Err(err) => {
                             error!("frame buffer data recv error {:?}", err.to_string());
@@ -131,7 +131,7 @@ impl rgbaEncoder {
                         }
                     }
                 },
-                default(Duration::from_millis(500)) => (),
+                default(Duration::from_millis(50)) => (),
             }
             while self.encoder.receive_packet(&mut packet).is_ok() {
                 let mut net_packet = pb::avpacket::VideoPacket::new();

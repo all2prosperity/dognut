@@ -1,6 +1,7 @@
 use std::error::Error;
 use std::io::{Stdout, stdout, Write};
 use std::time::Duration;
+use crossbeam_channel::Sender;
 use crate::department::common::self_type;
 use crossterm;
 use crossterm::{event, execute, terminal};
@@ -51,6 +52,7 @@ impl TuiApp {
 
     pub fn run(mut self, res: TriangleResources, state: Option<self_type::StateImp>) -> Result<(), Box<dyn Error>> {
         enable_raw_mode()?;
+
         execute!(self.stdout, crossterm::cursor::Hide);
         execute!(self.stdout, EnterAlternateScreen, event::EnableMouseCapture);
         execute!(self.stdout, crossterm::terminal::Clear(ClearType::All));
@@ -121,6 +123,7 @@ impl TuiApp {
             out_buf.stdout = Some(&mut self.stdout);
             let out = gpu.render();
             out_buf.display.copy_from_slice(&out);
+            self.raster.encoder_tx.send(out).unwrap();
             out_buf.queue_to_stdout();
             drop(out_buf);
             self.stdout.flush().unwrap();

@@ -44,9 +44,6 @@ fn main() -> Result<(), Error>{
     let raster = RasterRunner::new(rgb_tx, camera,
                       Box::new(shader), arg.term);
 
-
-    //let handle = rgbaEncoder::run(rgb_rx, net_tx, (WIDTH, HEIGHT));
-
     println!("obj resources path is {}", &arg.obj_path);
     let res = ObjectLoader::load_triangle_resources(&arg.obj_path);
 
@@ -58,11 +55,13 @@ fn main() -> Result<(), Error>{
         rt.block_on(async {
             let dimension = (256,79);
             let camera = self_type::camera_instance();
+            let handle = rgbaEncoder::run(rgb_rx, net_tx, (constant::WIDTH, constant::HEIGHT));
             let state = State::new(winit::dpi::PhysicalSize { width: dimension.0 as u32, height: dimension.1 as u32 }, camera).await;
             let result = TuiApp::new(raster).run(res, Some(state));
             if let Err(e) = result {
                 error!("tui return an error, {}", e.to_string());
             };
+            handle.join().unwrap();
         });
         return Ok(());
     }
