@@ -18,11 +18,12 @@ use ffmpeg_next::software::scaling::Flags;
 use log::{error, info};
 use std::time::Duration;
 use protobuf::Message;
+use crate::department::types::msg::TransferMsg;
 use crate::pb;
 
 pub struct rgbaEncoder {
     rx: crossbeam_channel::Receiver<Vec<u8>>,
-    tx: crossbeam_channel::Sender<Vec<u8>>,
+    tx: crossbeam_channel::Sender<TransferMsg>,
     encoder: video::Encoder,
     scale_ctx: scaling::Context,
     dimension: (u32, u32),
@@ -32,7 +33,7 @@ pub struct rgbaEncoder {
 
 impl rgbaEncoder {
 
-    pub fn run(rgb_rx: crossbeam_channel::Receiver<Vec<u8>>, network_tx: crossbeam_channel::Sender<Vec<u8>>, dimension:(u32, u32)) -> JoinHandle<()>{
+    pub fn run(rgb_rx: crossbeam_channel::Receiver<Vec<u8>>, network_tx: crossbeam_channel::Sender<TransferMsg>, dimension:(u32, u32)) -> JoinHandle<()>{
         let handle = std::thread::spawn(move || {
             let encoder = unsafe {Self::new(network_tx, rgb_rx, dimension).expect("ffmpeg encoder init failed") };
             encoder.run_encoding_pipeline();
@@ -43,7 +44,7 @@ impl rgbaEncoder {
     }
 
 
-    pub unsafe fn new(tx: crossbeam_channel::Sender<Vec<u8>>, rx: crossbeam_channel::Receiver<Vec<u8>>,  dimension: (u32, u32)) -> Result<Self, ffmpeg::Error> {
+    pub unsafe fn new(tx: crossbeam_channel::Sender<TransferMsg>, rx: crossbeam_channel::Receiver<Vec<u8>>,  dimension: (u32, u32)) -> Result<Self, ffmpeg::Error> {
         ffmpeg::init()?;
         let codec = codec::encoder::find(H264).expect("can't find h264 encoder");
 
@@ -142,7 +143,7 @@ impl rgbaEncoder {
                 net_packet.duration = packet.duration();
                 net_packet.flags = 0;
                 let serialized = net_packet.write_to_bytes().unwrap();
-                if self.tx.send(serialized).is_err() {
+                if self.tx.send(TransferMsg::RenderPc(serialized)).is_err() {
                     break;
                 }
             }

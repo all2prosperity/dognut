@@ -24,13 +24,15 @@ use dognut::wgpu::camera as cg_camera;
 use dognut::util::{ARG, Args};
 use dognut::wgpu::wgpu_helper::State;
 use dognut::department::common::self_type;
+use dognut::department::net::router;
+use dognut::department::types::msg::TransferMsg;
 
 
 fn main() -> Result<(), Error>{
     env_logger::init();
     let arg = &ARG;
     let (rgb_tx, rgb_rx) = crossbeam_channel::unbounded::<Vec<u8>>();
-    let (net_tx, net_rx) = crossbeam_channel::unbounded::<Vec<u8>>();
+    let (net_tx, net_rx) = crossbeam_channel::unbounded::<TransferMsg>();
 
     let camera=  Camera::new(45., (constant::WIDTH / constant::HEIGHT) as f32,
                              -5., -50., Vector3::from_xyz(0., 0., 10.,),
@@ -47,6 +49,7 @@ fn main() -> Result<(), Error>{
     println!("obj resources path is {}", &arg.obj_path);
     let res = ObjectLoader::load_triangle_resources(&arg.obj_path);
 
+    std::thread::spawn(move || router::net_run(net_rx, None));
 
     if arg.term {
 

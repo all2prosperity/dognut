@@ -16,6 +16,9 @@ use std::time::Duration;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use lazy_static::lazy_static;
+use prost::bytes;
+use prost::bytes::BufMut;
+use tokio::io::AsyncWriteExt;
 use crate::department::types::multi_sender::MultiSender;
 
 
@@ -34,12 +37,11 @@ async fn listen_from_render(render_recv: Receiver<msg::TransferMsg>) {
 
             match msg {
                 msg::TransferMsg::RenderPc(frame) => {
-                    // let mut buf = Vec::<u8>::new();
-                    // display::Frame {
-                    //     data: frame
-                    // }.encode_length_delimited(&mut buf);
+                    let size = frame.len();
+
                     for sender in CLIENT_SENDERS.lock().await.iter_mut() {
-                        sender.try_write(&frame);
+                        sender.write_u32(size as u32).await.unwrap();
+                        sender.try_write(&frame).unwrap();
                     }
                 },
                 _ => ()
@@ -76,10 +78,8 @@ async fn listen_from_udp() {
     }
 }
 
-pub fn net_run(render_recv: Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) {
+pub fn net_run(render_recv: Receiver<TransferMsg>, ms: Option<MultiSender<TransferMsg>>) {
     let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
-    // let mut rt = tokio::runtime::Runtime::new().unwrap();
-
     rt.block_on(async {
         for i in 0..(constant::PORT_RANGE) {
             let host_str = format!("{}:{}", constant::HOST, constant::PORT + i);
