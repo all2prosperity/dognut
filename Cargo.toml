@@ -39,7 +39,7 @@ pixels = "*"
 winit_input_helper = "0.13"
 profiling = "1.0.7"
 wgpu = "0.*"
-winit = "0.*"
+winit = "0.27.5"
 crossbeam-channel = {version = "0.5.*"} # for thread synchronize
 clap = {version="4.*", features = ["derive"]}
 protobuf = "3.2.0"
@@ -55,7 +55,7 @@ json = "0.12.4"
 cgmath = "0.18"
 
 futures-intrusive = "0.4"
-game-loop = {version = "0.*", features=["winit"]}
+game-loop = {version = "0.10.1", features=["winit"]}
 
 gilrs = "0.*"
 

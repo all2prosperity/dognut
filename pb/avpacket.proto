@@ -12,5 +12,6 @@ message VideoPacket {
   int64 dts = 4;
   int64 duration = 5;
   int32 flags = 6;
+  bool idr_frame = 7;
 }
 

@@ -124,7 +124,7 @@ impl TuiApp {
             let out = gpu.render();
             out_buf.display.copy_from_slice(&out);
             self.raster.encoder_tx.send(out).unwrap();
-            out_buf.queue_to_stdout();
+            //out_buf.queue_to_stdout();
             drop(out_buf);
             self.stdout.flush().unwrap();
             return ;

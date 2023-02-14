@@ -1,6 +1,6 @@
 use std::ffi::c_int;
 use std::thread::JoinHandle;
-use crossbeam_channel::{select};
+use crossbeam_channel::{select, unbounded};
 use ffmpeg_next as ffmpeg;
 
 use ffmpeg::encoder::video;
@@ -17,17 +17,21 @@ use ffmpeg_next::frame::Video;
 use ffmpeg_next::software::scaling::Flags;
 use log::{error, info};
 use std::time::Duration;
+use ffmpeg_next::picture::Type;
 use protobuf::Message;
+use crate::department::types::control::ControlMsg;
 use crate::department::types::msg::TransferMsg;
 use crate::pb;
 
 pub struct rgbaEncoder {
     rx: crossbeam_channel::Receiver<Vec<u8>>,
     tx: crossbeam_channel::Sender<TransferMsg>,
+    message_rx: crossbeam_channel::Receiver<ControlMsg>,
     encoder: video::Encoder,
     scale_ctx: scaling::Context,
     dimension: (u32, u32),
     codec: Codec,
+    next_frame_idr: bool,
 }
 
 
@@ -56,13 +60,17 @@ impl rgbaEncoder {
         let scaler = scaling::Context::get(Pixel::RGBA, dimension.0, dimension.1,
         Pixel::YUV420P, dimension.0, dimension.1, Flags::BILINEAR)?;
 
+        let msg_rx = unbounded();
+
         Ok(Self {
             tx,
             rx,
             encoder,
             dimension,
             scale_ctx: scaler,
-            codec
+            message_rx: msg_rx.1,
+            codec,
+            next_frame_idr: true,
         })
     }
 
@@ -96,6 +104,10 @@ impl rgbaEncoder {
         let mut yuv = Video::empty();
         self.scale_ctx.run(&rgb_frame, &mut yuv)?;
 
+        if self.next_frame_idr {
+            yuv.set_kind(Type::I);
+            self.next_frame_idr = false;
+        }
         self.encoder.send_frame(&yuv)?;
 
         //todo: encoder wait on another thread to recv encoded data and send to network;
@@ -107,8 +119,6 @@ impl rgbaEncoder {
         let raw_frame =  ffi::av_frame_alloc();
         ffi::av_image_fill_arrays((*raw_frame).data.as_mut_ptr(), (*raw_frame).linesize.as_mut_ptr(),rgba.as_ptr(), ffi::AVPixelFormat::AV_PIX_FMT_RGBA,
                                   self.dimension.0 as c_int, self.dimension.1 as c_int, 1);
-        // ffi::av_image_fill_arrays(raw_frame as *mut ffi::AVPicture, rgba.clone().as_ptr(), ffi::AVPixelFormat::AV_PIX_FMT_RGBA,
-        // self.dimension.0 as c_int, self.dimension.1 as c_int);
 
         let mut frame = Video::wrap(raw_frame);
         frame.set_format(Pixel::RGBA);
@@ -132,8 +142,18 @@ impl rgbaEncoder {
                         }
                     }
                 },
+                recv(self.message_rx) -> msg => {
+                    match msg {
+                        GenIDR => {
+                            self.next_frame_idr = true;
+                        }
+                        _ => {
+                        }
+                    }
+                }
                 default(Duration::from_millis(50)) => (),
             }
+
             while self.encoder.receive_packet(&mut packet).is_ok() {
                 let mut net_packet = pb::avpacket::VideoPacket::new();
                 net_packet.data = packet.data().unwrap().to_vec();
@@ -142,6 +162,8 @@ impl rgbaEncoder {
                 net_packet.pts = packet.pts().unwrap_or(0);
                 net_packet.duration = packet.duration();
                 net_packet.flags = 0;
+                net_packet.idr_frame = packet.is_key();
+
                 let serialized = net_packet.write_to_bytes().unwrap();
                 if self.tx.send(TransferMsg::RenderPc(serialized)).is_err() {
                     break;
