@@ -105,10 +105,10 @@ impl rgbaEncoder {
 
     unsafe fn unwrap_rgba_to_avframe(&self, rgba: &[u8]) -> Video {
         let raw_frame =  ffi::av_frame_alloc();
-        ffi::avpicture_fill(raw_frame as *mut ffi::AVPicture, rgba.clone().as_ptr(), ffi::AVPixelFormat::AV_PIX_FMT_RGBA,
-        self.dimension.0 as c_int, self.dimension.1 as c_int);
-
-
+        ffi::av_image_fill_arrays((*raw_frame).data.as_mut_ptr(), (*raw_frame).linesize.as_mut_ptr(),rgba.as_ptr(), ffi::AVPixelFormat::AV_PIX_FMT_RGBA,
+                                  self.dimension.0 as c_int, self.dimension.1 as c_int, 1);
+        // ffi::av_image_fill_arrays(raw_frame as *mut ffi::AVPicture, rgba.clone().as_ptr(), ffi::AVPixelFormat::AV_PIX_FMT_RGBA,
+        // self.dimension.0 as c_int, self.dimension.1 as c_int);
 
         let mut frame = Video::wrap(raw_frame);
         frame.set_format(Pixel::RGBA);
