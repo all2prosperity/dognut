@@ -1,5 +1,6 @@
-use std::io::{Write, stdout};
-use crossterm::{queue, QueueableCommand, cursor, style, execute};
+use std::io::{stdout, Write};
+
+use crossterm::{cursor, execute, queue, QueueableCommand, style};
 use crossterm::cursor::MoveToNextLine;
 use crossterm::style::{Attribute, Color, Stylize};
 use crossterm::terminal::{Clear, ClearType, size};

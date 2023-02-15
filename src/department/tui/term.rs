@@ -1,12 +1,10 @@
-
-
-
 use std::sync::mpsc::Receiver;
 use std::time::Duration;
-use tui::{Frame};
-use tui::backend::Backend;
+
 use tokio;
 use tokio::runtime::Runtime;
+use tui::Frame;
+use tui::backend::Backend;
 
 pub struct TermRenderer
 {

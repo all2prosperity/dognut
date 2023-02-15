@@ -1,13 +1,12 @@
-use dognut::department::net::router;
-use dognut::department::view::window;
-use dognut::department::view::render;
-use dognut::department::types::multi_sender;
-use dognut::wgpu::wgpu_helper;
 use std::thread;
-
 
 use crossbeam_channel::unbounded;
 
+use dognut::department::net::router;
+use dognut::department::types::multi_sender;
+use dognut::department::view::render;
+use dognut::department::view::window;
+use dognut::wgpu::wgpu_helper;
 
 fn main () {
     env_logger::init();
@@ -21,8 +20,6 @@ fn main () {
     let ms_win = multi_sender::MultiSender::new(net_s, wgpu_s, win_s);
     let ms_net = ms_win.clone();
     let ms_wgpu = ms_win.clone();
-
-    thread::spawn(move || router::net_run(net_r, ms_net));
     // thread::spawn(|| render::run(render_pc_s, render_cli_s));
     //thread::spawn(|| wgpu_helper::run(render_pc_s, render_cli_s));
 

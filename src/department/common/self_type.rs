@@ -1,8 +1,9 @@
+use crate::department::preview::vector;
+use crate::department::view::camera as dn_camera;
 use crate::wgpu::camera as cg_camera;
 use crate::wgpu::wgpu_helper;
+
 use super::constant;
-use crate::department::view::camera as dn_camera;
-use crate::department::preview::vector;
 
 pub type StateImp = wgpu_helper::State<cg_camera::Camera>;
 

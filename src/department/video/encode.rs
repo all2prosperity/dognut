@@ -1,24 +1,24 @@
 use std::ffi::c_int;
 use std::thread::JoinHandle;
-use crossbeam_channel::{select, unbounded};
-use ffmpeg_next as ffmpeg;
+use std::time::Duration;
 
-use ffmpeg::encoder::video;
+use crossbeam_channel::{select, unbounded};
 use ffmpeg::codec;
+use ffmpeg::encoder::video;
 use ffmpeg::ffi;
 use ffmpeg::software::scaling;
-use ffmpeg_next::{Codec};
+use ffmpeg_next as ffmpeg;
+use ffmpeg_next::Codec;
 use ffmpeg_next::codec::Context;
-
 use ffmpeg_next::codec::Id::H264;
-
 use ffmpeg_next::format::Pixel;
 use ffmpeg_next::frame::Video;
+use ffmpeg_next::log::Level;
+use ffmpeg_next::picture::Type;
 use ffmpeg_next::software::scaling::Flags;
 use log::{error, info};
-use std::time::Duration;
-use ffmpeg_next::picture::Type;
 use protobuf::Message;
+
 use crate::department::types::control::ControlMsg;
 use crate::department::types::msg::TransferMsg;
 use crate::pb;
@@ -53,6 +53,8 @@ impl rgbaEncoder {
         let codec = codec::encoder::find(H264).expect("can't find h264 encoder");
 
         let context = Self::wrap_context(&codec, dimension);
+
+        ffmpeg::log::set_level(Level::Quiet);
 
         let video = context.encoder().video()?;
         let encoder = video.open_as(codec)?;
@@ -103,11 +105,11 @@ impl rgbaEncoder {
         let rgb_frame =unsafe{self.unwrap_rgba_to_avframe(rgba)} ;
         let mut yuv = Video::empty();
         self.scale_ctx.run(&rgb_frame, &mut yuv)?;
-
         if self.next_frame_idr {
             yuv.set_kind(Type::I);
-            self.next_frame_idr = false;
         }
+
+        // todo: (liutong)  set frame pts
         self.encoder.send_frame(&yuv)?;
 
         //todo: encoder wait on another thread to recv encoded data and send to network;

@@ -1,8 +1,8 @@
 use image::{DynamicImage, GenericImageView};
 use tobj::{Material, Model};
+
 use crate::department::model::triangle::Triangle;
 use crate::department::preview::vector::{Vec2, Vector3};
-
 
 pub struct TriangleIter<'a> {
     pub resources: &'a TriangleResources,

@@ -1,5 +1,6 @@
 use std::ops::{AddAssign, SubAssign};
-use super::matrix::{Matrix, HMat};
+
+use super::matrix::{HMat, Matrix};
 
 pub type Vec2 = Matrix<1, 2>;
 

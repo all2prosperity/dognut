@@ -9,24 +9,23 @@ use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
 
+use dognut::department::common::constant;
+use dognut::department::common::constant::{HEIGHT, WIDTH};
+use dognut::department::common::self_type;
 use dognut::department::model::object_loader::ObjectLoader;
 use dognut::department::model::triangle_resources::TriangleResources;
+use dognut::department::net::router;
 use dognut::department::pipeline::rasterizer::RasterRunner;
 use dognut::department::pipeline::shader::LambertianShader;
 use dognut::department::preview::output_buffer::OutputBuffer;
 use dognut::department::preview::vector::Vector3;
 use dognut::department::tui::TuiApp;
+use dognut::department::types::msg::TransferMsg;
 use dognut::department::video::encode::rgbaEncoder;
 use dognut::department::view::camera::Camera;
-use dognut::department::common::constant;
-use dognut::department::common::constant::{WIDTH, HEIGHT};
-use dognut::wgpu::camera as cg_camera;
 use dognut::util::{ARG, Args};
+use dognut::wgpu::camera as cg_camera;
 use dognut::wgpu::wgpu_helper::State;
-use dognut::department::common::self_type;
-use dognut::department::net::router;
-use dognut::department::types::msg::TransferMsg;
-
 
 fn main() -> Result<(), Error>{
     env_logger::init();
@@ -48,8 +47,6 @@ fn main() -> Result<(), Error>{
 
     println!("obj resources path is {}", &arg.obj_path);
     let res = ObjectLoader::load_triangle_resources(&arg.obj_path);
-
-    std::thread::spawn(move || router::net_run(net_rx, None));
 
     if arg.term {
 

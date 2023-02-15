@@ -1,28 +1,28 @@
+use std::convert::Infallible;
+use std::sync::Arc;
+use std::thread;
+use std::time::Duration;
+
+//use crate::proto::debugger;
+use crossbeam_channel::{Receiver, unbounded};
+use lazy_static::lazy_static;
+use log::{debug, error};
+use protobuf::Message;
+use tokio::io::AsyncWriteExt;
 use tokio::net::{
-    TcpListener,
     tcp::OwnedWriteHalf,
+    TcpListener,
     UdpSocket
 };
-use log::{debug, error};
-use crate::department::common::constant;
-use crate::department::types::msg::TransferMsg;
-use std::convert::Infallible;
-//use crate::proto::debugger;
-use crossbeam_channel::Receiver;
-use crate::department::types::msg;
-
-use tokio::time::sleep;
-use std::time::Duration;
-use std::sync::Arc;
 use tokio::sync::Mutex;
-use lazy_static::lazy_static;
-use prost::bytes;
-use prost::bytes::BufMut;
-use tokio::io::AsyncWriteExt;
+use tokio::time::sleep;
+
+use crate::department::common::constant;
+use crate::department::types::msg;
+use crate::department::types::msg::TransferMsg;
 use crate::department::types::multi_sender::MultiSender;
-
-
-
+use crate::department::video::encode::rgbaEncoder;
+use crate::pb::netpacket::{NetPacket, PacketKind};
 
 lazy_static! {
     static ref CLIENT_SENDERS: Arc<Mutex<Vec<OwnedWriteHalf>>> = Arc::new(Mutex::new(Vec::new()));
@@ -30,6 +30,67 @@ lazy_static! {
 
 static mut BIND_PORT: u32 = 0;
 
+pub struct Router {
+    client_clicked: bool,
+    rgba_rx: Receiver<Vec<u8>>, // for encoder use
+    pkg_tx: crossbeam_channel::Sender<TransferMsg>, // for encoder use
+    pkg_rx: Receiver<TransferMsg>,
+}
+
+impl Router {
+    pub fn new(rgba_rx: Receiver<Vec<u8>>) -> Self {
+        let (pkg_tx, pkg_rx) = unbounded();
+
+        Self { client_clicked: false, rgba_rx, pkg_tx, pkg_rx }
+    }
+
+    pub fn run(mut self) {
+        thread::spawn(move || {
+            let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+            rt.block_on(async {
+                for i in 0..(constant::PORT_RANGE) {
+                    let host_str = format!("{}:{}", constant::HOST, constant::PORT + i);
+                    if let Ok(mut lis) = TcpListener::bind(&host_str).await {
+                        println!("Server listen on {}", host_str);
+                        unsafe {
+                            BIND_PORT = constant::PORT + i;
+                        }
+                        self.ws_accept(&mut lis).await;
+                        break;
+                    }
+                }
+            });
+        });
+    }
+
+    pub fn start_encoding_thread(&self) {
+        rgbaEncoder::run(self.rgba_rx.clone(), self.pkg_tx.clone(), (constant::WIDTH, constant::HEIGHT));
+    }
+
+    pub async fn ws_accept(&mut self, l: &mut TcpListener) -> Result<(), Infallible>{
+        tokio::spawn(listen_from_render(self.pkg_rx.clone()));
+        tokio::spawn(listen_from_udp());
+
+        loop {
+            match l.accept().await {
+                Ok((stream, addr)) => {
+                    //tokio::spawn(trans_websocket(stream, addr.to_string()));
+                    let (_client_recv, client_sender) = stream.into_split();
+                    CLIENT_SENDERS.lock().await.push(client_sender);
+                    if !self.client_clicked {
+                        self.start_encoding_thread();
+                        self.client_clicked = true;
+                    }
+
+                    debug!("accept stream from {}", addr);
+                }
+                Err(e) => {
+                    error!("error  when accept stream {}", e);
+                }
+            }
+        }
+    }
+}
 
 async fn listen_from_render(render_recv: Receiver<msg::TransferMsg>) {
     loop {
@@ -37,23 +98,26 @@ async fn listen_from_render(render_recv: Receiver<msg::TransferMsg>) {
 
             match msg {
                 msg::TransferMsg::RenderPc(frame) => {
-                    let size = frame.len();
+                    let mut net_pkt = NetPacket::new();
+                    net_pkt.data = frame;
+                    net_pkt.kind = protobuf::EnumOrUnknown::from(PacketKind::VideoPacket);
+                    let serialized = net_pkt.write_to_bytes().unwrap();
 
                     for sender in CLIENT_SENDERS.lock().await.iter_mut() {
-                        sender.write_u32(size as u32).await.unwrap();
-                        sender.try_write(&frame).unwrap();
+
+                        sender.write_u32( serialized.len() as u32).await.unwrap();
+                        sender.try_write(serialized.as_slice()).unwrap();
                     }
                 },
                 _ => ()
             }
 
-
-            // for sender in client_senders {
-            // }
         };
         sleep(Duration::from_millis(100)).await
     }
 }
+
+
 
 async fn listen_from_udp() {
     let mut buf = [0; 1024];
@@ -77,43 +141,3 @@ async fn listen_from_udp() {
         }
     }
 }
-
-pub fn net_run(render_recv: Receiver<TransferMsg>, ms: Option<MultiSender<TransferMsg>>) {
-    let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
-    rt.block_on(async {
-        for i in 0..(constant::PORT_RANGE) {
-            let host_str = format!("{}:{}", constant::HOST, constant::PORT + i);
-            if let Ok(mut lis) = TcpListener::bind(&host_str).await {
-                println!("Server listen on {}", host_str);
-                unsafe {
-                    BIND_PORT = constant::PORT + i;
-                }
-                ws_accept(&mut lis, render_recv).await;
-                break;
-            }
-        }
-    });
-
-}
-
-pub async fn ws_accept( l: &mut TcpListener, render_recv: Receiver<msg::TransferMsg>) -> Result<(), Infallible>{
-    tokio::spawn(listen_from_render(render_recv));
-    tokio::spawn(listen_from_udp());
-
-    loop {
-        match l.accept().await {
-            Ok((stream, addr)) => {
-                //tokio::spawn(trans_websocket(stream, addr.to_string()));
-                let (_client_recv, client_sender) = stream.into_split();
-                CLIENT_SENDERS.lock().await.push(client_sender);
-                debug!("accept stream from {}", addr);
-            }
-            Err(e) => {
-                error!("error  when accept stream {}", e);
-            }
-        }
-    }
-}
-
-
-

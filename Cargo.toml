@@ -25,7 +25,7 @@ name = "test_term"
 name = "test_camera_diff"
 
 [dependencies]
-prost = "*"
+#prost = "*"
 tui = "0.*"
 crossterm = "0.*"
 tobj = {version = "3.*", features = ["async"]}

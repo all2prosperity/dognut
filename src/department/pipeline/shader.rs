@@ -1,5 +1,3 @@
-
-
 use crate::department::preview::homo_transformation::HomoTransform;
 use crate::department::preview::matrix::Matrix;
 use crate::department::preview::vector::Vector3;

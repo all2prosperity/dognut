@@ -1,11 +1,14 @@
 use std::f32::consts::FRAC_PI_2;
-use crate::wgpu::camera::Camera;
 use std::time::Duration;
-use winit::event::*;
-use winit::dpi::PhysicalPosition;
+
 use cgmath::{InnerSpace, Rad, Vector3};
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers, ModifierKeyCode};
+use winit::dpi::PhysicalPosition;
+use winit::event::*;
+
 use crate::department::view::camera_trait;
+use crate::wgpu::camera::Camera;
+
 use super::ModelController;
 
 const SAFE_FRAC_PI_2: f32 = FRAC_PI_2 - 0.0001;

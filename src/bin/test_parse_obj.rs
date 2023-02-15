@@ -1,6 +1,5 @@
 use tobj;
 
-
 fn main() {
     // let obj_file = "G:\\shdownload\\FishSoup_Pot\\FishSoup_Pot.obj";
     let obj_file = "G:\\sh3dMod\\FishSoup_Pot.obj";

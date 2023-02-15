@@ -1,10 +1,10 @@
-use dognut::department::view::camera;
-use dognut::department::preview::{position, vector};
-use dognut::wgpu::camera as cg_camera;
-use dognut::department::common::constant;
-use dognut::department::view::camera_trait::CameraTrait;
 use cgmath;
 
+use dognut::department::common::constant;
+use dognut::department::preview::{position, vector};
+use dognut::department::view::camera;
+use dognut::department::view::camera_trait::CameraTrait;
+use dognut::wgpu::camera as cg_camera;
 
 fn main() {
     let dn_camera = camera::Camera::new(

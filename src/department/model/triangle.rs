@@ -1,11 +1,6 @@
-
-
-
-
-
 use crate::department::model::render_object::RenderObject;
 use crate::department::preview::homo_transformation::HomoTransform;
-use crate::department::preview::matrix::{Matrix, HMat};
+use crate::department::preview::matrix::{HMat, Matrix};
 use crate::department::preview::position::Pos3;
 use crate::department::preview::vector::{HVec4, Vec2, Vector3};
 

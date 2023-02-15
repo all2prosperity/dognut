@@ -1,12 +1,14 @@
-pub mod camera_controller;
-
 use std::f32::consts::PI;
+
 use cgmath::{InnerSpace, Rotation3};
 use crossterm::cursor::position;
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind};
 use winit::event::{ElementState, VirtualKeyCode};
+
 use crate::wgpu::camera::Camera;
 use crate::wgpu::instance::Instance;
+
+pub mod camera_controller;
 
 #[derive(Debug)]
 pub struct ModelController {

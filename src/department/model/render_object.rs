@@ -1,5 +1,5 @@
-use crate::department::preview::position::Pos3;
 use crate::department::preview::matrix::Matrix;
+use crate::department::preview::position::Pos3;
 use crate::department::preview::vector::Vec2;
 
 #[derive(Debug, Clone)]

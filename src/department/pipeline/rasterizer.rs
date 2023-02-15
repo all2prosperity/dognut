@@ -1,4 +1,3 @@
-
 use crossbeam_channel::Sender;
 use image::GenericImageView;
 
@@ -9,7 +8,6 @@ use crate::department::preview::homo_transformation::HomoTransform;
 use crate::department::preview::output_buffer::OutputBuffer;
 use crate::department::preview::vector::Vector3;
 use crate::department::view::camera::Camera;
-
 
 pub struct RasterRunner {
     pub encoder_tx: Sender<Vec<u8>>,

@@ -1,6 +1,5 @@
 use winit::event::WindowEvent;
 
-
 #[derive(Clone)]
 pub enum TransferMsg {
     RenderPc(Vec<u8>),

@@ -1,11 +1,10 @@
 use std::path::Path;
 
 use tobj;
+
 use crate::department::model::render_object::RenderObject;
 use crate::department::model::triangle_resources::TriangleResources;
 use crate::department::preview::position::Pos3;
-
-
 
 pub struct ObjectLoader {}
 

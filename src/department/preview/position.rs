@@ -1,7 +1,6 @@
 use crate::department::preview::vector::HVec4;
+
 use super::matrix::Matrix;
-
-
 
 // #[derive(Debug, Clone)]
 // pub struct Pos3 {

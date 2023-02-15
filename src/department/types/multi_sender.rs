@@ -1,6 +1,5 @@
 use crossbeam_channel::Sender;
 
-
 #[derive(Clone)]
 pub struct MultiSender<T: Clone> {
     pub net: Sender<T>,

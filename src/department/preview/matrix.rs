@@ -1,4 +1,5 @@
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Sub};
+
 use dognut_macros::TriangularInverse;
 
 #[derive(Debug, Clone, TriangularInverse)]

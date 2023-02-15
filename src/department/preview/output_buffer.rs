@@ -1,15 +1,18 @@
 use std::io::Stdout;
 use std::path::Path;
+
 use crossterm::{execute, queue, style};
-use crossterm::cursor::{MoveTo};
+use crossterm::cursor::MoveTo;
 use crossterm::style::Color;
-use image;
-use image::{ImageFormat, RgbaImage};
 use crossterm::style::Stylize;
 use crossterm::terminal::ClearType;
+use image;
+use image::{ImageFormat, RgbaImage};
 use log::error;
-use super::position::Pos3;
+
 use super::matrix::Matrix;
+use super::position::Pos3;
+
 pub type Display = image::ImageBuffer<image::Rgba<u8>, Vec<u8>>;
 
 pub struct OutputBuffer<'a> {

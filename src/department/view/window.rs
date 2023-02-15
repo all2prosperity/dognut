@@ -2,6 +2,9 @@
 #![forbid(unsafe_code)]
 
 use std::time::Duration;
+
+use crossbeam_channel::Receiver;
+use game_loop::{game_loop, Time, TimeTrait};
 use log::error;
 use pixels::{Error, Pixels, SurfaceTexture};
 use pixels::wgpu::Color;
@@ -10,20 +13,16 @@ use winit::event::{DeviceEvent, ElementState, Event, KeyboardInput, VirtualKeyCo
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
-use crate::department::common::constant::{WIDTH, HEIGHT};
+
+use crate::department::common::constant::{HEIGHT, WIDTH};
 use crate::department::common::self_type;
-
-
-use crate::department::types::msg::TransferMsg;
-
-use crossbeam_channel::Receiver;
-use game_loop::{game_loop, Time, TimeTrait};
 use crate::department::Game;
-use crate::wgpu::wgpu_helper::State;
+use crate::department::preview::{position, vector};
+use crate::department::types::msg::TransferMsg;
 use crate::department::types::multi_sender::MultiSender;
-use crate::wgpu::camera::{Camera, Projection};
 use crate::department::view::camera as dn_camera;
-use crate::department::preview::{vector, position};
+use crate::wgpu::camera::{Camera, Projection};
+use crate::wgpu::wgpu_helper::State;
 
 pub const FPS: usize = 120;
 pub const TIME_STEP: Duration = Duration::from_nanos(1_000_000_000 / FPS as u64);
@@ -60,14 +59,14 @@ pub async fn run(render_recv: Receiver<TransferMsg>, ms: MultiSender<TransferMsg
     let mut frames: std::collections::VecDeque<Vec<u8>> = std::collections::VecDeque::new();
 
     let game = Game::new(pixels, state, id, false);
-       
+
     game_loop(event_loop, window, game, FPS as u32, 0.1,
-               |g| {
+              |g| {
                   if !g.game.paused {
                       g.game.state.update(std::time::Duration::from_secs_f64(g.last_frame_time()));
                   }
               },
-               |g| {
+              |g| {
                   let out = g.game.state.render();
                   g.game.pixels.get_frame_mut().copy_from_slice(&out);
 
@@ -84,7 +83,7 @@ pub async fn run(render_recv: Receiver<TransferMsg>, ms: MultiSender<TransferMsg
               move |g, event| {
                   match event {
                       Event::NewEvents(_) => {}
-                      Event::WindowEvent { ref event, ..} => {
+                      Event::WindowEvent { ref event, .. } => {
                           match event {
                               WindowEvent::CloseRequested | WindowEvent::KeyboardInput {
                                   input:
@@ -93,19 +92,22 @@ pub async fn run(render_recv: Receiver<TransferMsg>, ms: MultiSender<TransferMsg
                                       virtual_keycode: Some(VirtualKeyCode::Escape),
                                       ..
                                   }, ..
-                              } => { g.exit(); return ;},
+                              } => {
+                                  g.exit();
+                                  return;
+                              }
                               WindowEvent::Resized(physical_size) => {
                                   g.game.state.resize(*physical_size);
                                   g.game.pixels.resize_surface(physical_size.width, physical_size.height);
                               }
-                              WindowEvent::ScaleFactorChanged {new_inner_size, ..} => {
+                              WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
                                   g.game.state.resize(**new_inner_size);
                                   g.game.pixels.resize_surface(new_inner_size.width, new_inner_size.height);
                               }
                               WindowEvent::KeyboardInput { input, .. } => {
                                   g.game.state.camera_controller.process_keyboard(input.virtual_keycode.unwrap(), input.state);
                               }
-                              WindowEvent::ModifiersChanged(ms)=> {
+                              WindowEvent::ModifiersChanged(ms) => {
                                   g.game.state.camera_controller.ctrl_pressed = ms.ctrl();
                               }
                               _ => {}
@@ -119,7 +121,6 @@ pub async fn run(render_recv: Receiver<TransferMsg>, ms: MultiSender<TransferMsg
                       }
                       _ => {}
                   }
-
               },
     );
 
