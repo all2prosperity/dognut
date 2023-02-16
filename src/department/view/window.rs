@@ -31,7 +31,7 @@ pub const TIME_STEP: Duration = Duration::from_nanos(1_000_000_000 / FPS as u64)
 /// Representation of the application state. In this example, a box will bounce around the screen.
 
 
-pub async fn run(render_recv: Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) -> Result<(), Error> {
+pub async fn run(rgba_tx: crossbeam_channel::Sender<Vec<u8>>) -> Result<(), Error> {
     let camera = self_type::camera_instance();
     let mut state = State::new(PhysicalSize { width: WIDTH, height: HEIGHT }, camera).await;
 

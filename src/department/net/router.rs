@@ -32,8 +32,8 @@ static mut BIND_PORT: u32 = 0;
 
 pub struct Router {
     client_clicked: bool,
-    rgba_rx: Receiver<Vec<u8>>, // for encoder use
-    pkg_tx: crossbeam_channel::Sender<TransferMsg>, // for encoder use
+    rgba_rx: Option<Receiver<Vec<u8>>>, // for encoder use
+    pkg_tx: Option<crossbeam_channel::Sender<TransferMsg>>, // for encoder use
     pkg_rx: Receiver<TransferMsg>,
 }
 
@@ -41,7 +41,7 @@ impl Router {
     pub fn new(rgba_rx: Receiver<Vec<u8>>) -> Self {
         let (pkg_tx, pkg_rx) = unbounded();
 
-        Self { client_clicked: false, rgba_rx, pkg_tx, pkg_rx }
+        Self { client_clicked: false, rgba_rx:Some(rgba_rx), pkg_tx: Some(pkg_tx), pkg_rx }
     }
 
     pub fn run(mut self) {
@@ -63,8 +63,8 @@ impl Router {
         });
     }
 
-    pub fn start_encoding_thread(&self) {
-        rgbaEncoder::run(self.rgba_rx.clone(), self.pkg_tx.clone(), (constant::WIDTH, constant::HEIGHT));
+    pub fn start_encoding_thread(&mut self) {
+        rgbaEncoder::run(self.rgba_rx.take().unwrap(), self.pkg_tx.take().unwrap(), (constant::WIDTH, constant::HEIGHT));
     }
 
     pub async fn ws_accept(&mut self, l: &mut TcpListener) -> Result<(), Infallible>{

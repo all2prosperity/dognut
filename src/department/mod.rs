@@ -1,4 +1,5 @@
-use gilrs::{Button, GamepadId, Gilrs};
+use gilrs::GamepadId;
+use gilrs::Gilrs;
 use log::debug;
 use pixels::Pixels;
 use winit::event::VirtualKeyCode;
