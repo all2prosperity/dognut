@@ -3,7 +3,7 @@
 
 use std::time::Duration;
 
-use crossbeam_channel::Receiver;
+use crossbeam_channel::{Receiver, TrySendError};
 use game_loop::{game_loop, Time, TimeTrait};
 use log::error;
 use pixels::{Error, Pixels, SurfaceTexture};
@@ -66,9 +66,11 @@ pub async fn run(rgba_tx: crossbeam_channel::Sender<Vec<u8>>) -> Result<(), Erro
                       g.game.state.update(std::time::Duration::from_secs_f64(g.last_frame_time()));
                   }
               },
-              |g| {
+              move |g| {
                   let out = g.game.state.render();
                   g.game.pixels.get_frame_mut().copy_from_slice(&out);
+                  if let Err(e) = rgba_tx.try_send(out) {
+                  }
 
                   if let Err(err) = g.game.pixels.render() {
                       error!("pixels.render() failed: {err}");

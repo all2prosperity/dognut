@@ -21,7 +21,8 @@ use crate::department::common::constant;
 use crate::department::types::msg;
 use crate::department::types::msg::TransferMsg;
 use crate::department::types::multi_sender::MultiSender;
-use crate::department::video::encode::rgbaEncoder;
+use crate::department::video::decode::RgbaDecoder;
+use crate::department::video::encode::RgbaEncoder;
 use crate::pb::netpacket::{NetPacket, PacketKind};
 
 lazy_static! {
@@ -45,26 +46,29 @@ impl Router {
     }
 
     pub fn run(mut self) {
-        thread::spawn(move || {
-            let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
-            rt.block_on(async {
-                for i in 0..(constant::PORT_RANGE) {
-                    let host_str = format!("{}:{}", constant::HOST, constant::PORT + i);
-                    if let Ok(mut lis) = TcpListener::bind(&host_str).await {
-                        println!("Server listen on {}", host_str);
-                        unsafe {
-                            BIND_PORT = constant::PORT + i;
-                        }
-                        self.ws_accept(&mut lis).await;
-                        break;
-                    }
-                }
-            });
-        });
+        self.start_encoding_thread();
+        // thread::spawn(move || {
+        //     let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+        //     rt.block_on(async {
+        //         for i in 0..(constant::PORT_RANGE) {
+        //             let host_str = format!("{}:{}", constant::HOST, constant::PORT + i);
+        //             if let Ok(mut lis) = TcpListener::bind(&host_str).await {
+        //                 println!("Server listen on {}", host_str);
+        //                 unsafe {
+        //                     BIND_PORT = constant::PORT + i;
+        //                 }
+        //                 self.ws_accept(&mut lis).await;
+        //                 break;
+        //             }
+        //         }
+        //     });
+        // });
     }
 
     pub fn start_encoding_thread(&mut self) {
-        rgbaEncoder::run(self.rgba_rx.take().unwrap(), self.pkg_tx.take().unwrap(), (constant::WIDTH, constant::HEIGHT));
+        RgbaEncoder::run(self.rgba_rx.take().unwrap(), self.pkg_tx.take().unwrap(), (constant::WIDTH, constant::HEIGHT));
+        let fake_channel = crossbeam_channel::unbounded();
+        RgbaDecoder::run(self.pkg_rx.clone(), fake_channel.0, (constant::WIDTH, constant::HEIGHT));
     }
 
     pub async fn ws_accept(&mut self, l: &mut TcpListener) -> Result<(), Infallible>{
@@ -106,7 +110,7 @@ async fn listen_from_render(render_recv: Receiver<msg::TransferMsg>) {
                     for sender in CLIENT_SENDERS.lock().await.iter_mut() {
 
                         sender.write_u32( serialized.len() as u32).await.unwrap();
-                        sender.try_write(serialized.as_slice()).unwrap();
+                        sender.write(serialized.as_slice()).await.unwrap();
                     }
                 },
                 _ => ()

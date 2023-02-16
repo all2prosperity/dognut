@@ -10,6 +10,7 @@ fn main () {
     env_logger::init();
     println!("hello");
     //dognut::department::common::logger::App::trivial_conf();
+    //let (rgb_tx, rgb_rx) = crossbeam_channel::bounded::<Vec<u8>>(500);
     let (rgb_tx, rgb_rx) = crossbeam_channel::unbounded::<Vec<u8>>();
 
     router::Router::new(rgb_rx).run();

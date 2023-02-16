@@ -23,11 +23,12 @@ use crate::department::types::control::ControlMsg;
 use crate::department::types::msg::TransferMsg;
 use crate::pb;
 
-pub struct rgbaEncoder {
+pub struct RgbaEncoder {
     rx: crossbeam_channel::Receiver<Vec<u8>>,
     tx: crossbeam_channel::Sender<TransferMsg>,
     message_rx: crossbeam_channel::Receiver<ControlMsg>,
     encoder: video::Encoder,
+    //encoder: codec::encoder::Encoder,
     scale_ctx: scaling::Context,
     dimension: (u32, u32),
     codec: Codec,
@@ -35,9 +36,11 @@ pub struct rgbaEncoder {
 }
 
 
-impl rgbaEncoder {
+impl RgbaEncoder {
 
     pub fn run(rgb_rx: crossbeam_channel::Receiver<Vec<u8>>, network_tx: crossbeam_channel::Sender<TransferMsg>, dimension:(u32, u32)) -> JoinHandle<()>{
+        ffmpeg::init().unwrap();
+        //ffmpeg::log::set_level(Level::Quiet);
         let handle = std::thread::spawn(move || {
             let encoder = unsafe {Self::new(network_tx, rgb_rx, dimension).expect("ffmpeg encoder init failed") };
             encoder.run_encoding_pipeline();
@@ -49,15 +52,20 @@ impl rgbaEncoder {
 
 
     pub unsafe fn new(tx: crossbeam_channel::Sender<TransferMsg>, rx: crossbeam_channel::Receiver<Vec<u8>>,  dimension: (u32, u32)) -> Result<Self, ffmpeg::Error> {
-        ffmpeg::init()?;
+
+        let mut ictx = ffmpeg::format::input(&String::from("./res/bbb.flv")).unwrap();
+        let input = ictx.streams().best(ffmpeg::media::Type::Video).ok_or(ffmpeg::Error::StreamNotFound).unwrap();
+
+        //let context_encoder = codec::context::Context::from_parameters(input.parameters()).unwrap();
+
+
         let codec = codec::encoder::find(H264).expect("can't find h264 encoder");
-
         let context = Self::wrap_context(&codec, dimension);
-
-        ffmpeg::log::set_level(Level::Quiet);
 
         let video = context.encoder().video()?;
         let encoder = video.open_as(codec)?;
+
+        //let encoder = context_encoder.encoder();
 
         let scaler = scaling::Context::get(Pixel::RGBA, dimension.0, dimension.1,
         Pixel::YUV420P, dimension.0, dimension.1, Flags::BILINEAR)?;
@@ -69,6 +77,7 @@ impl rgbaEncoder {
             rx,
             encoder,
             dimension,
+
             scale_ctx: scaler,
             message_rx: msg_rx.1,
             codec,
@@ -105,8 +114,10 @@ impl rgbaEncoder {
         let rgb_frame =unsafe{self.unwrap_rgba_to_avframe(rgba)} ;
         let mut yuv = Video::empty();
         self.scale_ctx.run(&rgb_frame, &mut yuv)?;
+
         if self.next_frame_idr {
             yuv.set_kind(Type::I);
+            self.next_frame_idr = false;
         }
 
         // todo: (liutong)  set frame pts
@@ -157,16 +168,16 @@ impl rgbaEncoder {
             }
 
             while self.encoder.receive_packet(&mut packet).is_ok() {
-                let mut net_packet = pb::avpacket::VideoPacket::new();
-                net_packet.data = packet.data().unwrap().to_vec();
-                net_packet.data_len = net_packet.data.len() as u32;
-                net_packet.dts = packet.dts().unwrap_or(0);
-                net_packet.pts = packet.pts().unwrap_or(0);
-                net_packet.duration = packet.duration();
-                net_packet.flags = 0;
-                net_packet.idr_frame = packet.is_key();
+                let mut vid_packet = pb::avpacket::VideoPacket::new();
+                vid_packet.data = packet.data().unwrap().to_vec();
+                vid_packet.data_len = vid_packet.data.len() as u32;
+                vid_packet.dts = packet.dts().unwrap_or(0);
+                vid_packet.pts = packet.pts().unwrap_or(0);
+                vid_packet.duration = packet.duration();
+                vid_packet.flags = 0;
+                vid_packet.idr_frame = packet.is_key();
 
-                let serialized = net_packet.write_to_bytes().unwrap();
+                let serialized = vid_packet.write_to_bytes().unwrap();
                 if self.tx.send(TransferMsg::RenderPc(serialized)).is_err() {
                     break;
                 }
