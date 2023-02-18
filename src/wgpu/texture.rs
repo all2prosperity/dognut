@@ -2,7 +2,7 @@ use anyhow::*;
 use image::GenericImageView;
 use std::num::NonZeroU32;
 use pixels::wgpu;
-use crate::department::common::constant::{WIDTH, HEIGHT, IS_NEED_FLIPV};
+use crate::department::common::constant::{IS_NEED_FLIPV};
 
 pub struct Texture {
     pub texture: wgpu::Texture,

@@ -1,5 +1,4 @@
-use crate::department::preview::vector;
-use crate::department::view::camera as dn_camera;
+
 use crate::wgpu::camera as cg_camera;
 use crate::wgpu::wgpu_helper;
 
@@ -20,5 +19,3 @@ pub fn camera_instance() -> cg_camera::Camera {
     let camera = cg_camera::Camera::new((0.0, 0., 10.), cgmath::Deg(-90.0), cgmath::Deg(-0.0), projection);
     camera
 }
-
-

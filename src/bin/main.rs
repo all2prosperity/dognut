@@ -1,10 +1,6 @@
-use std::thread;
-
 use dognut::department::net::router;
-use dognut::department::types::multi_sender;
-use dognut::department::view::render;
 use dognut::department::view::window;
-use dognut::wgpu::wgpu_helper;
+
 
 fn main () {
     env_logger::init();

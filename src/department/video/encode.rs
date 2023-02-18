@@ -40,7 +40,7 @@ impl RgbaEncoder {
 
     pub fn run(rgb_rx: crossbeam_channel::Receiver<Vec<u8>>, network_tx: crossbeam_channel::Sender<TransferMsg>, dimension:(u32, u32)) -> JoinHandle<()>{
         ffmpeg::init().unwrap();
-        //ffmpeg::log::set_level(Level::Quiet);
+        ffmpeg::log::set_level(Level::Trace);
         let handle = std::thread::spawn(move || {
             let encoder = unsafe {Self::new(network_tx, rgb_rx, dimension).expect("ffmpeg encoder init failed") };
             encoder.run_encoding_pipeline();
@@ -56,16 +56,16 @@ impl RgbaEncoder {
         let mut ictx = ffmpeg::format::input(&String::from("./res/bbb.flv")).unwrap();
         let input = ictx.streams().best(ffmpeg::media::Type::Video).ok_or(ffmpeg::Error::StreamNotFound).unwrap();
 
-        //let context_encoder = codec::context::Context::from_parameters(input.parameters()).unwrap();
+        let context_encoder = codec::context::Context::from_parameters(input.parameters()).unwrap();
 
 
         let codec = codec::encoder::find(H264).expect("can't find h264 encoder");
-        let context = Self::wrap_context(&codec, dimension);
+        //let context = Self::wrap_context(&codec, dimension);
 
-        let video = context.encoder().video()?;
-        let encoder = video.open_as(codec)?;
+        //let video = context.encoder().video()?;
+        //let encoder = context.encoder();//video.open_as(codec)?;
 
-        //let encoder = context_encoder.encoder();
+        let encoder = context_encoder.encoder().video().unwrap().open().unwrap();
 
         let scaler = scaling::Context::get(Pixel::RGBA, dimension.0, dimension.1,
         Pixel::YUV420P, dimension.0, dimension.1, Flags::BILINEAR)?;
@@ -102,10 +102,10 @@ impl RgbaEncoder {
         (*raw_context).has_b_frames = 0;
         let mut k = std::ffi::CString::new("preset").unwrap();
         let mut v = std::ffi::CString::new("fast").unwrap();
-        ffi::av_opt_set(raw_context as *mut _, k.as_ptr(), v.as_ptr(), 0);
+        ffi::av_opt_set((*raw_context).priv_data as *mut _, k.as_ptr(), v.as_ptr(), 0);
         k = std::ffi::CString::new("x264-params").unwrap();
         v = std::ffi::CString::new("keyint=60:min-keyint=60:scenecut=0:force-cfr=1").unwrap();
-        ffi::av_opt_set(raw_context as *mut _, k.as_ptr(), v.as_ptr(), 0);
+        ffi::av_opt_set((*raw_context).priv_data as *mut _, k.as_ptr(), v.as_ptr(), 0);
 
         return Context::wrap(raw_context, None);
     }

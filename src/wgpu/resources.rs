@@ -1,6 +1,6 @@
 use std::io::{BufReader, Cursor};
 
-use cfg_if::cfg_if;
+
 use pixels::wgpu;
 use pixels::wgpu::util::DeviceExt;
 

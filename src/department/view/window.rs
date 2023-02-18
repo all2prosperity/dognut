@@ -3,25 +3,19 @@
 
 use std::time::Duration;
 
-use crossbeam_channel::{Receiver, TrySendError};
 use game_loop::{game_loop, Time, TimeTrait};
 use log::error;
 use pixels::{Error, Pixels, SurfaceTexture};
 use pixels::wgpu::Color;
 use winit::dpi::{LogicalSize, PhysicalSize};
-use winit::event::{DeviceEvent, ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
-use winit::event_loop::{ControlFlow, EventLoop};
+use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
+use winit::event_loop::{EventLoop};
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
 
 use crate::department::common::constant::{HEIGHT, WIDTH};
 use crate::department::common::self_type;
 use crate::department::Game;
-use crate::department::preview::{position, vector};
-use crate::department::types::msg::TransferMsg;
-use crate::department::types::multi_sender::MultiSender;
-use crate::department::view::camera as dn_camera;
-use crate::wgpu::camera::{Camera, Projection};
 use crate::wgpu::wgpu_helper::State;
 
 pub const FPS: usize = 120;
@@ -193,4 +187,3 @@ pub async fn run(rgba_tx: crossbeam_channel::Sender<Vec<u8>>) -> Result<(), Erro
     //     }
     // });
 }
-

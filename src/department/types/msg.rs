@@ -1,4 +1,3 @@
-use winit::event::WindowEvent;
 
 #[derive(Clone)]
 pub enum TransferMsg {

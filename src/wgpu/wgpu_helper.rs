@@ -6,12 +6,11 @@ use pixels::wgpu::util::DeviceExt;
 use pixels::wgpu;
 use winit::{
     event::*,
-    event_loop::{ControlFlow, EventLoop},
-    window::Window,
+
 };
 
-use tokio::time::sleep;
-use std::time::{Duration, Instant};
+
+use std::time::{Duration};
 use crate::department::types::msg::TransferMsg;
 use crate::department::types::multi_sender::MultiSender;
 use crate::department::common::constant::{WIDTH, HEIGHT};
@@ -20,7 +19,6 @@ use winit::dpi::PhysicalSize;
 use crate::department::view::camera_trait;
 use crate::department::preview::{position, vector};
 use crate::department::view::camera as dn_camera;
-use crate::department::common::self_type;
 
 
 use super::model;
@@ -28,16 +26,15 @@ use super::texture;
 use super::resources;
 
 use model::{DrawModel, Vertex};
-use super::camera as cg_camera;
-use crate::wgpu::camera::OPENGL_TO_WGPU_MATRIX;
+
 use crate::wgpu::create_render_pipeline;
 use crate::wgpu::instance::{Instance, InstanceRaw};
 use crate::wgpu::light::LightUniform;
-use crate::wgpu::model::DrawLight;
+
 
 use crate::util::{ARG};
 use crate::department::control::camera_controller::CameraController;
-use crate::department::view::camera_trait::CameraTrait;
+
 
 const NUM_INSTANCES_PER_ROW: u32 = 10;
 
@@ -528,4 +525,3 @@ pub fn run(r: Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) {
         }
     });
 }
-

@@ -1,4 +1,3 @@
-use std::env;
 use std::ffi::c_int;
 use std::fs::File;
 use std::io::Write;
@@ -10,18 +9,18 @@ use ffmpeg::decoder::video;
 use ffmpeg::codec;
 use ffmpeg::ffi;
 use ffmpeg::software::scaling;
-use ffmpeg_next::{Codec, Frame, Packet};
+use ffmpeg_next::{Packet};
 use ffmpeg_next::codec::{Context, Parameters};
 
 use ffmpeg_next::codec::Id::H264;
 
-use ffmpeg_next::format::{input, Pixel};
+use ffmpeg_next::format::{Pixel};
 use ffmpeg_next::frame::Video;
 use ffmpeg_next::software::scaling::Flags;
 use log::{error, info};
 use std::time::Duration;
 use ffmpeg_next::log::Level;
-use ffmpeg_next::media::Type;
+
 use protobuf::Message;
 use crate::department::types::msg::TransferMsg;
 use crate::pb;

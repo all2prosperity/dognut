@@ -1,13 +1,13 @@
 use std::f32::consts::FRAC_PI_2;
 use std::time::Duration;
 
-use cgmath::{InnerSpace, Rad, Vector3};
-use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers, ModifierKeyCode};
+
+use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use winit::dpi::PhysicalPosition;
 use winit::event::*;
 
 use crate::department::view::camera_trait;
-use crate::wgpu::camera::Camera;
+
 
 use super::ModelController;
 

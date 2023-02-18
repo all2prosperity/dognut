@@ -2,11 +2,11 @@ use std::error::Error;
 use std::io::{Stdout, stdout, Write};
 use std::time::Duration;
 
-use crossbeam_channel::Sender;
+
 use crossterm;
 use crossterm::{event, execute, terminal};
-use crossterm::event::{Event, KeyCode};
-use crossterm::terminal::{ClearType, disable_raw_mode, enable_raw_mode, EnterAlternateScreen, SetSize, size};
+use crossterm::event::{Event};
+use crossterm::terminal::{ClearType, disable_raw_mode, enable_raw_mode, EnterAlternateScreen};
 use game_loop::{GameLoop, Time, TimeTrait};
 
 use crate::department::common::self_type;
@@ -16,7 +16,7 @@ use crate::department::pipeline::rasterizer::RasterRunner;
 use crate::department::preview::homo_transformation::HomoTransform;
 use crate::department::preview::output_buffer::OutputBuffer;
 use crate::department::preview::vector::Vector3;
-use crate::wgpu::wgpu_helper::State;
+
 
 pub mod term;
 
