@@ -46,29 +46,29 @@ impl Router {
     }
 
     pub fn run(mut self) {
-        self.start_encoding_thread();
-        // thread::spawn(move || {
-        //     let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
-        //     rt.block_on(async {
-        //         for i in 0..(constant::PORT_RANGE) {
-        //             let host_str = format!("{}:{}", constant::HOST, constant::PORT + i);
-        //             if let Ok(mut lis) = TcpListener::bind(&host_str).await {
-        //                 println!("Server listen on {}", host_str);
-        //                 unsafe {
-        //                     BIND_PORT = constant::PORT + i;
-        //                 }
-        //                 self.ws_accept(&mut lis).await;
-        //                 break;
-        //             }
-        //         }
-        //     });
-        // });
+//        self.start_encoding_thread();
+        std::thread::spawn(move || {
+            let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+            rt.block_on(async {
+                for i in 0..(constant::PORT_RANGE) {
+                    let host_str = format!("{}:{}", constant::HOST, constant::PORT + i);
+                    if let Ok(mut lis) = TcpListener::bind(&host_str).await {
+                        println!("Server listen on {}", host_str);
+                        unsafe {
+                            BIND_PORT = constant::PORT + i;
+                        }
+                        self.ws_accept(&mut lis).await;
+                        break;
+                    }
+                }
+            });
+        });
     }
 
     pub fn start_encoding_thread(&mut self) {
         RgbaEncoder::run(self.rgba_rx.take().unwrap(), self.pkg_tx.take().unwrap(), (constant::WIDTH, constant::HEIGHT));
-        let fake_channel = crossbeam_channel::unbounded();
-        RgbaDecoder::run(self.pkg_rx.clone(), fake_channel.0, (constant::WIDTH, constant::HEIGHT));
+        //let fake_channel = crossbeam_channel::unbounded();
+        //RgbaDecoder::run(self.pkg_rx.clone(), fake_channel.0, (constant::WIDTH, constant::HEIGHT));
     }
 
     pub async fn ws_accept(&mut self, l: &mut TcpListener) -> Result<(), Infallible>{

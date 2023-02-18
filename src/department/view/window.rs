@@ -41,6 +41,8 @@ pub async fn run(rgba_tx: crossbeam_channel::Sender<Vec<u8>>) -> Result<(), Erro
             .unwrap()
     };
 
+    window.set_outer_position(winit::dpi::Position::from(winit::dpi::PhysicalPosition{x:100, y: 100}));
+
     let id = window.id();
 
     let mut pixels = {
