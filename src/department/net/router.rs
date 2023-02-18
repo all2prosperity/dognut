@@ -67,8 +67,6 @@ impl Router {
 
     pub fn start_encoding_thread(&mut self) {
         RgbaEncoder::run(self.rgba_rx.take().unwrap(), self.pkg_tx.take().unwrap(), (constant::WIDTH, constant::HEIGHT));
-        //let fake_channel = crossbeam_channel::unbounded();
-        //RgbaDecoder::run(self.pkg_rx.clone(), fake_channel.0, (constant::WIDTH, constant::HEIGHT));
     }
 
     pub async fn ws_accept(&mut self, l: &mut TcpListener) -> Result<(), Infallible>{

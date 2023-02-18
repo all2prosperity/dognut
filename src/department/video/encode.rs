@@ -29,7 +29,6 @@ pub struct RgbaEncoder {
     tx: crossbeam_channel::Sender<TransferMsg>,
     message_rx: crossbeam_channel::Receiver<ControlMsg>,
     encoder: video::Encoder,
-    //encoder: codec::encoder::Encoder,
     scale_ctx: scaling::Context,
     dimension: (u32, u32),
     codec: Codec,
@@ -53,11 +52,7 @@ impl RgbaEncoder {
 
 
     pub unsafe fn new(tx: crossbeam_channel::Sender<TransferMsg>, rx: crossbeam_channel::Receiver<Vec<u8>>,  dimension: (u32, u32)) -> Result<Self, ffmpeg::Error> {
-        //let mut ictx = ffmpeg::format::input(&String::from("./res/bbb.flv")).unwrap();
-        //let input = ictx.streams().best(ffmpeg::media::Type::Video).ok_or(ffmpeg::Error::StreamNotFound).unwrap();
-        //let mut context_encoder = codec::context::Context::from_parameters(input.parameters()).unwrap();
         let codec = codec::encoder::find(H264).expect("can't find h264 encoder");
-        //let mut encoder = context_encoder.encoder().video().unwrap().open_as(codec).unwrap();
         let context = Self::wrap_context(&codec, dimension);
 
         let video = context.encoder().video()?;
@@ -143,29 +138,6 @@ impl RgbaEncoder {
             if let Ok(data) = self.rx.try_recv() {
                 self.send_frame(&data).expect("must send ok");
             }
-            // select! {
-            //     recv(self.rx) -> data =>  {
-            //         match data {
-            //             Ok(data) => {
-            //                 self.send_frame(&data).expect("must send ok");
-            //             }
-            //             Err(err) => {
-            //                 error!("frame buffer data recv error {:?}", err.to_string());
-            //                 break;
-            //             }
-            //         }
-            //     },
-            //     // recv(self.message_rx) -> msg => {
-            //     //     match msg {
-            //     //         GenIDR => {
-            //     //             self.next_frame_idr = true;
-            //     //         }
-            //     //         _ => {
-            //     //         }
-            //     //     }
-            //     // }
-            //     default(Duration::from_millis(5)) => (),
-            // }
 
             while self.encoder.receive_packet(&mut packet).is_ok() {
                 let mut vid_packet = pb::avpacket::VideoPacket::new();
@@ -182,7 +154,6 @@ impl RgbaEncoder {
                     break;
                 }
             }
-
         }
 
         info!("encoder thread quit");
