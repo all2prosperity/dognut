@@ -99,7 +99,6 @@ impl Router {
 async fn listen_from_render(render_recv: Receiver<msg::TransferMsg>) {
     loop {
         if let Ok(msg) = render_recv.try_recv() {
-
             match msg {
                 msg::TransferMsg::RenderPc(frame) => {
                     let mut net_pkt = NetPacket::new();
@@ -117,7 +116,7 @@ async fn listen_from_render(render_recv: Receiver<msg::TransferMsg>) {
             }
 
         };
-        sleep(Duration::from_millis(100)).await
+        sleep(Duration::from_millis(2)).await
     }
 }
 

@@ -18,7 +18,7 @@ use crate::department::common::self_type;
 use crate::department::Game;
 use crate::wgpu::wgpu_helper::State;
 
-pub const FPS: usize = 120;
+pub const FPS: usize = 60;
 pub const TIME_STEP: Duration = Duration::from_nanos(1_000_000_000 / FPS as u64);
 
 
@@ -34,7 +34,7 @@ pub async fn run(rgba_tx: crossbeam_channel::Sender<Vec<u8>>) -> Result<(), Erro
     let window = {
         let size = LogicalSize::new(WIDTH as f64, HEIGHT as f64);
         WindowBuilder::new()
-            .with_title("Hello Pixels")
+            .with_title("Main Window")
             .with_inner_size(size)
             .with_min_inner_size(size)
             .build(&event_loop)
@@ -66,6 +66,7 @@ pub async fn run(rgba_tx: crossbeam_channel::Sender<Vec<u8>>) -> Result<(), Erro
                   let out = g.game.state.render();
                   g.game.pixels.get_frame_mut().copy_from_slice(&out);
                   if let Err(e) = rgba_tx.try_send(out) {
+                      error!("send raw rgba fail: reason {:?}", e);
                   }
 
                   if let Err(err) = g.game.pixels.render() {
