@@ -56,6 +56,8 @@ pub async fn run(rgba_tx: crossbeam_channel::Sender<Vec<u8>>) -> Result<(), Erro
 
     let game = Game::new(pixels, state, id, false);
 
+    let mut index = 0;
+
     game_loop(event_loop, window, game, FPS as u32, 0.1,
               |g| {
                   if !g.game.paused {
@@ -68,6 +70,9 @@ pub async fn run(rgba_tx: crossbeam_channel::Sender<Vec<u8>>) -> Result<(), Erro
                   if let Err(e) = rgba_tx.try_send(out) {
                       error!("send raw rgba fail: reason {:?}", e);
                   }
+
+                  log::info!("send rgba frame to encoder index {}", index);
+                  index += 1;
 
                   if let Err(err) = g.game.pixels.render() {
                       error!("pixels.render() failed: {err}");

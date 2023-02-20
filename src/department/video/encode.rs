@@ -134,12 +134,21 @@ impl RgbaEncoder {
 
     pub fn run_encoding_pipeline(mut self) {
         let mut packet = ffmpeg::Packet::empty();
+        let mut index = 0;
+        let mut time = std::time::Instant::now();
         loop {
             if let Ok(data) = self.rx.try_recv() {
+                info!("current buffered data length is {}", self.rx.len());
                 self.send_frame(&data).expect("must send ok");
+                if index == 0 {
+                    index += 1;
+                    time = std::time::Instant::now();
+                }
             }
 
             while self.encoder.receive_packet(&mut packet).is_ok() {
+                info!("received encoded video and send it to network index {}", index);
+                index += 1;
                 let mut vid_packet = pb::avpacket::VideoPacket::new();
                 vid_packet.data = packet.data().unwrap().to_vec();
                 vid_packet.data_len = vid_packet.data.len() as u32;
