@@ -109,7 +109,11 @@ pub async fn run(rgba_tx: crossbeam_channel::Sender<Vec<u8>>) -> Result<(), Erro
                                   g.game.pixels.resize_surface(new_inner_size.width, new_inner_size.height);
                               }
                               WindowEvent::KeyboardInput { input, .. } => {
-                                  g.game.state.camera_controller.process_keyboard(input.virtual_keycode.unwrap(), input.state);
+                                  let ret = g.game.state.camera_controller.process_keyboard(input.virtual_keycode.unwrap(), input.state);
+                                  if !ret {
+                                      g.exit();
+                                      return;
+                                  }
                               }
                               WindowEvent::ModifiersChanged(ms) => {
                                   g.game.state.camera_controller.ctrl_pressed = ms.ctrl();
