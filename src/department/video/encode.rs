@@ -1,6 +1,6 @@
 use std::ffi::c_int;
 use std::thread::JoinHandle;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use crossbeam_channel::{select, unbounded};
 use ffmpeg::codec;
@@ -33,6 +33,7 @@ pub struct RgbaEncoder {
     dimension: (u32, u32),
     codec: Codec,
     next_frame_idr: bool,
+    instant: Instant,
 }
 
 
@@ -73,6 +74,7 @@ impl RgbaEncoder {
             message_rx: msg_rx.1,
             codec,
             next_frame_idr: true,
+            instant: Instant::now(),
         })
     }
 
@@ -104,13 +106,19 @@ impl RgbaEncoder {
     pub fn send_frame(&mut self, rgba: &[u8]) -> Result<(), ffmpeg::Error> {
         let rgb_frame =unsafe{self.unwrap_rgba_to_avframe(rgba)} ;
         let mut yuv = Video::empty();
-        self.scale_ctx.run(&rgb_frame, &mut yuv)?;
+        if let Err(e) = self.scale_ctx.run(&rgb_frame, &mut yuv) {
+            error!("scale error {:?}", e);
+        }
 
         if self.next_frame_idr {
             yuv.set_kind(Type::I);
             self.next_frame_idr = false;
             println!("next frame is IDR");
         }
+
+        let ts = Instant::now().duration_since(self.instant).as_millis();
+
+        yuv.set_pts(Some((ts * (1 / 60)) as i64));
 
         // todo: (liutong)  set frame pts
         self.encoder.send_frame(&yuv)?;
@@ -135,14 +143,15 @@ impl RgbaEncoder {
     pub fn run_encoding_pipeline(mut self) {
         let mut packet = ffmpeg::Packet::empty();
         let mut index = 0;
-        let mut time = std::time::Instant::now();
+        let mut time = Instant::now();
         loop {
             if let Ok(data) = self.rx.try_recv() {
                 info!("current buffered data length is {}", self.rx.len());
                 self.send_frame(&data).expect("must send ok");
                 if index == 0 {
                     index += 1;
-                    time = std::time::Instant::now();
+                    time = Instant::now();
+                    self.instant = Instant::now();
                 }
             }
 
