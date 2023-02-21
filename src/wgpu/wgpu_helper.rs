@@ -499,7 +499,7 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
     }
 }
 
-pub fn run(r: Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) {
+pub fn run(_r: Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) {
     let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
     rt.block_on(async {
 

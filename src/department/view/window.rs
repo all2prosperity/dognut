@@ -27,10 +27,10 @@ pub const TIME_STEP: Duration = Duration::from_nanos(1_000_000_000 / FPS as u64)
 
 pub async fn run(rgba_tx: crossbeam_channel::Sender<Vec<u8>>) -> Result<(), Error> {
     let camera = self_type::camera_instance();
-    let mut state = State::new(PhysicalSize { width: WIDTH, height: HEIGHT }, camera).await;
+    let state = State::new(PhysicalSize { width: WIDTH, height: HEIGHT }, camera).await;
 
     let event_loop = EventLoop::new();
-    let mut input = WinitInputHelper::new();
+    let _input = WinitInputHelper::new();
     let window = {
         let size = LogicalSize::new(WIDTH as f64, HEIGHT as f64);
         WindowBuilder::new()
@@ -52,7 +52,7 @@ pub async fn run(rgba_tx: crossbeam_channel::Sender<Vec<u8>>) -> Result<(), Erro
     };
     pixels.set_clear_color(Color::WHITE);
 
-    let mut frames: std::collections::VecDeque<Vec<u8>> = std::collections::VecDeque::new();
+    let _frames: std::collections::VecDeque<Vec<u8>> = std::collections::VecDeque::new();
 
     let game = Game::new(pixels, state, id, false);
 

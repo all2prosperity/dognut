@@ -1,8 +1,8 @@
 use std::ffi::c_int;
 use std::thread::JoinHandle;
-use std::time::{Duration, Instant};
+use std::time::{Instant};
 
-use crossbeam_channel::{select, unbounded};
+use crossbeam_channel::{unbounded};
 use ffmpeg::codec;
 use ffmpeg::encoder::video;
 use ffmpeg::ffi;
@@ -18,7 +18,7 @@ use ffmpeg_next::picture::Type;
 use ffmpeg_next::software::scaling::Flags;
 use log::{error, info};
 use protobuf::Message;
-use crate::department::common::constant::WIDTH;
+
 
 use crate::department::types::control::ControlMsg;
 use crate::department::types::msg::TransferMsg;

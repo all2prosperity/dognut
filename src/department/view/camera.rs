@@ -27,7 +27,7 @@ pub struct Camera {
 }
 
 impl camera_trait::CameraTrait for Camera {
-    fn update_camera(&mut self, forward_dt: f32, right_dt: f32, scroll_dt: f32, up_dt: f32, hori: f32, ver: f32, sensi: f32) {
+    fn update_camera(&mut self, _forward_dt: f32, _right_dt: f32, _scroll_dt: f32, _up_dt: f32, _hori: f32, _ver: f32, _sensi: f32) {
 
     }
 

@@ -1,6 +1,6 @@
 use std::ffi::c_int;
-use std::fs::File;
-use std::io::Write;
+
+
 use std::thread::JoinHandle;
 use crossbeam_channel::{select};
 use ffmpeg_next as ffmpeg;
@@ -190,7 +190,7 @@ impl RgbaDecoder {
     }
 }
 
-fn save_file(frame: &Video, index: usize) -> Result<(), std::io::Error> {
+fn save_file(frame: &Video, _index: usize) -> Result<(), std::io::Error> {
     image::save_buffer("image.png", frame.data(0), frame.width(), frame.height(), image::ColorType::Rgba8).unwrap();
     //let mut file = File::create(format!("frame{}.ppm", index))?;
     //file.write_all(format!("P6\n{} {}\n255\n", frame.width(), frame.height()).as_bytes())?;

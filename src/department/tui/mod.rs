@@ -59,7 +59,7 @@ impl TuiApp {
         let dimension = (256,79);
         self.gpu = state;
 
-        let lop = game_loop(self, FPS, 0.1, |g| {
+        let _lop = game_loop(self, FPS, 0.1, |g| {
             // update
             g.game.update(g.last_frame_time());
         }, |g| {

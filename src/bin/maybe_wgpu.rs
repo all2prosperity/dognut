@@ -1,5 +1,5 @@
-use clap::Parser;
-use crossterm::terminal::size;
+
+
 use log::error;
 use pixels::{Error, Pixels, SurfaceTexture};
 use pixels::wgpu::Color;
@@ -14,7 +14,7 @@ use dognut::department::common::constant::{HEIGHT, WIDTH};
 use dognut::department::common::self_type;
 use dognut::department::model::object_loader::ObjectLoader;
 use dognut::department::model::triangle_resources::TriangleResources;
-use dognut::department::net::router;
+
 use dognut::department::pipeline::rasterizer::RasterRunner;
 use dognut::department::pipeline::shader::LambertianShader;
 use dognut::department::preview::output_buffer::OutputBuffer;
@@ -23,15 +23,15 @@ use dognut::department::tui::TuiApp;
 use dognut::department::types::msg::TransferMsg;
 use dognut::department::video::encode::RgbaEncoder;
 use dognut::department::view::camera::Camera;
-use dognut::util::{ARG, Args};
-use dognut::wgpu::camera as cg_camera;
+use dognut::util::{ARG};
+
 use dognut::wgpu::wgpu_helper::State;
 
 fn main() -> Result<(), Error>{
     env_logger::init();
     let arg = &ARG;
     let (rgb_tx, rgb_rx) = crossbeam_channel::unbounded::<Vec<u8>>();
-    let (net_tx, net_rx) = crossbeam_channel::unbounded::<TransferMsg>();
+    let (net_tx, _net_rx) = crossbeam_channel::unbounded::<TransferMsg>();
 
     let camera=  Camera::new(45., (constant::WIDTH / constant::HEIGHT) as f32,
                              -5., -50., Vector3::from_xyz(0., 0., 10.,),
