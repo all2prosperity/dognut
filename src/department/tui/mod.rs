@@ -16,6 +16,7 @@ use crate::department::pipeline::rasterizer::RasterRunner;
 use crate::department::preview::homo_transformation::HomoTransform;
 use crate::department::preview::output_buffer::OutputBuffer;
 use crate::department::preview::vector::Vector3;
+use crate::department::types::msg::TransferMsg;
 
 
 pub mod term;
@@ -122,7 +123,7 @@ impl TuiApp {
             out_buf.stdout = Some(&mut self.stdout);
             let out = gpu.render();
             out_buf.display.copy_from_slice(&out);
-            self.raster.encoder_tx.send(out).unwrap();
+            self.raster.encoder_tx.enc.send(TransferMsg::RenderPc(out)).unwrap();
             //out_buf.queue_to_stdout();
             drop(out_buf);
             self.stdout.flush().unwrap();
@@ -141,7 +142,7 @@ impl TuiApp {
         self.stdout.flush().unwrap();
 
         println!("this frame cost {} milli sec", now.elapsed().as_millis());
-        self.raster.encoder_tx.send(data).unwrap();
+        self.raster.encoder_tx.enc.send(TransferMsg::RenderPc(data)).unwrap();
     }
 }
 

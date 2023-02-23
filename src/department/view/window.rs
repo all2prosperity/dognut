@@ -13,6 +13,8 @@ use winit::event_loop::{EventLoop};
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
 
+use crate::department::types::msg::TransferMsg;
+use crate::department::types::multi_sender::MultiSender;
 use crate::department::common::constant::{HEIGHT, WIDTH};
 use crate::department::common::self_type;
 use crate::department::Game;
@@ -25,7 +27,7 @@ pub const TIME_STEP: Duration = Duration::from_nanos(1_000_000_000 / FPS as u64)
 /// Representation of the application state. In this example, a box will bounce around the screen.
 
 
-pub async fn run(rgba_tx: crossbeam_channel::Sender<Vec<u8>>) -> Result<(), Error> {
+pub async fn run(win_receiver: crossbeam_channel::Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) -> Result<(), Error> {
     let camera = self_type::camera_instance();
     let state = State::new(PhysicalSize { width: WIDTH, height: HEIGHT }, camera).await;
 
@@ -67,7 +69,7 @@ pub async fn run(rgba_tx: crossbeam_channel::Sender<Vec<u8>>) -> Result<(), Erro
               move |g| {
                   let out = g.game.state.render();
                   g.game.pixels.get_frame_mut().copy_from_slice(&out);
-                  if let Err(e) = rgba_tx.try_send(out) {
+                  if let Err(e) = ms.net.try_send(TransferMsg::RenderPc(out)) {
                       error!("send raw rgba fail: reason {:?}", e);
                   }
 

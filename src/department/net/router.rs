@@ -19,7 +19,8 @@ use tokio::time::sleep;
 
 use crate::department::common::constant;
 use crate::department::types::msg;
-use crate::department::types::msg::TransferMsg;
+use crate::department::types::multi_sender::MultiSender;
+use crate::department::types::msg::{TransferMsg, DognutOption};
 
 
 use crate::department::video::encode::RgbaEncoder;
@@ -33,16 +34,13 @@ static mut BIND_PORT: u32 = 0;
 
 pub struct Router {
     client_clicked: bool,
-    rgba_rx: Option<Receiver<Vec<u8>>>, // for encoder use
-    pkg_tx: Option<crossbeam_channel::Sender<TransferMsg>>, // for encoder use
-    pkg_rx: Receiver<TransferMsg>,
+    receiver: Option<Receiver<TransferMsg>>, // for encoder use
+    ms: Option<MultiSender<TransferMsg>>,
 }
 
 impl Router {
-    pub fn new(rgba_rx: Receiver<Vec<u8>>) -> Self {
-        let (pkg_tx, pkg_rx) = unbounded();
-
-        Self { client_clicked: false, rgba_rx:Some(rgba_rx), pkg_tx: Some(pkg_tx), pkg_rx }
+    pub fn new(receiver: Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) -> Self {
+        Self { client_clicked: false, receiver: Some(receiver), ms: Some(ms)}
     }
 
     pub fn run(mut self) {
@@ -66,11 +64,14 @@ impl Router {
     }
 
     pub fn start_encoding_thread(&mut self) {
-        RgbaEncoder::run(self.rgba_rx.take().unwrap(), self.pkg_tx.take().unwrap(), (constant::WIDTH, constant::HEIGHT));
+        // RgbaEncoder::run(self.rgba_rx.take().unwrap(), self.pkg_tx.take().unwrap(), (constant::WIDTH, constant::HEIGHT));
+        if let Some(_ms) = &mut self.ms {
+            _ms.enc.send(TransferMsg::DogOpt(DognutOption::StartEncode));
+        }
     }
 
     pub async fn ws_accept(&mut self, l: &mut TcpListener) -> Result<(), Infallible>{
-        tokio::spawn(listen_from_render(self.pkg_rx.clone()));
+        tokio::spawn(listen_from_render(self.receiver.take().unwrap().clone()));
         tokio::spawn(listen_from_udp());
 
         loop {
@@ -97,6 +98,7 @@ impl Router {
 async fn listen_from_render(render_recv: Receiver<msg::TransferMsg>) {
     loop {
         if let Ok(msg) = render_recv.try_recv() {
+            println!("receive msg");
             match msg {
                 msg::TransferMsg::RenderPc(frame) => {
                     let mut net_pkt = NetPacket::new();
