@@ -1,6 +1,7 @@
 #[derive(Clone, PartialEq)]
 pub enum DognutOption {
     StartEncode = 1,
+    StartRender = 2,
 }
 
 

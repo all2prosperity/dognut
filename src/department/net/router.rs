@@ -63,9 +63,10 @@ impl Router {
         });
     }
 
-    pub fn start_encoding_thread(&mut self) {
+    pub fn start_encoding_and_rendering(&mut self) {
         // RgbaEncoder::run(self.rgba_rx.take().unwrap(), self.pkg_tx.take().unwrap(), (constant::WIDTH, constant::HEIGHT));
         if let Some(_ms) = &mut self.ms {
+            _ms.win.send(TransferMsg::DogOpt(DognutOption::StartRender));
             _ms.enc.send(TransferMsg::DogOpt(DognutOption::StartEncode));
         }
     }
@@ -81,7 +82,7 @@ impl Router {
                     let (_client_recv, client_sender) = stream.into_split();
                     CLIENT_SENDERS.lock().await.push(client_sender);
                     if !self.client_clicked {
-                        self.start_encoding_thread();
+                        self.start_encoding_and_rendering();
                         self.client_clicked = true;
                     }
 
