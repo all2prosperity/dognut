@@ -69,7 +69,7 @@ pub async fn run(win_receiver: crossbeam_channel::Receiver<TransferMsg>, ms: Mul
               move |g| {
                   let out = g.game.state.render();
                   g.game.pixels.get_frame_mut().copy_from_slice(&out);
-                  if let Err(e) = ms.net.try_send(TransferMsg::RenderPc(out)) {
+                  if let Err(e) = ms.enc.try_send(TransferMsg::RenderPc(out)) {
                       error!("send raw rgba fail: reason {:?}", e);
                   }
 

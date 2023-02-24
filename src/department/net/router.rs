@@ -71,7 +71,7 @@ impl Router {
     }
 
     pub async fn ws_accept(&mut self, l: &mut TcpListener) -> Result<(), Infallible>{
-        tokio::spawn(listen_from_render(self.receiver.take().unwrap().clone()));
+        tokio::spawn(listen_from_render(self.receiver.take().unwrap()));
         tokio::spawn(listen_from_udp());
 
         loop {
@@ -98,7 +98,6 @@ impl Router {
 async fn listen_from_render(render_recv: Receiver<msg::TransferMsg>) {
     loop {
         if let Ok(msg) = render_recv.try_recv() {
-            println!("receive msg");
             match msg {
                 msg::TransferMsg::RenderPc(frame) => {
                     let mut net_pkt = NetPacket::new();
