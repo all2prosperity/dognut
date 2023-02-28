@@ -9,7 +9,7 @@ use dognut::department::common::constant;
 fn main () {
     let env = env_logger::Env::default();
     env_logger::Builder::from_env(env).target(env_logger::Target::Stdout).filter(Some("wgpu_core"), LevelFilter::Error).
-        filter_level(LevelFilter::Info).init();
+        filter_level(LevelFilter::Info).format_timestamp_millis().init();
 
     log::info!(target:"wgpu_core", "hello");
 

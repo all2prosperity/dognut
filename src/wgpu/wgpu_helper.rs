@@ -69,6 +69,7 @@ pub struct State<T> where T: camera_trait::CameraTrait {
     queue: wgpu::Queue,
     render_pipeline: wgpu::RenderPipeline,
     obj_model: model::Model,
+    light_model: model::Model,
     camera: T,
     pub camera_controller: CameraController,
     camera_uniform: CameraUniform,
@@ -198,6 +199,13 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
             &texture_bind_group_layout,
         ).await.unwrap();
 
+        let light_model = resources::load_model(
+            "./res/nice_cube/light_ball.obj",
+            &device,
+            &queue,
+            &texture_bind_group_layout,
+        ).await.unwrap();
+
         let depth_texture =
             texture::Texture::create_depth_texture(&device, (size.width, size.height), "depth_texture");
 
@@ -280,6 +288,7 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
             instance_buffer,
             depth_texture,
             size,
+            light_model,
             light_uniform,
             light_buffer,
             light_bind_group,
@@ -431,7 +440,7 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
             render_pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
             use crate::wgpu::model::DrawLight;
             render_pass.set_pipeline(&self.light_render_pipeline);
-            render_pass.draw_light_model(&self.obj_model, &self.camera_bind_group, &self.light_bind_group);
+            render_pass.draw_light_model(&self.light_model, &self.camera_bind_group, &self.light_bind_group);
 
             render_pass.set_pipeline(&self.render_pipeline);
             render_pass.draw_model_instanced(
