@@ -8,9 +8,12 @@ use crate::department::preview::homo_transformation::HomoTransform;
 use crate::department::preview::output_buffer::OutputBuffer;
 use crate::department::preview::vector::Vector3;
 use crate::department::view::camera::Camera;
+use crate::department::types::multi_sender::MultiSender;
+use crate::department::types::msg::TransferMsg;
+
 
 pub struct RasterRunner {
-    pub encoder_tx: Sender<Vec<u8>>,
+    pub encoder_tx: MultiSender<TransferMsg>,
     model_mat: HomoTransform,
     view_mat: HomoTransform,
     proj_mat: HomoTransform,
@@ -21,9 +24,9 @@ pub struct RasterRunner {
 
 
 impl RasterRunner {
-    pub fn new(tx: Sender<Vec<u8>>, camera: Camera, shader: Box<dyn Shader>, tui: bool) -> Self {
+    pub fn new(ms: MultiSender<TransferMsg>, camera: Camera, shader: Box<dyn Shader>, tui: bool) -> Self {
         Self {
-            encoder_tx: tx,
+            encoder_tx: ms,
             model_mat: HomoTransform::identity_matrix(),
             view_mat: camera.to_view_matrix(),
             proj_mat: camera.perspective_projection.clone(),

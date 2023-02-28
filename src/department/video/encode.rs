@@ -21,12 +21,13 @@ use protobuf::Message;
 
 
 use crate::department::types::control::ControlMsg;
-use crate::department::types::msg::TransferMsg;
+use crate::department::types::msg::{TransferMsg, DognutOption};
+use crate::department::types::multi_sender::MultiSender;
 use crate::pb;
 
 pub struct RgbaEncoder {
-    rx: crossbeam_channel::Receiver<Vec<u8>>,
-    tx: crossbeam_channel::Sender<TransferMsg>,
+    rx: crossbeam_channel::Receiver<TransferMsg>,
+    ms: MultiSender<TransferMsg>,
     message_rx: crossbeam_channel::Receiver<ControlMsg>,
     encoder: video::Encoder,
     scale_ctx: scaling::Context,
@@ -39,11 +40,18 @@ pub struct RgbaEncoder {
 
 impl RgbaEncoder {
 
-    pub fn run(rgb_rx: crossbeam_channel::Receiver<Vec<u8>>, network_tx: crossbeam_channel::Sender<TransferMsg>, dimension:(u32, u32)) -> JoinHandle<()>{
+    pub fn run(receiver: crossbeam_channel::Receiver<TransferMsg>, ms: MultiSender<TransferMsg>, dimension:(u32, u32)) -> JoinHandle<()>{
         ffmpeg::init().unwrap();
         ffmpeg::log::set_level(Level::Trace);
         let handle = std::thread::spawn(move || {
-            let encoder = unsafe {Self::new(network_tx, rgb_rx, dimension).expect("ffmpeg encoder init failed") };
+            while true {
+                if let Ok(TransferMsg::DogOpt(code)) = receiver.try_recv() {
+                    if code == DognutOption::StartEncode {
+                        break;
+                    }
+                }
+            }
+            let encoder = unsafe {Self::new(receiver, ms, dimension).expect("ffmpeg encoder init failed") };
             encoder.run_encoding_pipeline();
             return ();
         });
@@ -52,7 +60,7 @@ impl RgbaEncoder {
     }
 
 
-    pub unsafe fn new(tx: crossbeam_channel::Sender<TransferMsg>, rx: crossbeam_channel::Receiver<Vec<u8>>,  dimension: (u32, u32)) -> Result<Self, ffmpeg::Error> {
+    pub unsafe fn new(rx: crossbeam_channel::Receiver<TransferMsg>, ms: MultiSender<TransferMsg>,  dimension: (u32, u32)) -> Result<Self, ffmpeg::Error> {
         let codec = codec::encoder::find(H264).expect("can't find h264 encoder");
         let context = Self::wrap_context(&codec, dimension);
 
@@ -65,7 +73,7 @@ impl RgbaEncoder {
         let msg_rx = unbounded();
 
         Ok(Self {
-            tx,
+            ms,
             rx,
             encoder,
             dimension,
@@ -147,11 +155,13 @@ impl RgbaEncoder {
         loop {
             if let Ok(data) = self.rx.try_recv() {
                 info!("current buffered data length is {}", self.rx.len());
-                self.send_frame(&data).expect("must send ok");
-                if index == 0 {
-                    index += 1;
-                    time = Instant::now();
-                    self.instant = Instant::now();
+                if let TransferMsg::RenderPc(_pic_data) = data {
+                    self.send_frame(&_pic_data).expect("must send ok");
+                    if index == 0 {
+                        index += 1;
+                        time = Instant::now();
+                        self.instant = Instant::now();
+                    }
                 }
             }
 
@@ -168,7 +178,7 @@ impl RgbaEncoder {
                 vid_packet.idr_frame = packet.is_key();
 
                 let serialized = vid_packet.write_to_bytes().unwrap();
-                if self.tx.send(TransferMsg::RenderPc(serialized)).is_err() {
+                if self.ms.net.send(TransferMsg::RenderPc(serialized)).is_err() {
                     break;
                 }
             }

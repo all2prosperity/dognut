@@ -21,6 +21,7 @@ use dognut::department::preview::output_buffer::OutputBuffer;
 use dognut::department::preview::vector::Vector3;
 use dognut::department::tui::TuiApp;
 use dognut::department::types::msg::TransferMsg;
+use dognut::department::types::multi_sender::MultiSender;
 use dognut::department::video::encode::RgbaEncoder;
 use dognut::department::view::camera::Camera;
 use dognut::util::{ARG};
@@ -30,8 +31,11 @@ use dognut::wgpu::wgpu_helper::State;
 fn main() -> Result<(), Error>{
     env_logger::init();
     let arg = &ARG;
-    let (rgb_tx, rgb_rx) = crossbeam_channel::unbounded::<Vec<u8>>();
-    let (net_tx, _net_rx) = crossbeam_channel::unbounded::<TransferMsg>();
+
+    let (net_sender, net_receiver) = crossbeam_channel::unbounded::<TransferMsg>();
+    let (win_sender, win_receiver) = crossbeam_channel::unbounded::<TransferMsg>();
+    let (enc_sender, enc_receiver) = crossbeam_channel::unbounded::<TransferMsg>();
+    let ms = MultiSender::new(net_sender, enc_sender, win_sender);
 
     let camera=  Camera::new(45., (constant::WIDTH / constant::HEIGHT) as f32,
                              -5., -50., Vector3::from_xyz(0., 0., 10.,),
@@ -42,7 +46,7 @@ fn main() -> Result<(), Error>{
                                        0.8, 1.,&camera, arg.term);
 
 
-    let raster = RasterRunner::new(rgb_tx, camera,
+    let raster = RasterRunner::new(ms.clone(), camera,
                       Box::new(shader), arg.term);
 
     println!("obj resources path is {}", &arg.obj_path);
@@ -55,7 +59,7 @@ fn main() -> Result<(), Error>{
         rt.block_on(async {
             let dimension = (256,79);
             let camera = self_type::camera_instance();
-            let handle = RgbaEncoder::run(rgb_rx, net_tx, (constant::WIDTH, constant::HEIGHT));
+            let handle = RgbaEncoder::run(enc_receiver, ms, (constant::WIDTH, constant::HEIGHT));
             let state = State::new(winit::dpi::PhysicalSize { width: dimension.0 as u32, height: dimension.1 as u32 }, camera).await;
             let result = TuiApp::new(raster).run(res, Some(state));
             if let Err(e) = result {
