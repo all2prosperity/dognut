@@ -114,7 +114,7 @@ impl ModelController {
                 self.amount_down = amount;
                 true
             }
-            _ => false,
+            _ => true,
         }
     }
 
