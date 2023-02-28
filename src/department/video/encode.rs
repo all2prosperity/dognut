@@ -44,13 +44,6 @@ impl RgbaEncoder {
         ffmpeg::init().unwrap();
         ffmpeg::log::set_level(Level::Trace);
         let handle = std::thread::spawn(move || {
-            while true {
-                if let Ok(TransferMsg::DogOpt(code)) = receiver.try_recv() {
-                    if code == DognutOption::StartEncode {
-                        break;
-                    }
-                }
-            }
             let encoder = unsafe {Self::new(receiver, ms, dimension).expect("ffmpeg encoder init failed") };
             encoder.run_encoding_pipeline();
             return ();
@@ -149,12 +142,20 @@ impl RgbaEncoder {
     }
 
     pub fn run_encoding_pipeline(mut self) {
+        loop {
+            if let Ok(TransferMsg::DogOpt(code)) = self.rx.recv() {
+                if code == DognutOption::StartEncode {
+                    info!("start encoding");
+                    break;
+                }
+            }
+        }
+
         let mut packet = ffmpeg::Packet::empty();
         let mut index = 0;
         let mut time = Instant::now();
         loop {
             if let Ok(data) = self.rx.try_recv() {
-                info!("current buffered data length is {}", self.rx.len());
                 if let TransferMsg::RenderPc(_pic_data) = data {
                     self.send_frame(&_pic_data).expect("must send ok");
                     if index == 0 {

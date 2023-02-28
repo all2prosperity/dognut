@@ -77,16 +77,18 @@ pub async fn run(win_receiver: crossbeam_channel::Receiver<TransferMsg>, ms: Mul
                 }
             }
 
+
+            let out = g.game.state.render();
+            g.game.pixels.get_frame_mut().copy_from_slice(&out);
             if start_enc_render {
-                let out = g.game.state.render();
-                g.game.pixels.get_frame_mut().copy_from_slice(&out);
                 if let Err(e) = ms.enc.try_send(TransferMsg::RenderPc(out)) {
                     error!("send raw rgba fail: reason {:?}", e);
                 }
+                log::info!("send rgba frame to encoder index {}", index);
+                index += 1;
             }
 
-            log::info!("send rgba frame to encoder index {}", index);
-            index += 1;
+
 
             if let Err(err) = g.game.pixels.render() {
                 error!("pixels.render() failed: {err}");

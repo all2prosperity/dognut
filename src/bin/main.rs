@@ -12,8 +12,7 @@ fn main () {
         filter_level(LevelFilter::Info).init();
 
     log::info!(target:"wgpu_core", "hello");
-    //dognut::department::common::logger::App::trivial_conf();
-    //let (rgb_tx, rgb_rx) = crossbeam_channel::bounded::<Vec<u8>>(500);
+
     let (net_sender, net_receiver) = crossbeam_channel::unbounded::<msg::TransferMsg>();
     let (win_sender, win_receiver) = crossbeam_channel::unbounded::<msg::TransferMsg>();
     let (enc_sender, enc_receiver) = crossbeam_channel::unbounded::<msg::TransferMsg>();

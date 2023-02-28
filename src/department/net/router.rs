@@ -66,8 +66,8 @@ impl Router {
     pub fn start_encoding_and_rendering(&mut self) {
         // RgbaEncoder::run(self.rgba_rx.take().unwrap(), self.pkg_tx.take().unwrap(), (constant::WIDTH, constant::HEIGHT));
         if let Some(_ms) = &mut self.ms {
-            _ms.win.send(TransferMsg::DogOpt(DognutOption::StartRender));
-            _ms.enc.send(TransferMsg::DogOpt(DognutOption::StartEncode));
+            _ms.win.send(TransferMsg::DogOpt(DognutOption::StartRender)).unwrap();
+            _ms.enc.send(TransferMsg::DogOpt(DognutOption::StartEncode)).unwrap();
         }
     }
 
