@@ -54,7 +54,13 @@ impl RgbaEncoder {
 
 
     pub unsafe fn new(rx: crossbeam_channel::Receiver<TransferMsg>, ms: MultiSender<TransferMsg>,  dimension: (u32, u32)) -> Result<Self, ffmpeg::Error> {
-        let codec = codec::encoder::find(H264).expect("can't find h264 encoder");
+        let mut codec = codec::encoder::find(H264).expect("can't find h264 encoder");
+        if cfg!(target_os = "macos") {
+            codec = codec::encoder::find_by_name("h264_videotoolbox").expect("can't find h264_videotoolbox encoder");
+        }else if cfg!(target_os = "windows") {
+            codec = codec::encoder::find_by_name("h264_mf").expect("can't find h264_nvenc encoder");
+        }
+        
         let context = Self::wrap_context(&codec, dimension);
 
         let video = context.encoder().video()?;
