@@ -69,6 +69,10 @@ impl camera_trait::CameraTrait for Camera {
     fn to_view_proj(&self) -> [[f32; 4]; 4] {
         (self.proj.calc_matrix() * self.calc_matrix()).into()
     }
+
+    fn update_projection(&mut self, width: u32, height: u32) {
+        self.proj.resize(width, height);
+    }
 }
 
 impl Camera {

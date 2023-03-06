@@ -15,7 +15,8 @@ use crate::department::types::msg::TransferMsg;
 use crate::department::types::multi_sender::MultiSender;
 use crate::department::common::constant::{WIDTH, HEIGHT};
 use crossbeam_channel::Receiver;
-use winit::dpi::PhysicalSize;
+use log::info;
+use winit::dpi::{LogicalSize, PhysicalSize};
 use crate::department::view::camera_trait;
 use crate::department::preview::{position, vector};
 use crate::department::view::camera as dn_camera;
@@ -65,6 +66,7 @@ impl CameraUniform {
 
 
 pub struct State<T> where T: camera_trait::CameraTrait {
+    tui_size: (u32, u32),
     device: wgpu::Device,
     queue: wgpu::Queue,
     render_pipeline: wgpu::RenderPipeline,
@@ -79,16 +81,17 @@ pub struct State<T> where T: camera_trait::CameraTrait {
     #[allow(dead_code)]
     instance_buffer: wgpu::Buffer,
     depth_texture: texture::Texture,
-    size: PhysicalSize<u32>,
+    size: LogicalSize<u32>,
     light_uniform: LightUniform,
     light_buffer: wgpu::Buffer,
     light_bind_group: wgpu::BindGroup,
     light_render_pipeline: wgpu::RenderPipeline,
     pub mouse_pressed: bool,
+    pub scale_factor: f64,
 }
 
 impl<T> State<T> where T: camera_trait::CameraTrait {
-    pub async fn new(size: PhysicalSize<u32>, camera: T) -> Self {
+    pub async fn new(size: LogicalSize<u32>, camera: T) -> Self {
         // The instance is a handle to our GPU
         // BackendBit::PRIMARY => Vulkan + Metal + DX12 + Browser WebGPU
         log::warn!("WGPU setup");
@@ -275,6 +278,7 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
         };
 
         Self {
+            tui_size: (256, 79),
             device,
             queue,
             render_pipeline,
@@ -294,15 +298,22 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
             light_bind_group,
             light_render_pipeline,
             mouse_pressed: false,
+            scale_factor: 1.0f64,
         }
     }
 
-    pub fn resize(&mut self, new_size: PhysicalSize<u32>) {
-        if new_size.width > 0 && new_size.height > 0 {
-            // self.projection.resize(new_size.width, new_size.height);
-            // self.size = new_size;
-            // self.depth_texture =
-            //     texture::Texture::create_depth_texture(&self.device,(self.size.width, self.size.height), "depth_label");
+    pub fn resize(&mut self, new_size: PhysicalSize<u32>, scale_factor: f64) {
+        let logical_size = new_size.to_logical::<u32>(scale_factor);
+        if logical_size.width % 256 != 0 {
+            return ;
+        }
+        if logical_size.width > 0 && logical_size.height > 0 {
+            
+            info!("window update from {:?} to {:?}", self.size, logical_size);
+            self.camera.update_projection(logical_size.width, logical_size.height);
+            self.size = logical_size;
+            self.depth_texture =
+                texture::Texture::create_depth_texture(&self.device,(self.size.width, self.size.height), "depth_label");
         }
     }
 
@@ -387,69 +398,13 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
     }
 
     pub fn render(&mut self) -> Vec<u8> {
-        //let now = Instant::now();
-        let texture_desc = wgpu::TextureDescriptor {
-            size: wgpu::Extent3d {
-                width: self.size.width,
-                height: self.size.height,
-                depth_or_array_layers: 1,
-            },
-            mip_level_count: 1,
-            sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba8UnormSrgb,
-            usage: wgpu::TextureUsages::COPY_SRC | wgpu::TextureUsages::RENDER_ATTACHMENT,
-            label: None,
-        };
-        let texture = self.device.create_texture(&texture_desc);
-        let view = texture 
-            .create_view(&wgpu::TextureViewDescriptor::default());
-
         let mut encoder = self
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("Render Encoder"),
             });
 
-        {
-            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: Some("Render Pass"),
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &view,
-                    resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color {
-                            r: 0.0,
-                            g: 0.0,
-                            b: 0.0,
-                            a: 1.0,
-                        }),
-                        store: true,
-                    },
-                })],
-                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                    view: &self.depth_texture.view,
-                    depth_ops: Some(wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(1.0),
-                        store: true,
-                    }),
-                    stencil_ops: None,
-                }),
-            });
-
-            render_pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
-            use crate::wgpu::model::DrawLight;
-            render_pass.set_pipeline(&self.light_render_pipeline);
-            render_pass.draw_light_model(&self.light_model, &self.camera_bind_group, &self.light_bind_group);
-
-            render_pass.set_pipeline(&self.render_pipeline);
-            render_pass.draw_model_instanced(
-                &self.obj_model,
-                0..self.instances.len() as u32,
-                &self.camera_bind_group,
-                &self.light_bind_group
-            );
-        }
+        let (texture_desc, texture) = self.encode_a_new_render_texutre(&mut encoder, (self.size.width, self.size.height));
         let u32_size = std::mem::size_of::<u32>() as u32;
 
         let output_buffer_size = (u32_size * self.size.width * self.size.height) as wgpu::BufferAddress;
@@ -506,6 +461,66 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
         output_buffer.unmap();
         ret_buf
     }
+
+    fn encode_a_new_render_texutre(&self, encoder: &mut wgpu::CommandEncoder, w_h: (u32, u32)) -> (wgpu::TextureDescriptor, wgpu::Texture) {
+        let texture_desc = wgpu::TextureDescriptor {
+            size: wgpu::Extent3d {
+                width: w_h.0,
+                height: w_h.1,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Rgba8UnormSrgb,
+            usage: wgpu::TextureUsages::COPY_SRC | wgpu::TextureUsages::RENDER_ATTACHMENT,
+            label: None,
+        };
+        let texture = self.device.create_texture(&texture_desc);
+        let view = texture
+            .create_view(&wgpu::TextureViewDescriptor::default());
+
+        {
+            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("Render Pass"),
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view: &view,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(wgpu::Color {
+                            r: 0.0,
+                            g: 0.0,
+                            b: 0.0,
+                            a: 1.0,
+                        }),
+                        store: true,
+                    },
+                })],
+                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                    view: &self.depth_texture.view,
+                    depth_ops: Some(wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(1.0),
+                        store: true,
+                    }),
+                    stencil_ops: None,
+                }),
+            });
+
+            render_pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
+            use crate::wgpu::model::DrawLight;
+            render_pass.set_pipeline(&self.light_render_pipeline);
+            render_pass.draw_light_model(&self.light_model, &self.camera_bind_group, &self.light_bind_group);
+
+            render_pass.set_pipeline(&self.render_pipeline);
+            render_pass.draw_model_instanced(
+                &self.obj_model,
+                0..self.instances.len() as u32,
+                &self.camera_bind_group,
+                &self.light_bind_group
+            );
+        }
+        (texture_desc, texture)
+    }
 }
 
 pub fn run(_r: Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) {
@@ -524,7 +539,7 @@ pub fn run(_r: Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) {
         println!("use new camera");
         // let projection = cg_camera::Projection::new(WIDTH, HEIGHT, cgmath::Deg(45.), 0.1, 100.0);
         // let camera = cg_camera::Camera::new((0.0, 0., 10.), cgmath::Deg(-90.0), cgmath::Deg(-0.0), projection);
-        let mut state = State::new(PhysicalSize{height: HEIGHT, width:WIDTH}, camera).await;
+        let mut state = State::new(LogicalSize{height: HEIGHT, width:WIDTH}, camera).await;
         loop {
             let buf = state.render();
             ms.net.send(TransferMsg::RenderPc(buf.clone()));

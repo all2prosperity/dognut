@@ -20,6 +20,7 @@ use crate::department::types::msg::TransferMsg;
 
 
 pub mod term;
+mod tui_with_window;
 
 
 pub struct TuiApp {
@@ -34,7 +35,7 @@ static FPS:u32 = 30;
 
 static TIME_STEP: Duration = Duration::from_nanos(1_000_000_000 / FPS as u64);
 
-fn game_loop<G, U, R>(game: G, updates_per_second: u32, max_frame_time: f64, mut update: U, mut render: R) -> GameLoop<G, game_loop::Time, ()>
+pub fn game_loop<G, U, R>(game: G, updates_per_second: u32, max_frame_time: f64, mut update: U, mut render: R) -> GameLoop<G, game_loop::Time, ()>
     where U: FnMut(&mut game_loop::GameLoop<G, game_loop::Time, ()>),
           R: FnMut(&mut game_loop::GameLoop<G, game_loop::Time, ()>),
 {

@@ -4,7 +4,7 @@
 use std::time::Duration;
 
 use game_loop::{game_loop, Time, TimeTrait};
-use log::error;
+use log::{error, info};
 use pixels::{Error, Pixels, SurfaceTexture};
 use pixels::wgpu::Color;
 use winit::dpi::{LogicalSize, PhysicalSize};
@@ -29,7 +29,7 @@ pub const TIME_STEP: Duration = Duration::from_nanos(1_000_000_000 / FPS as u64)
 
 pub async fn run(win_receiver: crossbeam_channel::Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) -> Result<(), Error> {
     let camera = self_type::camera_instance();
-    let state = State::new(PhysicalSize { width: WIDTH, height: HEIGHT }, camera).await;
+    let state = State::new(LogicalSize { width: WIDTH, height: HEIGHT }, camera).await;
 
     let event_loop = EventLoop::new();
     let _input = WinitInputHelper::new();
@@ -46,9 +46,11 @@ pub async fn run(win_receiver: crossbeam_channel::Receiver<TransferMsg>, ms: Mul
     window.set_outer_position(winit::dpi::Position::from(winit::dpi::PhysicalPosition{x:100, y: 100}));
 
     let id = window.id();
+    let scale_factor = window.scale_factor();
 
     let mut pixels = {
         let window_size = window.inner_size();
+        info!("scale factor is {}", scale_factor);
         let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
         Pixels::new(WIDTH, HEIGHT, surface_texture)?
     };
@@ -117,11 +119,11 @@ pub async fn run(win_receiver: crossbeam_channel::Receiver<TransferMsg>, ms: Mul
                             return;
                         }
                         WindowEvent::Resized(physical_size) => {
-                            g.game.state.resize(*physical_size);
+                            g.game.state.resize(*physical_size, scale_factor);
                             g.game.pixels.resize_surface(physical_size.width, physical_size.height);
                         }
                         WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
-                            g.game.state.resize(**new_inner_size);
+                            g.game.state.resize(**new_inner_size, scale_factor);
                             g.game.pixels.resize_surface(new_inner_size.width, new_inner_size.height);
                         }
                         WindowEvent::KeyboardInput { input, .. } => {

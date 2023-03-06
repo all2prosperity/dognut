@@ -4,4 +4,7 @@ pub trait CameraTrait {
     fn to_view_position(&self) -> [f32; 4];
 
     fn to_view_proj(&self) -> [[f32; 4]; 4];
+
+    fn update_projection(&mut self, width: u32, height: u32);
+
 }

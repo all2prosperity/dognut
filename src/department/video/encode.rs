@@ -60,7 +60,7 @@ impl RgbaEncoder {
         }else if cfg!(target_os = "windows") {
             codec = codec::encoder::find_by_name("h264_mf").expect("can't find h264_nvenc encoder");
         }
-        
+
         let context = Self::wrap_context(&codec, dimension);
 
         let video = context.encoder().video()?;
@@ -97,6 +97,7 @@ impl RgbaEncoder {
         (*raw_context).rc_max_rate = 2 * 1000 * 1000;
         (*raw_context).rc_min_rate = (2.5 * 1000. * 1000.) as i64;
         (*raw_context).framerate = ffi::AVRational{num:60, den: 1};
+        (*raw_context).gop_size = 15;
         // disable b frame for realtime streaming
         (*raw_context).max_b_frames = 0;
         (*raw_context).has_b_frames = 0;
@@ -105,7 +106,7 @@ impl RgbaEncoder {
         ffi::av_opt_set((*raw_context).priv_data as *mut _, k.as_ptr(), v.as_ptr(), 0);
         k = std::ffi::CString::new("x264-params").unwrap();
         v = std::ffi::CString::new("keyint=60:min-keyint=60:scenecut=0:force-cfr=1").unwrap();
-        ffi::av_opt_set((*raw_context).priv_data as *mut _, k.as_ptr(), v.as_ptr(), 0);
+        //ffi::av_opt_set((*raw_context).priv_data as *mut _, k.as_ptr(), v.as_ptr(), 0);
 
         return Context::wrap(raw_context, None);
     }
@@ -120,7 +121,7 @@ impl RgbaEncoder {
         if self.next_frame_idr {
             yuv.set_kind(Type::I);
             self.next_frame_idr = false;
-            println!("next frame is IDR");
+            info!("next frame is IDR");
         }
 
         let ts = Instant::now().duration_since(self.instant).as_millis();
@@ -159,14 +160,11 @@ impl RgbaEncoder {
 
         let mut packet = ffmpeg::Packet::empty();
         let mut index = 0;
-        let mut time = Instant::now();
         loop {
             if let Ok(data) = self.rx.try_recv() {
                 if let TransferMsg::RenderPc(_pic_data) = data {
                     self.send_frame(&_pic_data).expect("must send ok");
                     if index == 0 {
-                        index += 1;
-                        time = Instant::now();
                         self.instant = Instant::now();
                     }
                 }

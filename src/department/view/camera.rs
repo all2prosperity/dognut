@@ -38,6 +38,16 @@ impl camera_trait::CameraTrait for Camera {
     fn to_view_proj(&self) -> [[f32; 4]; 4] {
         (&self.perspective_projection * &self.to_view_matrix()).into()
     }
+
+    fn update_projection(&mut self, width: u32, height: u32) {
+        self.ratio = width as f32 / height as f32;
+        self.perspective_projection = if constant::IS_LEFT_HAND {
+            Camera::perspective_projection_mat_left_hand(self.fov_y, self.ratio, self.n, self.z)
+        }
+        else {
+            Camera::perspective_projection_mat_right_hand(self.fov_y, self.ratio, self.n, self.z)
+        };
+    }
 }
 
 impl Camera {
