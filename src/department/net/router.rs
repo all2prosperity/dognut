@@ -45,7 +45,7 @@ impl Router {
 
     pub fn run(mut self) {
 //        self.start_encoding_thread();
-        std::thread::spawn(move || {
+        std::thread::Builder::new().name("dognut_net_router".into()).spawn(move || {
             let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
             rt.block_on(async {
                 for i in 0..(constant::PORT_RANGE) {
@@ -60,7 +60,7 @@ impl Router {
                     }
                 }
             });
-        });
+        }).unwrap();
     }
 
     pub fn start_encoding_and_rendering(&mut self) {
@@ -85,7 +85,6 @@ impl Router {
                         self.start_encoding_and_rendering();
                         self.client_clicked = true;
                     }
-
                     debug!("accept stream from {}", addr);
                 }
                 Err(e) => {

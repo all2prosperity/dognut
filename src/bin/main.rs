@@ -35,7 +35,7 @@ fn main () {
         let tui_ms = ms.clone();
         let raster_ms = ms.clone();
 
-        std::thread::spawn( move || {
+        std::thread::Builder::new().name("tui_renderer_thread".into()).spawn( move || {
             let camera=  Camera::new(45., (WIDTH / HEIGHT) as f32,
                                      -5., -50., Vector3::from_xyz(0., 0., 10.,),
                                      Vector3::from_xyz(0., 0., -1.),
@@ -56,7 +56,7 @@ fn main () {
                     error!("tui return an error, {}", e.to_string());
                 };
             });
-        });
+        }).unwrap();
 
         dognut::department::view::local_window::start(win_receiver, ms);
         return ;

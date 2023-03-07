@@ -91,8 +91,8 @@ impl TuiWinApp {
             }
 
             if should_exit {
-                g.game.ms.win.try_send(TransferMsg::QuitThread).unwrap();
                 g.game.ms.enc.try_send(TransferMsg::QuitThread).unwrap();
+                g.game.ms.win.try_send(TransferMsg::QuitThread).unwrap();
                 g.exit();
             }
             g.game.draw((dimension.0 as u32, dimension.1 as u32));

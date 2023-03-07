@@ -43,11 +43,11 @@ impl RgbaEncoder {
     pub fn run(receiver: crossbeam_channel::Receiver<TransferMsg>, ms: MultiSender<TransferMsg>, dimension:(u32, u32)) -> JoinHandle<()>{
         ffmpeg::init().unwrap();
         ffmpeg::log::set_level(Level::Trace);
-        let handle = std::thread::spawn(move || {
+        let handle = std::thread::Builder::new().name("dognut_encoder_thread".into()).spawn(move || {
             let encoder = unsafe {Self::new(receiver, ms, dimension).expect("ffmpeg encoder init failed") };
             encoder.run_encoding_pipeline();
             return ();
-        });
+        }).unwrap();
 
         return handle;
     }
@@ -149,14 +149,30 @@ impl RgbaEncoder {
     }
 
     pub fn run_encoding_pipeline(mut self) {
-        self.ms.win.send(TransferMsg::DogOpt(DognutOption::EncoderStarted)).expect("must send ok");
+
         loop {
-            if let Ok(TransferMsg::DogOpt(code)) = self.rx.recv() {
-                if code == DognutOption::StartEncode {
-                    info!("start encoding");
-                    break;
+            let msg = self.rx.recv().unwrap();
+            match msg {
+                TransferMsg::RenderedData(_) => {}
+                TransferMsg::DogOpt(code) => {
+                    if code == DognutOption::StartEncode {
+                        self.ms.win.send(TransferMsg::DogOpt(DognutOption::EncoderStarted)).expect("must send ok");
+                        break;
+                    }
                 }
+                TransferMsg::QuitThread => {
+                    info!("encoder thread quit on msg");
+                    return ;
+                }
+                TransferMsg::Test(_) => {}
+                _ => {}
             }
+            // if let Ok(TransferMsg::DogOpt(code)) = self.rx.recv() {
+            //     if code == DognutOption::StartEncode {
+            //         info!("start encoding");
+            //         break;
+            //     }
+            // }
         }
 
         let mut packet = ffmpeg::Packet::empty();

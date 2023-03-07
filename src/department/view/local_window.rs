@@ -1,5 +1,5 @@
 use crossbeam_channel::Receiver;
-use log::info;
+use log::{debug, info};
 use pixels::{Pixels, SurfaceTexture};
 use pixels::wgpu::Color;
 use winit::dpi::LogicalSize;
@@ -61,12 +61,15 @@ impl LocalWindow {
                 }
                 TransferMsg::QuitThread => {
                     *control_flow = winit::event_loop::ControlFlow::Exit;
+                    return ;
                 }
                 _ => {
                     *control_flow = winit::event_loop::ControlFlow::Exit;
                 }
             }
         });
+
+        debug!("LocalWindow::run() end");
     }
 }
 
