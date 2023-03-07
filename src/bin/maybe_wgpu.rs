@@ -60,7 +60,7 @@ fn main() -> Result<(), Error>{
             let dimension = (256,79);
             let camera = self_type::camera_instance();
             let handle = RgbaEncoder::run(enc_receiver, ms, (constant::WIDTH, constant::HEIGHT));
-            let state = State::new(winit::dpi::PhysicalSize { width: dimension.0 as u32, height: dimension.1 as u32 }, camera).await;
+            let state = State::new(winit::dpi::LogicalSize { width: dimension.0 as u32, height: dimension.1 as u32 }, camera).await;
             let result = TuiApp::new(raster).run(res, Some(state));
             if let Err(e) = result {
                 error!("tui return an error, {}", e.to_string());

@@ -81,6 +81,7 @@ pub struct State<T> where T: camera_trait::CameraTrait {
     #[allow(dead_code)]
     instance_buffer: wgpu::Buffer,
     depth_texture: texture::Texture,
+    tui_depth_texture: texture::Texture,
     size: LogicalSize<u32>,
     light_uniform: LightUniform,
     light_buffer: wgpu::Buffer,
@@ -212,6 +213,8 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
         let depth_texture =
             texture::Texture::create_depth_texture(&device, (size.width, size.height), "depth_texture");
 
+        let tui_depth_texture = texture::Texture::create_depth_texture(&device, (256, 79), "tui_depth_texture");
+
         let light_uniform = LightUniform::default();
 
         let light_buffer = device.create_buffer_init(
@@ -291,6 +294,7 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
             instances,
             instance_buffer,
             depth_texture,
+            tui_depth_texture,
             size,
             light_model,
             light_uniform,
@@ -397,26 +401,17 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
 
     }
 
-    pub fn render(&mut self) -> Vec<u8> {
+    // the first return Vec is for gui, the second is for tui
+    pub fn render(&mut self, render_tui: bool) -> (Vec<u8>, Option<Vec<u8>>) {
         let mut encoder = self
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("Render Encoder"),
             });
 
-        let (texture_desc, texture) = self.encode_a_new_render_texutre(&mut encoder, (self.size.width, self.size.height));
+        let (texture_desc, texture) = self.encode_a_new_render_texutre(&mut encoder, (self.size.width, self.size.height), &self.depth_texture);
         let u32_size = std::mem::size_of::<u32>() as u32;
-
-        let output_buffer_size = (u32_size * self.size.width * self.size.height) as wgpu::BufferAddress;
-        let output_buffer_desc = wgpu::BufferDescriptor {
-            size: output_buffer_size,
-            usage: wgpu::BufferUsages::COPY_DST
-                // this tells wpgu that we want to read this buffer from the cpu
-                | wgpu::BufferUsages::MAP_READ,
-            label: None,
-            mapped_at_creation: false,
-        };
-        let output_buffer = self.device.create_buffer(&output_buffer_desc);
+        let output_buffer = self.create_output_buffer((self.size.width, self.size.height),u32_size);
 
         encoder.copy_texture_to_buffer(
             wgpu::ImageCopyTexture {
@@ -436,33 +431,81 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
             texture_desc.size,
         );
 
+        let tui_output_buffer = self.create_output_buffer(self.tui_size, u32_size);
+        if render_tui {
+            let (tui_desc, tui_texture) = self.encode_a_new_render_texutre(&mut encoder, (self.tui_size.0, self.tui_size.1), &self.tui_depth_texture);
+
+
+            encoder.copy_texture_to_buffer(
+                wgpu::ImageCopyTexture {
+                    aspect: wgpu::TextureAspect::All,
+                    texture: &tui_texture,
+                    mip_level: 0,
+                    origin: wgpu::Origin3d::ZERO,
+                },
+                wgpu::ImageCopyBuffer {
+                    buffer: &tui_output_buffer,
+                    layout: wgpu::ImageDataLayout {
+                        offset: 0,
+                        bytes_per_row: NonZeroU32::new(u32_size * self.tui_size.0),
+                        rows_per_image: NonZeroU32::new(self.tui_size.1),
+                    },
+                },
+                tui_desc.size,
+            );
+        }
+
         self.queue.submit(iter::once(encoder.finish()));
         let mut ret_buf = Vec::new();
+        let mut tui_buf = None;
         {
+            let c = std::time::Instant::now();
             let buffer_slice = output_buffer.slice(..);
-
             // NOTE: We have to create the mapping THEN device.poll() before await
             // the future. Otherwise the application will freeze.
             let (tx, rx) = futures_intrusive::channel::shared::oneshot_channel();
             buffer_slice.map_async(wgpu::MapMode::Read, move |result| {
                 tx.send(result).unwrap();
             });
+
+            let mut tui_slice = None;
+
+            if render_tui {
+                tui_slice = Some(tui_output_buffer.slice(..));
+                // tui_slice will be mapped with buffer_slice, so we don't need to send a signal.
+                tui_slice.unwrap().map_async(wgpu::MapMode::Read, move |result| {
+                });
+            }
             self.device.poll(wgpu::Maintain::Wait);
             pollster::block_on(rx.receive());
 
             let data = buffer_slice.get_mapped_range();
-            // println!("data :{:?}", data.len());
-            // use image::{ImageBuffer, Rgba};
-            // let buffer =
-            //     ImageBuffer::<Rgba<u8>, _>::from_raw(WIDTH, HEIGHT, data).unwrap();
-            // buffer.save("image.png").unwrap();
             ret_buf = data.iter().map(|x| *x).collect();
+            if render_tui {
+                let data = tui_slice.unwrap().get_mapped_range();
+                tui_buf = Some(data.iter().map(|x| *x).collect());
+                tui_output_buffer.unmap();
+            }
         }
         output_buffer.unmap();
-        ret_buf
+        (ret_buf, tui_buf)
     }
 
-    fn encode_a_new_render_texutre(&self, encoder: &mut wgpu::CommandEncoder, w_h: (u32, u32)) -> (wgpu::TextureDescriptor, wgpu::Texture) {
+    fn create_output_buffer(&self, size: (u32, u32), u32_size: u32) -> wgpu::Buffer {
+        let output_buffer_size = (u32_size * size.0 * size.1) as wgpu::BufferAddress;
+        let output_buffer_desc = wgpu::BufferDescriptor {
+            size: output_buffer_size,
+            usage: wgpu::BufferUsages::COPY_DST
+                // this tells wpgu that we want to read this buffer from the cpu
+                | wgpu::BufferUsages::MAP_READ,
+            label: None,
+            mapped_at_creation: false,
+        };
+        let output_buffer = self.device.create_buffer(&output_buffer_desc);
+        output_buffer
+    }
+
+    fn encode_a_new_render_texutre(&self, encoder: &mut wgpu::CommandEncoder, w_h: (u32, u32), depth_texture: &texture::Texture) -> (wgpu::TextureDescriptor, wgpu::Texture) {
         let texture_desc = wgpu::TextureDescriptor {
             size: wgpu::Extent3d {
                 width: w_h.0,
@@ -497,7 +540,7 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
                     },
                 })],
                 depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                    view: &self.depth_texture.view,
+                    view: &depth_texture.view,
                     depth_ops: Some(wgpu::Operations {
                         load: wgpu::LoadOp::Clear(1.0),
                         store: true,
@@ -541,7 +584,7 @@ pub fn run(_r: Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) {
         // let camera = cg_camera::Camera::new((0.0, 0., 10.), cgmath::Deg(-90.0), cgmath::Deg(-0.0), projection);
         let mut state = State::new(LogicalSize{height: HEIGHT, width:WIDTH}, camera).await;
         loop {
-            let buf = state.render();
+            let buf = state.render(false).0;
             ms.net.send(TransferMsg::RenderPc(buf.clone()));
             ms.win.send(TransferMsg::RenderPc(buf));
             // println!("render once");

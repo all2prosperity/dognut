@@ -80,10 +80,10 @@ pub async fn run(win_receiver: crossbeam_channel::Receiver<TransferMsg>, ms: Mul
             }
 
 
-            let out = g.game.state.render();
-            g.game.pixels.get_frame_mut().copy_from_slice(&out);
+            let out = g.game.state.render(false);
+            g.game.pixels.get_frame_mut().copy_from_slice(&out.0.as_slice());
             if start_enc_render {
-                if let Err(e) = ms.enc.try_send(TransferMsg::RenderPc(out)) {
+                if let Err(e) = ms.enc.try_send(TransferMsg::RenderPc(out.0)) {
                     error!("send raw rgba fail: reason {:?}", e);
                 }
                 log::info!("send rgba frame to encoder index {}", index);
@@ -122,8 +122,8 @@ pub async fn run(win_receiver: crossbeam_channel::Receiver<TransferMsg>, ms: Mul
                             g.game.state.resize(*physical_size, scale_factor);
                             g.game.pixels.resize_surface(physical_size.width, physical_size.height);
                         }
-                        WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
-                            g.game.state.resize(**new_inner_size, scale_factor);
+                        WindowEvent::ScaleFactorChanged {scale_factor, new_inner_size } => {
+                            g.game.state.resize(**new_inner_size, *scale_factor);
                             g.game.pixels.resize_surface(new_inner_size.width, new_inner_size.height);
                         }
                         WindowEvent::KeyboardInput { input, .. } => {
@@ -140,7 +140,7 @@ pub async fn run(win_receiver: crossbeam_channel::Receiver<TransferMsg>, ms: Mul
                     }
                 }
                 Event::DeviceEvent { ref event, .. } => {
-                    g.game.state.input(event);
+                    //g.game.state.input(event);
                 }
                 Event::RedrawRequested(_) => {
                     //g.game.pixels.window_pos_to_pixel()
