@@ -158,7 +158,7 @@ impl RgbaDecoder {
                     match data {
                         Ok(data) => {
                             match data {
-                                TransferMsg::RenderPc(inner_data) => {
+                                TransferMsg::RenderedData(inner_data) => {
                                     // if data.is_empty() {
                                     //     continue;
                                     // }

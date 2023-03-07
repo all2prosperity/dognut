@@ -55,9 +55,6 @@ pub async fn run(win_receiver: crossbeam_channel::Receiver<TransferMsg>, ms: Mul
         Pixels::new(WIDTH, HEIGHT, surface_texture)?
     };
     pixels.set_clear_color(Color::WHITE);
-
-    let _frames: std::collections::VecDeque<Vec<u8>> = std::collections::VecDeque::new();
-
     let game = Game::new(pixels, state, id, false);
 
     let mut start_enc_render = false;
@@ -73,7 +70,7 @@ pub async fn run(win_receiver: crossbeam_channel::Receiver<TransferMsg>, ms: Mul
         move |g| {
             if let Ok(msg) = win_receiver.try_recv() {
                 if let TransferMsg::DogOpt(_code) = msg {
-                    if _code == DognutOption::StartRender {
+                    if _code == DognutOption::EncoderStarted {
                         start_enc_render = true;
                     }
                 }
@@ -83,7 +80,7 @@ pub async fn run(win_receiver: crossbeam_channel::Receiver<TransferMsg>, ms: Mul
             let out = g.game.state.render(false);
             g.game.pixels.get_frame_mut().copy_from_slice(&out.0.as_slice());
             if start_enc_render {
-                if let Err(e) = ms.enc.try_send(TransferMsg::RenderPc(out.0)) {
+                if let Err(e) = ms.enc.try_send(TransferMsg::RenderedData(out.0)) {
                     error!("send raw rgba fail: reason {:?}", e);
                 }
                 log::info!("send rgba frame to encoder index {}", index);

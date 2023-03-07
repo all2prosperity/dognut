@@ -87,7 +87,7 @@ pub fn run(render_pc_s: Sender<TransferMsg>, render_cli_s: Sender<TransferMsg>) 
     loop {
         render.update();
         let buf = render.draw();
-        render_pc_s.send(TransferMsg::RenderPc(buf.clone()));
-        render_cli_s.send(TransferMsg::RenderPc(buf));
+        render_pc_s.send(TransferMsg::RenderedData(buf.clone()));
+        render_cli_s.send(TransferMsg::RenderedData(buf));
     }
 }

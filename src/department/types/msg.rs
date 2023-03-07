@@ -1,13 +1,14 @@
 #[derive(Clone, PartialEq)]
 pub enum DognutOption {
     StartEncode = 1,
-    StartRender = 2,
+    EncoderStarted = 2,
 }
 
 
 #[derive(Clone)]
 pub enum TransferMsg {
-    RenderPc(Vec<u8>),
+    RenderedData(Vec<u8>),
     DogOpt(DognutOption),
+    QuitThread,
     Test(u32)
 }

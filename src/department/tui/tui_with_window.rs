@@ -23,7 +23,7 @@ pub struct TuiWinApp {
     camera_controller: CameraController,
     gpu: Option<self_type::StateImp>,
     fps: u32,
-    time_step: std::time::Duration,
+    time_step: Duration,
     res: TriangleResources,
     ms: MultiSender<TransferMsg>,
 }
@@ -44,7 +44,7 @@ impl TuiWinApp {
         }
     }
 
-    pub fn run(mut self, res: TriangleResources, state: Option<self_type::StateImp>) -> Result<(), Box<dyn Error>> {
+    pub fn run(mut self, state: Option<self_type::StateImp>) -> Result<(), Box<dyn Error>> {
         enable_raw_mode()?;
 
         execute!(self.stdout, crossterm::cursor::Hide);
@@ -91,6 +91,8 @@ impl TuiWinApp {
             }
 
             if should_exit {
+                g.game.ms.win.try_send(TransferMsg::QuitThread).unwrap();
+                g.game.ms.enc.try_send(TransferMsg::QuitThread).unwrap();
                 g.exit();
             }
             g.game.draw((dimension.0 as u32, dimension.1 as u32));
@@ -115,9 +117,9 @@ impl TuiWinApp {
             let mut out_buf = OutputBuffer::new(dim.0 as u32, dim.1 as u32, true);
             out_buf.stdout = Some(&mut self.stdout);
             let out = gpu.render(true);
-            out_buf.display.copy_from_slice(&out.0);
-            self.raster.encoder_tx.enc.send(TransferMsg::RenderPc(out.0)).unwrap();
-            //out_buf.queue_to_stdout();
+            out_buf.display.copy_from_slice(&out.1.unwrap());
+            self.ms.win.try_send(TransferMsg::RenderedData(out.0)).unwrap();
+            out_buf.queue_to_stdout();
             drop(out_buf);
             self.stdout.flush().unwrap();
             return;
@@ -134,8 +136,7 @@ impl TuiWinApp {
         drop(out_buf);
         self.stdout.flush().unwrap();
 
-        println!("this frame cost {} milli sec", now.elapsed().as_millis());
-        self.raster.encoder_tx.enc.send(TransferMsg::RenderPc(data)).unwrap();
+        self.raster.encoder_tx.enc.send(TransferMsg::RenderedData(data)).unwrap();
     }
 }
 

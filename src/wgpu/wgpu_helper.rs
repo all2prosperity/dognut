@@ -484,7 +484,6 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
             if render_tui {
                 let data = tui_slice.unwrap().get_mapped_range();
                 tui_buf = Some(data.iter().map(|x| *x).collect());
-                tui_output_buffer.unmap();
             }
         }
         output_buffer.unmap();
@@ -585,8 +584,8 @@ pub fn run(_r: Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) {
         let mut state = State::new(LogicalSize{height: HEIGHT, width:WIDTH}, camera).await;
         loop {
             let buf = state.render(false).0;
-            ms.net.send(TransferMsg::RenderPc(buf.clone()));
-            ms.win.send(TransferMsg::RenderPc(buf));
+            ms.net.send(TransferMsg::RenderedData(buf.clone()));
+            ms.win.send(TransferMsg::RenderedData(buf));
             // println!("render once");
             // sleep(Duration::from_millis(100)).await
         }

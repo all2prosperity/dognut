@@ -149,6 +149,7 @@ impl RgbaEncoder {
     }
 
     pub fn run_encoding_pipeline(mut self) {
+        self.ms.win.send(TransferMsg::DogOpt(DognutOption::EncoderStarted)).expect("must send ok");
         loop {
             if let Ok(TransferMsg::DogOpt(code)) = self.rx.recv() {
                 if code == DognutOption::StartEncode {
@@ -161,12 +162,19 @@ impl RgbaEncoder {
         let mut packet = ffmpeg::Packet::empty();
         let mut index = 0;
         loop {
-            if let Ok(data) = self.rx.try_recv() {
-                if let TransferMsg::RenderPc(_pic_data) = data {
-                    self.send_frame(&_pic_data).expect("must send ok");
-                    if index == 0 {
-                        self.instant = Instant::now();
+            if let Ok(msg) = self.rx.try_recv() {
+                match msg {
+                    TransferMsg::RenderedData(data) => {
+                        self.send_frame(&data).expect("should send encoder ok");
+                        if index == 0 {
+                            self.instant = Instant::now();
+                        }
                     }
+                    TransferMsg::DogOpt(_) => {}
+                    TransferMsg::QuitThread => {
+                        break;
+                    }
+                    TransferMsg::Test(_) => {}
                 }
             }
 
@@ -183,7 +191,7 @@ impl RgbaEncoder {
                 vid_packet.idr_frame = packet.is_key();
 
                 let serialized = vid_packet.write_to_bytes().unwrap();
-                if self.ms.net.send(TransferMsg::RenderPc(serialized)).is_err() {
+                if self.ms.net.send(TransferMsg::RenderedData(serialized)).is_err() {
                     break;
                 }
             }

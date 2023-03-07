@@ -20,7 +20,7 @@ use crate::department::types::msg::TransferMsg;
 
 
 pub mod term;
-mod tui_with_window;
+pub mod tui_with_window;
 
 
 pub struct TuiApp {
@@ -143,7 +143,7 @@ impl TuiApp {
         self.stdout.flush().unwrap();
 
         println!("this frame cost {} milli sec", now.elapsed().as_millis());
-        self.raster.encoder_tx.enc.send(TransferMsg::RenderPc(data)).unwrap();
+        self.raster.encoder_tx.enc.send(TransferMsg::RenderedData(data)).unwrap();
     }
 }
 
