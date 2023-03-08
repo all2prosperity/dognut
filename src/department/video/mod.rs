@@ -1,4 +1,6 @@
+#[cfg(feature = "rtc")]
 pub mod encode;
+#[cfg(feature = "rtc")]
 pub mod decode;
 
 pub struct VConvert();

@@ -3,6 +3,7 @@ use dognut::department::net::router;
 use dognut::department::view::window;
 use dognut::department::types::multi_sender::MultiSender;
 use dognut::department::types::msg;
+#[cfg(feature = "rtc")]
 use dognut::department::video::encode::RgbaEncoder;
 use dognut::department::common::{constant, self_type};
 use dognut::department::common::constant::{HEIGHT, WIDTH};
@@ -29,6 +30,7 @@ fn main () {
     let ms = MultiSender::new(net_sender, enc_sender, win_sender);
 
     router::Router::new(net_receiver, ms.clone()).run();
+    #[cfg(feature = "rtc")]
     RgbaEncoder::run(enc_receiver, ms.clone(), (WIDTH, HEIGHT));
 
     if arg.term {

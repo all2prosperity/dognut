@@ -47,7 +47,7 @@ protobuf = "3.2.0"
 tokio = {version="1", features=["full"]}
 dognut_macros = {path = "../dognut_macros"}
 
-ffmpeg-next = "5.*"
+ffmpeg-next = {version="5.*", optional = true}
 
 log4rs = "1.2.0"
 lazy_static = "*"
@@ -68,9 +68,9 @@ features = ["png", "jpeg"]
 #prost-build = "*"
 
 [features]
+rtc = ["dep:ffmpeg-next"]
 profile-with-puffin = ["profiling/profile-with-puffin"]
 profile-with-optick = ["profiling/profile-with-optick"]
 profile-with-superluminal = ["profiling/profile-with-superluminal"]
 profile-with-tracing = ["profiling/profile-with-tracing"]
 profile-with-tracy = ["profiling/profile-with-tracy"]
-
