@@ -69,6 +69,7 @@ features = ["png", "jpeg"]
 
 [features]
 rtc = ["dep:ffmpeg-next"]
+image_encoder = []
 profile-with-puffin = ["profiling/profile-with-puffin"]
 profile-with-optick = ["profiling/profile-with-optick"]
 profile-with-superluminal = ["profiling/profile-with-superluminal"]

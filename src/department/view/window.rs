@@ -83,7 +83,7 @@ pub async fn run(win_receiver: crossbeam_channel::Receiver<TransferMsg>, ms: Mul
                 if let Err(e) = ms.enc.try_send(TransferMsg::RenderedData(out.0)) {
                     error!("send raw rgba fail: reason {:?}", e);
                 }
-                log::info!("send rgba frame to encoder index {}", index);
+                info!("send rgba frame to encoder index {}", index);
                 index += 1;
             }
 

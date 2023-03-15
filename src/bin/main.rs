@@ -11,13 +11,14 @@ use dognut::department::pipeline::rasterizer::RasterRunner;
 use dognut::department::pipeline::shader::LambertianShader;
 use dognut::department::preview::vector::Vector3;
 use dognut::department::tui::tui_with_window::TuiWinApp;
+use dognut::department::video::ImgEncoder;
 use dognut::department::view::camera::Camera;
 use dognut::util::ARG;
 
 fn main () {
     let env = env_logger::Env::default();
     env_logger::Builder::from_env(env).target(env_logger::Target::Stdout).filter(Some("wgpu_core"), LevelFilter::Off).
-        filter_level(LevelFilter::Off).format_timestamp_millis().init();
+        filter_level(LevelFilter::Info).format_timestamp_millis().init();
 
     let arg = &ARG;
 
@@ -32,6 +33,9 @@ fn main () {
     router::Router::new(net_receiver, ms.clone()).run();
     #[cfg(feature = "rtc")]
     RgbaEncoder::run(enc_receiver, ms.clone(), (WIDTH, HEIGHT));
+
+    //#[cfg(feature = "image_encoder")]
+    let img_handle = ImgEncoder::run(enc_receiver, ms.clone(), (WIDTH, HEIGHT));
 
     if arg.term {
         let tui_ms = ms.clone();
