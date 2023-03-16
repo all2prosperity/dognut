@@ -95,7 +95,7 @@ async fn listen_from_render(render_recv: Receiver<msg::TransferMsg>) {
     loop {
         if let Ok(msg) = render_recv.try_recv() {
             match msg {
-                msg::TransferMsg::RenderedData(frame) => {
+                msg::TransferMsg::CompressedData(frame) => {
                     let mut net_pkt = NetPacket::new();
                     net_pkt.data = frame;
                     net_pkt.kind = protobuf::EnumOrUnknown::from(PacketKind::VideoPacket);

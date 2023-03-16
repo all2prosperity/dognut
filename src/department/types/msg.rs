@@ -8,6 +8,7 @@ pub enum DognutOption {
 #[derive(Clone)]
 pub enum TransferMsg {
     RenderedData(Vec<u8>),
+    CompressedData(Vec<u8>),
     DogOpt(DognutOption),
     QuitThread,
     Test(u32)
