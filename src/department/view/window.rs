@@ -15,7 +15,7 @@ use winit_input_helper::WinitInputHelper;
 
 use crate::department::types::msg::{TransferMsg, DognutOption};
 use crate::department::types::multi_sender::MultiSender;
-use crate::department::common::constant::{HEIGHT, WIDTH};
+use crate::department::common::constant::{HEIGHT, WHOLE_WIDTH, WIDTH};
 use crate::department::common::self_type;
 use crate::department::Game;
 use crate::wgpu::wgpu_helper::State;
@@ -25,11 +25,11 @@ pub const TIME_STEP: Duration = Duration::from_nanos(1_000_000_000 / FPS as u64)
 
 
 /// Representation of the application state. In this example, a box will bounce around the screen.
-
+///
 
 pub async fn run(win_receiver: crossbeam_channel::Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) -> Result<(), Error> {
     let camera = self_type::camera_instance();
-    let state = State::new(LogicalSize { width: WIDTH, height: HEIGHT }, camera).await;
+    let state = State::new(LogicalSize { width: WHOLE_WIDTH, height: HEIGHT }, camera).await;
 
     let event_loop = EventLoop::new();
     let _input = WinitInputHelper::new();
@@ -76,11 +76,12 @@ pub async fn run(win_receiver: crossbeam_channel::Receiver<TransferMsg>, ms: Mul
                 }
             }
 
-
             let out = g.game.state.render(false);
-            g.game.pixels.get_frame_mut().copy_from_slice(&out.0.as_slice());
+            let (this, that) = crate::util::split_screen(&out.0, (WHOLE_WIDTH, HEIGHT), (WIDTH, HEIGHT));
+
+            g.game.pixels.get_frame_mut().copy_from_slice(&that.as_slice());
             if start_enc_render {
-                if let Err(e) = ms.enc.try_send(TransferMsg::RenderedData(out.0)) {
+                if let Err(e) = ms.enc.try_send(TransferMsg::RenderedData(this)) {
                     error!("send raw rgba fail: reason {:?}", e);
                 }
                 info!("send rgba frame to encoder index {}", index);

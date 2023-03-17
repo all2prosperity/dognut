@@ -30,3 +30,21 @@ pub struct Args {
 lazy_static!{
     pub static ref ARG: Args = Args::parse();
 }
+
+pub fn split_screen(data: &Vec<u8>, original_dimension: (u32, u32), split_dimension: (u32, u32)) -> (Vec<u8>, Vec<u8>) {
+    let skip = 4u32;
+    let mut left = Vec::with_capacity((split_dimension.0 * split_dimension.1 * skip) as usize);
+    let mut right = Vec::with_capacity(((original_dimension.0 - split_dimension.0) * split_dimension.1 * skip) as usize);
+
+
+    for row in 0..original_dimension.1 {
+        let row_start = (row * original_dimension.0 * skip);
+        let left_copy_start = row_start as usize;
+        let right_copy_start = (row_start + split_dimension.0 * skip) as usize;
+        let line_end = ((row + 1) * original_dimension.0 * skip) as usize;
+        left.extend_from_slice(&data[left_copy_start..right_copy_start]);
+        right.extend_from_slice(&data[right_copy_start..line_end]);
+    }
+
+    return (left, right);
+}

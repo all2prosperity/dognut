@@ -4,6 +4,8 @@ pub const UDP_PORT: u32 = 19527;
 pub const PORT_RANGE: u32 = 10;
 
 pub const WIDTH: u32 = 640;
+
+pub const WHOLE_WIDTH: u32 = 1280;
 pub const HEIGHT: u32 = 480;
 
 pub const IS_NEED_FLIPV: bool = true;

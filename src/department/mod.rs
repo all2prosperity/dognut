@@ -31,7 +31,7 @@ pub struct Game {
 }
 
 impl Game {
-    fn new(pixels: Pixels, state: self_type::StateImp, id:WindowId , _debug: bool) -> Self {
+    pub fn new(pixels: Pixels, state: self_type::StateImp, id:WindowId , _debug: bool) -> Self {
         Self {
             pixels,
             state,

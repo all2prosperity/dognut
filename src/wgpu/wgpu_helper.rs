@@ -456,10 +456,10 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
         }
 
         self.queue.submit(iter::once(encoder.finish()));
+
         let mut ret_buf = Vec::new();
         let mut tui_buf = None;
         {
-            let c = std::time::Instant::now();
             let buffer_slice = output_buffer.slice(..);
             // NOTE: We have to create the mapping THEN device.poll() before await
             // the future. Otherwise the application will freeze.
