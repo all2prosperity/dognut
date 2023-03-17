@@ -38,7 +38,7 @@ pub fn split_screen(data: &Vec<u8>, original_dimension: (u32, u32), split_dimens
 
 
     for row in 0..original_dimension.1 {
-        let row_start = (row * original_dimension.0 * skip);
+        let row_start = row * original_dimension.0 * skip;
         let left_copy_start = row_start as usize;
         let right_copy_start = (row_start + split_dimension.0 * skip) as usize;
         let line_end = ((row + 1) * original_dimension.0 * skip) as usize;

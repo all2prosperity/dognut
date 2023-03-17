@@ -6,6 +6,7 @@ use image::ImageEncoder;
 use log::{debug, info};
 use protobuf::Message;
 
+#[cfg(feature = "turbo")]
 extern crate turbojpeg;
 
 #[cfg(feature = "rtc")]
@@ -37,25 +38,25 @@ impl ImgEncoder {
     }
 
     pub fn run_encoding_pipeline(mut self) {
-        // loop {
-        //     let msg = self.rx.recv().unwrap();
-        //     match msg {
-        //         TransferMsg::RenderedData(_) => {}
-        //         TransferMsg::DogOpt(code) => {
-        //             if code == DognutOption::StartEncode {
-        //                 self.ms.win.send(TransferMsg::DogOpt(DognutOption::EncoderStarted)).expect("must send ok");
-        //                 break;
-        //             }
-        //         }
-        //         TransferMsg::QuitThread => {
-        //             info!("encoder thread quit on msg");
-        //             return;
-        //         }
-        //         _ => {}
-        //     }
-        // }
+        loop {
+            let msg = self.rx.recv().unwrap();
+            match msg {
+                TransferMsg::RenderedData(_) => {}
+                TransferMsg::DogOpt(code) => {
+                    if code == DognutOption::StartEncode {
+                        self.ms.win.send(TransferMsg::DogOpt(DognutOption::EncoderStarted)).expect("must send ok");
+                        break;
+                    }
+                }
+                TransferMsg::QuitThread => {
+                    info!("encoder thread quit on msg");
+                    return;
+                }
+                _ => {}
+            }
+        }
 
-        self.ms.win.send(TransferMsg::DogOpt(DognutOption::EncoderStarted)).expect("must send ok");
+        //self.ms.win.send(TransferMsg::DogOpt(DognutOption::EncoderStarted)).expect("must send ok");
 
         let mut index = 0;
         loop {
@@ -63,13 +64,7 @@ impl ImgEncoder {
                 match msg {
                     TransferMsg::RenderedData(data) => {
                         let instant = Instant::now();
-                        //let mut out = Vec::new();
-                        let img = image::RgbaImage::from_raw(self.dimension.0, self.dimension.1, data).unwrap();
-                        let out = turbojpeg::compress_image(&img, 50, turbojpeg::Subsamp::Sub2x2 ).unwrap();
-
-                        let mut vid_packet = crate::pb::avpacket::VideoPacket::new();
-                        vid_packet.data_len = out.len() as u32;
-                        vid_packet.data = out.to_vec();
+                        let vid_packet = self.encode_vid_packet(data);
                         debug!("encode image cost {:?} with size {}", instant.elapsed(), vid_packet.data_len);
 
                         let serialized = vid_packet.write_to_bytes().unwrap();
@@ -87,5 +82,29 @@ impl ImgEncoder {
                 }
             }
         }
+    }
+
+    #[cfg(feature = "turbo")]
+    fn encode_vid_packet(&self, data: Vec<u8>) -> crate::pb::avpacket::VideoPacket {
+        let img = image::RgbaImage::from_raw(self.dimension.0, self.dimension.1, data).unwrap();
+        let out = turbojpeg::compress_image(&img, 50, turbojpeg::Subsamp::Sub2x2).unwrap();
+
+        let mut vid_packet = crate::pb::avpacket::VideoPacket::new();
+        vid_packet.data_len = out.len() as u32;
+        vid_packet.data = out.to_vec();
+        vid_packet
+    }
+
+    #[cfg(not(feature = "turbo"))]
+    fn encode_vid_packet(&self, data: Vec<u8>) -> crate::pb::avpacket::VideoPacket {
+        let mut out = Vec::new();
+        image::codecs::jpeg::JpegEncoder::new_with_quality(&mut out, 50)
+            .encode(data.as_slice(), self.dimension.0, self.dimension.1, image::ColorType::Rgba8)
+            .expect("encode image failed");
+
+        let mut vid_packet = crate::pb::avpacket::VideoPacket::new();
+        vid_packet.data_len = out.len() as u32;
+        vid_packet.data = out;
+        vid_packet
     }
 }

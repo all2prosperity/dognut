@@ -61,6 +61,7 @@ impl LocalWindow {
                 }
                 TransferMsg::QuitThread => {
                     *control_flow = winit::event_loop::ControlFlow::Exit;
+                    debug!("LocalWindow::run() end");
                     return ;
                 }
                 _ => {
@@ -69,7 +70,7 @@ impl LocalWindow {
             }
         });
 
-        debug!("LocalWindow::run() end");
+
     }
 }
 

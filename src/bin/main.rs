@@ -34,8 +34,8 @@ fn main () {
     #[cfg(feature = "rtc")]
     RgbaEncoder::run(enc_receiver, ms.clone(), (WIDTH, HEIGHT));
 
-    //#[cfg(feature = "image_encoder")]
-    let img_handle = ImgEncoder::run(enc_receiver, ms.clone(), (WIDTH, HEIGHT));
+    #[cfg(not(feature = "rtc"))]
+    ImgEncoder::run(enc_receiver, ms.clone(), (WIDTH, HEIGHT));
 
     if arg.term {
         let tui_ms = ms.clone();
