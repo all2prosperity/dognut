@@ -12,7 +12,7 @@ pub fn camera_instance() -> cg_camera::Camera {
     //     vector::Vector3::from_xyz(0., 0., -1.),
     //     vector::Vector3::from_xyz(0., -1., 0.))
     let projection = cg_camera::Projection::new(
-        constant::WIDTH, 
+        constant::WHOLE_WIDTH ,
         constant::HEIGHT, 
         cgmath::Deg(45.), 
         0.1, 100.0);

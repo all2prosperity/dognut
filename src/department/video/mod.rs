@@ -65,7 +65,7 @@ impl ImgEncoder {
                     TransferMsg::RenderedData(data) => {
                         let instant = Instant::now();
                         let vid_packet = self.encode_vid_packet(data);
-                        debug!("encode image cost {:?} with size {}", instant.elapsed(), vid_packet.data_len);
+                        info!("encode image cost {:?} with size {}", instant.elapsed(), vid_packet.data_len);
 
                         let serialized = vid_packet.write_to_bytes().unwrap();
                         if self.ms.net.send(TransferMsg::CompressedData(serialized)).is_err() {
@@ -88,7 +88,6 @@ impl ImgEncoder {
     fn encode_vid_packet(&self, data: Vec<u8>) -> crate::pb::avpacket::VideoPacket {
         let img = image::RgbaImage::from_raw(self.dimension.0, self.dimension.1, data).unwrap();
         let out = turbojpeg::compress_image(&img, 50, turbojpeg::Subsamp::Sub2x2).unwrap();
-
         let mut vid_packet = crate::pb::avpacket::VideoPacket::new();
         vid_packet.data_len = out.len() as u32;
         vid_packet.data = out.to_vec();
