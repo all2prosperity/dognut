@@ -26,6 +26,7 @@ name = "test_camera_diff"
 
 [dependencies]
 #prost = "*"
+proc-macro2="=1.0.65"
 tui = "0.*"
 crossterm = "0.*"
 tobj = {version = "3.*", features = ["async"]}

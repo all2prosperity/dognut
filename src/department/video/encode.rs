@@ -192,6 +192,7 @@ impl RgbaEncoder {
                         break;
                     }
                     TransferMsg::Test(_) => {}
+                    _ => {}
                 }
             }
 

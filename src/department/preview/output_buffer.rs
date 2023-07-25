@@ -87,6 +87,7 @@ impl<'a> OutputBuffer<'a> {
 
     pub fn save_to_image(&self, path: &str) {
         let mut img = RgbaImage::new(self.width, self.height);
+        image::imageops::resize(&img, 1920, 1080, image::imageops::FilterType::CatmullRom);
         img.copy_from_slice(self.display.as_slice());
         if let Err(e) = img.save_with_format(Path::new(path), ImageFormat::Png) {
             error!("could not save image {}", e);

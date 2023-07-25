@@ -156,9 +156,15 @@ impl ObjectLoader {
         if let Some(i) = model.mesh.material_id {
             if model_path.is_relative() {
                 let texture_path = model_path.parent().unwrap().join(Path::new(&mat[i].diffuse_texture));
-                let texture = image::open(texture_path).unwrap();
-                triangle_resources.image = Some(texture);
-                triangle_resources.material = mat.pop();
+                let texture = image::open(texture_path);
+                if texture.is_err() {
+                    triangle_resources.image = None;
+                    triangle_resources.material = None;
+                }else {
+                    triangle_resources.image = Some(texture.unwrap());
+                    triangle_resources.material = mat.pop();
+                }
+
             }
         }
 

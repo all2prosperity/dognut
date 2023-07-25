@@ -22,6 +22,8 @@ use dognut::department::preview::vector::Vector3;
 use dognut::department::tui::TuiApp;
 use dognut::department::types::msg::TransferMsg;
 use dognut::department::types::multi_sender::MultiSender;
+
+#[cfg(feature = "rtc")]
 use dognut::department::video::encode::RgbaEncoder;
 use dognut::department::view::camera::Camera;
 use dognut::util::{ARG};
