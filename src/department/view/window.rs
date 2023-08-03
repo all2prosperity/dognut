@@ -28,7 +28,7 @@ pub const TIME_STEP: Duration = Duration::from_nanos(1_000_000_000 / FPS as u64)
 ///
 
 pub async fn run(win_receiver: crossbeam_channel::Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) -> Result<(), Error> {
-    let camera = self_type::camera_instance();
+    let camera = self_type::camera_instance(WHOLE_WIDTH, HEIGHT);
     let state = State::new(LogicalSize { width: WHOLE_WIDTH, height: HEIGHT }, camera).await;
 
     let event_loop = EventLoop::new();

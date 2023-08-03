@@ -60,7 +60,7 @@ fn main() -> Result<(), Error>{
 
         rt.block_on(async {
             let dimension = (256,79);
-            let camera = self_type::camera_instance();
+            let camera = self_type::camera_instance(WIDTH, HEIGHT);
             let handle = RgbaEncoder::run(enc_receiver, ms, (constant::WIDTH, constant::HEIGHT));
             let state = State::new(winit::dpi::LogicalSize { width: dimension.0 as u32, height: dimension.1 as u32 }, camera).await;
             let result = TuiApp::new(raster).run(res, Some(state));

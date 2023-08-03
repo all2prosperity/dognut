@@ -55,7 +55,7 @@ fn main () {
             inner_rt.block_on(async {
                 let res = dognut::department::model::object_loader::ObjectLoader::load_triangle_resources(&arg.obj_path);
                 let dimension = (256,79);
-                let camera = self_type::camera_instance();
+                let camera = self_type::camera_instance(WIDTH, HEIGHT);
                 let state = dognut::wgpu::wgpu_helper::State::new(winit::dpi::LogicalSize { width: WIDTH, height:HEIGHT }, camera).await;
                 let result = TuiWinApp::new(raster,res, tui_ms).run(Some(state));
                 if let Err(e) = result {

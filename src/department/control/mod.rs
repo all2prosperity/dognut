@@ -138,7 +138,7 @@ impl ModelController {
         if self.presentation_mode {
             self.theta += PI * dt * 0.2;
             let rad = cgmath::Rad(self.theta);
-            self.rotation = cgmath::Quaternion::from_angle_y(rad) * cgmath::Quaternion::from_angle_x(rad);
+            self.rotation = cgmath::Quaternion::from_angle_y(rad);// * cgmath::Quaternion::from_angle_x(rad);
         }
 
         let instances = vec![Instance{position: self.position.clone(), rotation:self.rotation.clone()}];
