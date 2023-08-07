@@ -16,7 +16,7 @@ use ffmpeg_next::frame::Video;
 use ffmpeg_next::log::Level;
 use ffmpeg_next::picture::Type;
 use ffmpeg_next::software::scaling::Flags;
-use log::{error, info};
+use log::{error, info, warn};
 use protobuf::Message;
 
 
@@ -81,7 +81,7 @@ impl RgbaEncoder {
             scale_ctx: scaler,
             message_rx: msg_rx.1,
             codec,
-            next_frame_idr: true,
+            next_frame_idr: false,
             instant: Instant::now(),
         })
     }
@@ -97,17 +97,18 @@ impl RgbaEncoder {
         (*raw_context).rc_buffer_size = 4 * 1000 * 1000;
         (*raw_context).rc_max_rate = 2 * 1000 * 1000;
         (*raw_context).rc_min_rate = (2.5 * 1000. * 1000.) as i64;
-        (*raw_context).framerate = ffi::AVRational{num:60, den: 1};
-        (*raw_context).gop_size = 15;
+        (*raw_context).framerate = ffi::AVRational{num:30, den: 1};
+        (*raw_context).gop_size = 100000000;
         // disable b frame for realtime streaming
         (*raw_context).max_b_frames = 0;
         (*raw_context).has_b_frames = 0;
+        (*raw_context).color_range = ffi::AVColorRange::AVCOL_RANGE_JPEG;
         let mut k = std::ffi::CString::new("preset").unwrap();
         let mut v = std::ffi::CString::new("fast").unwrap();
         ffi::av_opt_set((*raw_context).priv_data as *mut _, k.as_ptr(), v.as_ptr(), 0);
         k = std::ffi::CString::new("x264-params").unwrap();
         v = std::ffi::CString::new("keyint=60:min-keyint=60:scenecut=0:force-cfr=1").unwrap();
-        //ffi::av_opt_set((*raw_context).priv_data as *mut _, k.as_ptr(), v.as_ptr(), 0);
+        ffi::av_opt_set((*raw_context).priv_data as *mut _, k.as_ptr(), v.as_ptr(), 0);
 
         return Context::wrap(raw_context, None);
     }
@@ -122,8 +123,9 @@ impl RgbaEncoder {
         if self.next_frame_idr {
             yuv.set_kind(Type::I);
             self.next_frame_idr = false;
-            info!("next frame is IDR");
+            //info!("next frame is IDR");
         }
+
 
         let ts = Instant::now().duration_since(self.instant).as_millis();
 
@@ -154,7 +156,10 @@ impl RgbaEncoder {
         loop {
             let msg = self.rx.recv().unwrap();
             match msg {
-                TransferMsg::RenderedData(_) => {}
+                TransferMsg::RenderedData(_) => {
+                    warn!("there should not be any renderedData");
+                    break;
+                }
                 TransferMsg::DogOpt(code) => {
                     if code == DognutOption::StartEncode {
                         self.ms.win.send(TransferMsg::DogOpt(DognutOption::EncoderStarted)).expect("must send ok");
@@ -197,8 +202,6 @@ impl RgbaEncoder {
             }
 
             while self.encoder.receive_packet(&mut packet).is_ok() {
-                info!("received encoded video and send it to network index {}", index);
-                index += 1;
                 let mut vid_packet = pb::avpacket::VideoPacket::new();
                 vid_packet.data = packet.data().unwrap().to_vec();
                 vid_packet.data_len = vid_packet.data.len() as u32;
@@ -207,6 +210,9 @@ impl RgbaEncoder {
                 vid_packet.duration = packet.duration();
                 vid_packet.flags = 0;
                 vid_packet.idr_frame = packet.is_key();
+
+                info!("received encoded video and send it to network index {}, data len {}", index, vid_packet.data_len);
+                index += 1;
 
                 let serialized = vid_packet.write_to_bytes().unwrap();
                 if self.ms.net.send(TransferMsg::RenderedData(serialized)).is_err() {

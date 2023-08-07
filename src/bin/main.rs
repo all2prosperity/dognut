@@ -34,7 +34,7 @@ fn main () {
     #[cfg(feature = "rtc")]
     RgbaEncoder::run(enc_receiver, ms.clone(), (WIDTH, HEIGHT));
 
-    #[cfg(not(feature = "rtc"))]
+    #[cfg(feature = "image_encoder")]
     ImgEncoder::run(enc_receiver, ms.clone(), (WIDTH, HEIGHT));
 
     if arg.term {

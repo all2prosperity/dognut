@@ -95,7 +95,19 @@ async fn listen_from_render(render_recv: Receiver<msg::TransferMsg>) {
     loop {
         if let Ok(msg) = render_recv.try_recv() {
             match msg {
-                msg::TransferMsg::CompressedData(frame) => {
+                msg::TransferMsg::CompressedData(pic_frame) => {
+                    let mut net_pkt = NetPacket::new();
+                    net_pkt.data = pic_frame;
+                    net_pkt.kind = protobuf::EnumOrUnknown::from(PacketKind::VideoPacket);
+                    let serialized = net_pkt.write_to_bytes().unwrap();
+
+                    for sender in CLIENT_SENDERS.lock().await.iter_mut() {
+
+                        sender.write_u32( serialized.len() as u32).await.unwrap();
+                        sender.write(serialized.as_slice()).await.unwrap();
+                    }
+                }
+                TransferMsg::RenderedData(frame) => {
                     let mut net_pkt = NetPacket::new();
                     net_pkt.data = frame;
                     net_pkt.kind = protobuf::EnumOrUnknown::from(PacketKind::VideoPacket);

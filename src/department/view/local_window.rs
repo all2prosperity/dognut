@@ -57,6 +57,7 @@ impl LocalWindow {
                 TransferMsg::DogOpt(op) => {
                     if op == DognutOption::EncoderStarted {
                         self.encoder_start_working = true;
+                        info!("start send rgba to encoder");
                     }
                 }
                 TransferMsg::QuitThread => {
