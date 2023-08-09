@@ -15,5 +15,5 @@ Cargo.lock
 *.log
 *.bat
 **/*.vscode
-
+/res/
 
