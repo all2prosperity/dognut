@@ -1,4 +1,4 @@
-use crossbeam_channel::Sender;
+
 use image::GenericImageView;
 
 use crate::department::model::triangle::Triangle;

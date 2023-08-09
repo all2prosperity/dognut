@@ -2,8 +2,8 @@ use std::thread::JoinHandle;
 use std::time::Instant;
 use crate::department::types::msg::{DognutOption, TransferMsg};
 use crate::department::types::multi_sender::MultiSender;
-use image::ImageEncoder;
-use log::{debug, info};
+
+use log::{info};
 use protobuf::Message;
 
 #[cfg(feature = "turbo")]
@@ -37,7 +37,7 @@ impl ImgEncoder {
         return handle;
     }
 
-    pub fn run_encoding_pipeline(mut self) {
+    pub fn run_encoding_pipeline(self) {
         loop {
             let msg = self.rx.recv().unwrap();
             match msg {
@@ -58,7 +58,7 @@ impl ImgEncoder {
 
         //self.ms.win.send(TransferMsg::DogOpt(DognutOption::EncoderStarted)).expect("must send ok");
 
-        let mut index = 0;
+        let _index = 0;
         loop {
             if let Ok(msg) = self.rx.recv() {
                 match msg {

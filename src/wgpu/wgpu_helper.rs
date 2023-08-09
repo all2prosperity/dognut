@@ -473,7 +473,7 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
             if tui_with_window {
                 tui_slice = Some(tui_output_buffer.slice(..));
                 // tui_slice will be mapped with buffer_slice, so we don't need to send a signal.
-                tui_slice.unwrap().map_async(wgpu::MapMode::Read, move |result| {
+                tui_slice.unwrap().map_async(wgpu::MapMode::Read, move |_result| {
                 });
             }
             self.device.poll(wgpu::Maintain::Wait);

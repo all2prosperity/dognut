@@ -5,14 +5,14 @@ use dognut::department::types::multi_sender::MultiSender;
 use dognut::department::types::msg;
 #[cfg(feature = "rtc")]
 use dognut::department::video::encode::RgbaEncoder;
-use dognut::department::common::{constant, self_type};
+use dognut::department::common::{self_type};
 use dognut::department::common::constant::{HEIGHT, WIDTH};
 use dognut::department::pipeline::rasterizer::RasterRunner;
 use dognut::department::pipeline::shader::LambertianShader;
 use dognut::department::preview::vector::Vector3;
 use dognut::department::tui::tui_split::TuiSplitApp;
 use dognut::department::tui::tui_with_window::TuiWinApp;
-use dognut::department::video::ImgEncoder;
+
 use dognut::department::view::camera::Camera;
 use dognut::util::ARG;
 
@@ -66,7 +66,7 @@ fn main() {
 
                 inner_rt.block_on(async {
                     let res = dognut::department::model::object_loader::ObjectLoader::load_triangle_resources(&arg.obj_path);
-                    let dimension = (256, 79);
+                    let _dimension = (256, 79);
                     let camera = self_type::camera_instance(WIDTH, HEIGHT);
                     let state = dognut::wgpu::wgpu_helper::State::new(winit::dpi::LogicalSize { width: WIDTH, height: HEIGHT }, camera).await;
                     let result = TuiWinApp::new(raster, res, tui_ms).run(Some(state));

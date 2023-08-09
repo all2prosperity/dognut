@@ -113,7 +113,7 @@ impl TuiSplitApp {
             let mut out_buf = OutputBuffer::new(dim.0 as u32, dim.1 as u32, true);
             out_buf.stdout = Some(&mut self.stdout);
             let out = gpu.render(false);
-            let (this, that) = crate::util::split_screen(&out.0, (TUI_WIDE_WIDTH, TUI_SPLIT_HEIGHT), (TUI_SPLIT_WIDTH, TUI_SPLIT_HEIGHT));
+            let (_this, that) = crate::util::split_screen(&out.0, (TUI_WIDE_WIDTH, TUI_SPLIT_HEIGHT), (TUI_SPLIT_WIDTH, TUI_SPLIT_HEIGHT));
             out_buf.display.copy_from_slice(&that);
             //self.raster.encoder_tx.enc.send(TransferMsg::RenderPc(out)).unwrap();
             out_buf.queue_to_stdout();

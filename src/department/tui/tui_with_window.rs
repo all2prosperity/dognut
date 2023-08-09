@@ -126,7 +126,7 @@ impl TuiWinApp {
         }
 
 
-        let now = std::time::Instant::now();
+        let _now = std::time::Instant::now();
         let mut out_buf = OutputBuffer::new(dim.0 as u32, dim.1 as u32, true);
         out_buf.stdout = Some(&mut self.stdout);
         self.raster.set_model(HomoTransform::rotation_matrix(&Vector3::from_xyz(0., 1., 0.), self.theta) * HomoTransform::scale((1.5, 1.5, 1.5)));

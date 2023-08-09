@@ -27,7 +27,7 @@ impl LocalWindow {
     }
 
     pub fn run(mut self) {
-        self.ev_loop.run(move |event, _, control_flow| {
+        self.ev_loop.run(move |_event, _, control_flow| {
             // match event {
             //     winit::event::Event::WindowEvent { event, .. } => match event {
             //         winit::event::WindowEvent::CloseRequested => {

@@ -7,7 +7,7 @@ use game_loop::{game_loop, Time, TimeTrait};
 use log::{error, info};
 use pixels::{Error, Pixels, SurfaceTexture};
 use pixels::wgpu::Color;
-use winit::dpi::{LogicalSize, PhysicalSize};
+use winit::dpi::{LogicalSize};
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::{EventLoop};
 use winit::window::WindowBuilder;
@@ -137,7 +137,7 @@ pub async fn run(win_receiver: crossbeam_channel::Receiver<TransferMsg>, ms: Mul
                         _ => {}
                     }
                 }
-                Event::DeviceEvent { ref event, .. } => {
+                Event::DeviceEvent {  .. } => {
                     //g.game.state.input(event);
                 }
                 Event::RedrawRequested(_) => {

@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 //use crate::proto::debugger;
-use crossbeam_channel::{Receiver, unbounded};
+use crossbeam_channel::{Receiver};
 use lazy_static::lazy_static;
 use log::{debug, error};
 use protobuf::Message;
