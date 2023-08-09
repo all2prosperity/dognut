@@ -158,7 +158,7 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
 
         const SPACE_BETWEEN: f32 = 3.0;
         
-        let position = cgmath::Vector3 { x:0.0, y: 0., z: 1. };
+        let position = cgmath::Vector3 { x:0., y: 0., z: -5. };
 
         let rotation = cgmath::Quaternion::from_axis_angle(position.normalize(), cgmath::Deg(0.0));
         let instances = vec![Instance{position, rotation}];
@@ -402,7 +402,7 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
     }
 
     // the first return Vec is for gui, the second is for tui
-    pub fn render(&mut self, render_tui: bool) -> (Vec<u8>, Option<Vec<u8>>) {
+    pub fn render(&mut self, tui_with_window: bool) -> (Vec<u8>, Option<Vec<u8>>) {
         let mut encoder = self
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
@@ -432,7 +432,7 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
         );
 
         let tui_output_buffer = self.create_output_buffer(self.tui_size, u32_size);
-        if render_tui {
+        if tui_with_window {
             let (tui_desc, tui_texture) = self.encode_a_new_render_texutre(&mut encoder, (self.tui_size.0, self.tui_size.1), &self.tui_depth_texture);
 
 
@@ -470,7 +470,7 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
 
             let mut tui_slice = None;
 
-            if render_tui {
+            if tui_with_window {
                 tui_slice = Some(tui_output_buffer.slice(..));
                 // tui_slice will be mapped with buffer_slice, so we don't need to send a signal.
                 tui_slice.unwrap().map_async(wgpu::MapMode::Read, move |result| {
@@ -481,7 +481,7 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
 
             let data = buffer_slice.get_mapped_range();
             ret_buf = data.iter().map(|x| *x).collect();
-            if render_tui {
+            if tui_with_window {
                 let data = tui_slice.unwrap().get_mapped_range();
                 tui_buf = Some(data.iter().map(|x| *x).collect());
             }

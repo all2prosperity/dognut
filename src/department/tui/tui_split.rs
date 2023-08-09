@@ -1,66 +1,54 @@
-use std::error::Error;
 use std::io::{Stdout, stdout, Write};
 use std::time::Duration;
-
-
-use crossterm;
-use crossterm::{event, execute, terminal};
-use crossterm::event::{Event};
-use crossterm::terminal::{ClearType, disable_raw_mode, enable_raw_mode, EnterAlternateScreen};
-use game_loop::{GameLoop, Time, TimeTrait};
-
-use crate::department::common::self_type;
-use crate::department::control::camera_controller::CameraController;
-use crate::department::model::triangle_resources::TriangleResources;
-use crate::department::pipeline::rasterizer::RasterRunner;
-use crate::department::preview::homo_transformation::HomoTransform;
+use crossterm::{event, execute};
+use crossterm::event::Event;
+use crossterm::terminal::{ClearType};
+use game_loop::TimeTrait;
 use crate::department::preview::output_buffer::OutputBuffer;
-use crate::department::preview::vector::Vector3;
 use crate::department::types::msg::TransferMsg;
+use crate::department::types::multi_sender::MultiSender;
+use super::game_loop;
 
 
-pub mod term;
-pub mod tui_with_window;
-pub mod tui_split;
+const TUI_WIDE_WIDTH: u32 = 256 * 2;
+const TUI_SPLIT_WIDTH: u32 = 256;
+const TUI_SPLIT_HEIGHT: u32 = 79;
 
-
-pub struct TuiApp {
-    pub raster: RasterRunner,
+pub struct TuiSplitApp {
     stdout: Stdout,
     theta: f32,
-    camera_controller: CameraController,
-    gpu: Option<self_type::StateImp>,
+    camera_controller: crate::department::control::camera_controller::CameraController,
+    gpu: Option<crate::department::common::self_type::StateImp>,
+    ms: MultiSender<TransferMsg>,
 }
+
 
 static FPS: u32 = 30;
-
 static TIME_STEP: Duration = Duration::from_nanos(1_000_000_000 / FPS as u64);
 
-pub fn game_loop<G, U, R>(game: G, updates_per_second: u32, max_frame_time: f64, mut update: U, mut render: R) -> GameLoop<G, game_loop::Time, ()>
-    where U: FnMut(&mut game_loop::GameLoop<G, game_loop::Time, ()>),
-          R: FnMut(&mut game_loop::GameLoop<G, game_loop::Time, ()>),
-{
-    let mut game_loop = game_loop::GameLoop::new(game, updates_per_second, max_frame_time, ());
 
-    while game_loop.next_frame(&mut update, &mut render) {}
-
-    game_loop
-}
-
-impl TuiApp {
-    pub fn new(raster: RasterRunner) -> Self {
-        Self { raster, stdout: stdout(), theta: 0., gpu: None, camera_controller: CameraController::new(2.0, 0.2, true) }
+impl TuiSplitApp {
+    pub fn new(ms: MultiSender<TransferMsg>) -> Self {
+        Self {
+            stdout: stdout(),
+            theta: 0.,
+            gpu: None,
+            camera_controller: crate::department::control::camera_controller::CameraController::new(2.0, 0.2, true),
+            ms,
+        }
     }
 
-    pub fn run(mut self, res: TriangleResources, state: Option<self_type::StateImp>) -> Result<(), Box<dyn Error>> {
-        enable_raw_mode()?;
+    pub async fn run(mut self) -> Result<(), Box<dyn std::error::Error>> {
+        crossterm::terminal::enable_raw_mode()?;
 
         execute!(self.stdout, crossterm::cursor::Hide);
-        execute!(self.stdout, EnterAlternateScreen, event::EnableMouseCapture);
+        execute!(self.stdout, crossterm::terminal::EnterAlternateScreen, event::EnableMouseCapture);
         execute!(self.stdout, crossterm::terminal::Clear(ClearType::All));
 
-        let dimension = (256, 79);
-        self.gpu = state;
+        let cam = crate::department::common::self_type::camera_instance(TUI_WIDE_WIDTH, TUI_SPLIT_HEIGHT);
+        let gpu = crate::wgpu::wgpu_helper::State::new(winit::dpi::LogicalSize { width: TUI_WIDE_WIDTH, height: TUI_SPLIT_HEIGHT }, cam).await;
+        self.gpu = Some(gpu);
+
 
         let _lop = game_loop(self, FPS, 0.1, |g| {
             // update
@@ -102,13 +90,15 @@ impl TuiApp {
                 g.exit();
             }
             // execute!(g.game.stdout, terminal::Clear(ClearType::All));
-            g.game.draw((dimension.0 as u32, dimension.1 as u32), &res);
+            g.game.draw((TUI_SPLIT_WIDTH, TUI_SPLIT_HEIGHT));
 
-            let st = TIME_STEP.as_secs_f64() - Time::now().sub(&g.current_instant());
+            let st = TIME_STEP.as_secs_f64() - game_loop::Time::now().sub(&g.current_instant());
             if st > 0. {
                 std::thread::sleep(Duration::from_secs_f64(st));
             }
         });
+
+
         Ok(())
     }
 
@@ -118,41 +108,27 @@ impl TuiApp {
         }
     }
 
-
-    pub fn draw(&mut self, dim: (u32, u32), res: &TriangleResources) {
+    pub fn draw(&mut self, dim: (u32, u32)) {
         if let Some(ref mut gpu) = self.gpu {
             let mut out_buf = OutputBuffer::new(dim.0 as u32, dim.1 as u32, true);
             out_buf.stdout = Some(&mut self.stdout);
             let out = gpu.render(false);
-            out_buf.display.copy_from_slice(&out.0);
+            let (this, that) = crate::util::split_screen(&out.0, (TUI_WIDE_WIDTH, TUI_SPLIT_HEIGHT), (TUI_SPLIT_WIDTH, TUI_SPLIT_HEIGHT));
+            out_buf.display.copy_from_slice(&that);
             //self.raster.encoder_tx.enc.send(TransferMsg::RenderPc(out)).unwrap();
             out_buf.queue_to_stdout();
             drop(out_buf);
             self.stdout.flush().unwrap();
             return;
         }
-
-
-        let now = std::time::Instant::now();
-        let mut out_buf = OutputBuffer::new(dim.0 as u32, dim.1 as u32, true);
-        out_buf.stdout = Some(&mut self.stdout);
-        self.raster.set_model(HomoTransform::rotation_matrix(&Vector3::from_xyz(0., 1., 0.), self.theta) * HomoTransform::scale((1.5, 1.5, 1.5)));
-        self.raster.render_frame(res, &mut out_buf);
-        out_buf.queue_to_stdout();
-        let data = out_buf.display.clone();
-        drop(out_buf);
-        self.stdout.flush().unwrap();
-
-        println!("this frame cost {} milli sec", now.elapsed().as_millis());
-        self.raster.encoder_tx.enc.send(TransferMsg::RenderedData(data)).unwrap();
     }
 }
 
-impl Drop for TuiApp {
+impl Drop for TuiSplitApp {
     fn drop(&mut self) {
-        execute!(self.stdout, terminal::Clear(ClearType::All));
-        execute!(self.stdout, terminal::LeaveAlternateScreen, event::DisableMouseCapture);
+        execute!(self.stdout, crossterm::terminal::Clear(ClearType::All));
+        execute!(self.stdout, crossterm::terminal::LeaveAlternateScreen, event::DisableMouseCapture);
         execute!(self.stdout, crossterm::cursor::Show);
-        disable_raw_mode().unwrap();
+        crossterm::terminal::disable_raw_mode().unwrap();
     }
 }

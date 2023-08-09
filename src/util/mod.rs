@@ -17,6 +17,8 @@ pub struct Args {
     #[arg(short, long, default_value_t=false)]
     pub term: bool,
 
+    #[arg(short, long, default_value_t=false)]
+    pub split: bool,
     /// object path to load, only support triangulated obj.
     #[arg(long, default_value_t=String::from("./res/plane/plane.obj"))]
     pub obj_path: String,
