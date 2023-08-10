@@ -5,6 +5,8 @@ use dognut::department::types::multi_sender::MultiSender;
 use dognut::department::types::msg;
 #[cfg(feature = "rtc")]
 use dognut::department::video::encode::RgbaEncoder;
+#[cfg(feature = "image_encoder")]
+use dognut::department::video::ImgEncoder;
 use dognut::department::common::{self_type};
 use dognut::department::common::constant::{HEIGHT, WIDTH};
 use dognut::department::pipeline::rasterizer::RasterRunner;
@@ -36,7 +38,7 @@ fn main() {
     RgbaEncoder::run(enc_receiver, ms.clone(), (WIDTH, HEIGHT));
 
     #[cfg(feature = "image_encoder")]
-    ImgEncoder::run(enc_receiver, ms.clone(), (WIDTH, HEIGHT));
+    ImgEncoder::run(enc_receiver, ms.clone(), ( if arg.term { 256} else {WIDTH}, if arg.term {79} else {HEIGHT}));
 
     if arg.term {
         let tui_ms = ms.clone();
@@ -81,6 +83,6 @@ fn main() {
         }
     } else {
         let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
-        rt.block_on(window::run(win_receiver, ms)).expect("fail on block");
+        rt.block_on(window::run(win_receiver, ms, arg.split)).expect("fail on block");
     }
 }

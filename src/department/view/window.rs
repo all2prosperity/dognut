@@ -27,9 +27,10 @@ pub const TIME_STEP: Duration = Duration::from_nanos(1_000_000_000 / FPS as u64)
 /// Representation of the application state. In this example, a box will bounce around the screen.
 ///
 
-pub async fn run(win_receiver: crossbeam_channel::Receiver<TransferMsg>, ms: MultiSender<TransferMsg>) -> Result<(), Error> {
-    let camera = self_type::camera_instance(WHOLE_WIDTH, HEIGHT);
-    let state = State::new(LogicalSize { width: WHOLE_WIDTH, height: HEIGHT }, camera).await;
+pub async fn run(win_receiver: crossbeam_channel::Receiver<TransferMsg>, ms: MultiSender<TransferMsg>, split: bool) -> Result<(), Error> {
+    let setting_width = if split { WHOLE_WIDTH } else { WIDTH };
+    let camera = self_type::camera_instance(setting_width, HEIGHT);
+    let state = State::new(LogicalSize { width: setting_width, height: HEIGHT }, camera).await;
 
     let event_loop = EventLoop::new();
     let _input = WinitInputHelper::new();
@@ -76,17 +77,31 @@ pub async fn run(win_receiver: crossbeam_channel::Receiver<TransferMsg>, ms: Mul
                 }
             }
 
-            let out = g.game.state.render(false);
-            let (this, that) = crate::util::split_screen(&out.0, (WHOLE_WIDTH, HEIGHT), (WIDTH, HEIGHT));
 
-            g.game.pixels.get_frame_mut().copy_from_slice(&that.as_slice());
-            if start_enc_render {
-                if let Err(e) = ms.enc.try_send(TransferMsg::RenderedData(this)) {
-                    error!("send raw rgba fail: reason {:?}", e);
+            let out = g.game.state.render(false);
+            if split {
+               let (this, that) = crate::util::split_screen(&out.0, (WHOLE_WIDTH, HEIGHT), (WIDTH, HEIGHT));
+                g.game.pixels.get_frame_mut().copy_from_slice(&that.as_slice());
+                if start_enc_render {
+                    if let Err(e) = ms.enc.try_send(TransferMsg::RenderedData(this)) {
+                        error!("send raw rgba fail: reason {:?}", e);
+                    }
+                    //info!("send rgba frame to encoder index {}", index);
+                    index += 1;
                 }
-                //info!("send rgba frame to encoder index {}", index);
-                index += 1;
+            }else {
+                g.game.pixels.get_frame_mut().copy_from_slice(&out.0.as_slice());
+                if start_enc_render {
+                    if let Err(e) = ms.enc.try_send(TransferMsg::RenderedData(out.0)) {
+                        error!("send raw rgba fail: reason {:?}", e);
+                    }
+                    //info!("send rgba frame to encoder index {}", index);
+                    index += 1;
+                }
             }
+
+
+
 
 
 

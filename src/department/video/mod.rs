@@ -41,7 +41,9 @@ impl ImgEncoder {
         loop {
             let msg = self.rx.recv().unwrap();
             match msg {
-                TransferMsg::RenderedData(_) => {}
+                TransferMsg::RenderedData(data) => {
+                    drop(data);
+                }
                 TransferMsg::DogOpt(code) => {
                     if code == DognutOption::StartEncode {
                         self.ms.win.send(TransferMsg::DogOpt(DognutOption::EncoderStarted)).expect("must send ok");
