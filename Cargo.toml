@@ -57,7 +57,7 @@ json = "0.12.4"
 cgmath = "0.18"
 
 futures-intrusive = "0.4"
-game-loop = {version = "0.10.1", features=["winit"]}
+game-loop = {version = "=0.10.1", features=["winit"]}
 
 gilrs = "0.*"
 
