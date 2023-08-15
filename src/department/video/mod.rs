@@ -67,7 +67,7 @@ impl ImgEncoder {
                     TransferMsg::RenderedData(data) => {
                         let instant = Instant::now();
                         let vid_packet = self.encode_vid_packet(data);
-                        info!("encode image cost {:?} with size {}", instant.elapsed(), vid_packet.data_len);
+                        ///info!("encode image cost {:?} with size {}", instant.elapsed(), vid_packet.data_len);
 
                         let serialized = vid_packet.write_to_bytes().unwrap();
                         if self.ms.net.send(TransferMsg::CompressedData(serialized)).is_err() {

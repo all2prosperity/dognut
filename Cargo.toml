@@ -36,10 +36,10 @@ bytemuck = { version = "1.4", features = [ "derive" ] }
 pollster = "0.2"
 env_logger = "0.9"
 log = "0.4"
-pixels = "*"
+pixels = "=0.10.0"
 winit_input_helper = "0.13"
 profiling = "1.0.7"
-wgpu = "0.*"
+wgpu = "=0.13.1"
 winit = "0.27.5"
 crossbeam-channel = {version = "0.5.*"} # for thread synchronize
 clap = {version="4.*", features = ["derive"]}

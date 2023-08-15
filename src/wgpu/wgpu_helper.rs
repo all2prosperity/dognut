@@ -15,6 +15,7 @@ use crate::department::types::msg::TransferMsg;
 use crate::department::types::multi_sender::MultiSender;
 use crate::department::common::constant::{WIDTH, HEIGHT};
 use crossbeam_channel::Receiver;
+use lazy_static::lazy_static;
 use log::info;
 use winit::dpi::{LogicalSize, PhysicalSize};
 use crate::department::view::camera_trait;
@@ -89,6 +90,7 @@ pub struct State<T> where T: camera_trait::CameraTrait {
     light_render_pipeline: wgpu::RenderPipeline,
     pub mouse_pressed: bool,
     pub scale_factor: f64,
+    light_degree: u32,
 }
 
 impl<T> State<T> where T: camera_trait::CameraTrait {
@@ -303,6 +305,7 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
             light_render_pipeline,
             mouse_pressed: false,
             scale_factor: 1.0f64,
+            light_degree: 0,
         }
     }
 
@@ -392,9 +395,17 @@ impl<T> State<T> where T: camera_trait::CameraTrait {
             bytemuck::cast_slice(&data)
         );
 
-        // let old_position: cgmath::Vector3<_> = self.light_uniform.position.into();
+        let old_position: cgmath::Vector3<_> = self.light_uniform.position.into();
+
+        // self.light_degree += 1;
+        // let res = self.light_degree / 180;
+        // let mut clockwise = true;
+        // if res % 2 == 1 {
+        //     clockwise = false;
+        // }
+        //
         // self.light_uniform.position =
-        //     (cgmath::Quaternion::from_axis_angle((0.0, 1.0, 0.0).into(), cgmath::Deg(1.0))
+        //     (cgmath::Quaternion::from_axis_angle((0.0, 1.0, 0.0).into(), cgmath::Deg(if clockwise {-1.0} else {1.0}))
         //         * old_position)
         //         .into();
         // self.queue.write_buffer(&self.light_buffer, 0, bytemuck::cast_slice(&[self.light_uniform]));
