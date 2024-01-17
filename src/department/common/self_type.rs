@@ -15,7 +15,7 @@ pub fn camera_instance(width: u32, height:u32) -> cg_camera::Camera {
         width ,
         height,
         cgmath::Deg(60.),
-        0.1, 100.0);
+        0.1, 1000.0);
     let camera = cg_camera::Camera::new((0.0, 0., 10.), cgmath::Deg(-90.0), cgmath::Deg(-0.0), projection);
     camera
 }

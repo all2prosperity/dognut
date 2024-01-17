@@ -45,7 +45,7 @@ impl TuiSplitApp {
         execute!(self.stdout, crossterm::terminal::EnterAlternateScreen, event::EnableMouseCapture);
         execute!(self.stdout, crossterm::terminal::Clear(ClearType::All));
 
-        let cam = crate::department::common::self_type::camera_instance(TUI_WIDE_WIDTH, TUI_SPLIT_HEIGHT);
+        let cam = crate::department::common::self_type::camera_instance(TUI_SPLIT_WIDTH, TUI_SPLIT_HEIGHT);
         let gpu = crate::wgpu::wgpu_helper::State::new(winit::dpi::LogicalSize { width: TUI_WIDE_WIDTH, height: TUI_SPLIT_HEIGHT }, cam).await;
         self.gpu = Some(gpu);
 
@@ -87,6 +87,8 @@ impl TuiSplitApp {
             }
 
             if should_exit {
+                g.game.ms.enc.try_send(TransferMsg::QuitThread).unwrap();
+                g.game.ms.win.try_send(TransferMsg::QuitThread).unwrap();
                 g.exit();
             }
             // execute!(g.game.stdout, terminal::Clear(ClearType::All));
@@ -110,13 +112,14 @@ impl TuiSplitApp {
 
     pub fn draw(&mut self, dim: (u32, u32)) {
         if let Some(ref mut gpu) = self.gpu {
-            let mut out_buf = OutputBuffer::new(dim.0 as u32, dim.1 as u32, true);
+            let mut out_buf = OutputBuffer::new(dim.0 as u32, dim.1 as u32, false);
             out_buf.stdout = Some(&mut self.stdout);
             let out = gpu.render(false);
             let (this, that) = crate::util::split_screen(&out.0, (TUI_WIDE_WIDTH, TUI_SPLIT_HEIGHT), (TUI_SPLIT_WIDTH, TUI_SPLIT_HEIGHT));
             out_buf.display.copy_from_slice(&that);
             self.ms.enc.try_send(TransferMsg::RenderedData(this)).unwrap();
             out_buf.queue_to_stdout();
+            drop(out);
             drop(out_buf);
             self.stdout.flush().unwrap();
             return;

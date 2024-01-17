@@ -42,11 +42,9 @@ fn main() {
 
     if arg.term {
         let tui_ms = ms.clone();
-        let raster_ms = ms.clone();
-
         if arg.split {
             let inner_rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
-            inner_rt.block_on(async {
+            inner_rt.block_on( async {
                 let result = TuiSplitApp::new(tui_ms).run().await;
                 if let Err(e) = result {
                     error!("tui split thread error: {}", e);
@@ -55,6 +53,7 @@ fn main() {
 
             return;
         } else {
+            let raster_ms = ms.clone();
             std::thread::Builder::new().name("tui_renderer_thread".into()).spawn(move || {
                 let camera = Camera::new(45., (WIDTH / HEIGHT) as f32,
                                          -5., -50., Vector3::from_xyz(0., 0., 10.),

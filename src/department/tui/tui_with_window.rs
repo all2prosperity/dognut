@@ -93,6 +93,7 @@ impl TuiWinApp {
             if should_exit {
                 g.game.ms.enc.try_send(TransferMsg::QuitThread).unwrap();
                 g.game.ms.win.try_send(TransferMsg::QuitThread).unwrap();
+                drop(&g.game);
                 g.exit();
             }
             g.game.draw((dimension.0 as u32, dimension.1 as u32));
@@ -102,6 +103,7 @@ impl TuiWinApp {
                 std::thread::sleep(Duration::from_secs_f64(st));
             }
         });
+
         Ok(())
     }
 
